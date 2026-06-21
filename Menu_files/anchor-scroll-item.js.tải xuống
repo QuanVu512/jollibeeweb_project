@@ -1,0 +1,24 @@
+define(['jquery', 'domReady!'], function ($) {
+    'use strict';
+
+    $.widget('mage.anchor_scroll_item', {
+        _create: function () {
+            this._bindEvents();
+        },
+
+        _bindEvents: function () {
+            // Anchor scroll events
+            var hash = $(location).prop('hash').substr(1),
+                itemAnchorString = '[data-product-item="' + hash + '"]',
+                itemAnchor = $(this.element).find(itemAnchorString);
+
+            if (itemAnchor.length > 0) {
+                $( "html, body" ).animate({
+                    scrollTop: (itemAnchor.offset().top - ($(window).width() > 1200 ? $('.nav-sections').innerHeight() + 10 : 10)) // 10 is spacing margin top nav
+                }, {duration: 2000});
+            }
+        },
+    });
+
+    return $.mage.anchor_scroll_item;
+});

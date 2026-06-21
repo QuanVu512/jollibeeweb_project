@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hồ sơ nhân viên - Jollibee Admin</title>
+  <link rel="icon" href="/assets/logo.png">
+  <link rel="stylesheet" href="/admin/assets/css/admin.css">
+  <script src="/admin/assets/js/api.js" defer></script>
+  <script src="/admin/assets/js/common.js" defer></script>
+  <script src="/admin/assets/js/staff.js" defer></script>
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="sidebar-brand">JOLLIBEE ADMIN</div>
+    <nav class="sidebar-nav" aria-label="Điều hướng quản trị">
+      <a href="/admin/">Quản lý Tài khoản</a>
+      <a class="active" href="/admin/staff.html">Hồ sơ Nhân viên</a>
+      <a href="/admin/report.html">Báo cáo Thống kê</a>
+    </nav>
+  </aside>
+
+  <div class="page-shell">
+    <header class="topbar">
+      <img src="/assets/logo.png" alt="Jollibee">
+      <div class="topbar-user">
+        <span>Chào, <span class="user-name" data-user-name>Admin</span></span>
+        <button class="btn btn-danger" type="button" data-logout>Đăng xuất</button>
+      </div>
+    </header>
+
+    <main class="content">
+      <div class="page-heading">
+        <h1>Hồ sơ nhân viên</h1>
+        <p>Thêm mới, chỉnh sửa và quản lý thông tin nhân sự.</p>
+      </div>
+
+      <div class="grid-two">
+        <section class="card">
+          <h2 id="staff-form-title" class="card-title">Thêm nhân viên</h2>
+          <form id="staff-form">
+            <input id="staff-id" name="id" type="hidden">
+            <div class="form-group">
+              <label for="full-name">Họ và tên</label>
+              <input id="full-name" name="fullName" maxlength="120" required placeholder="Nhập họ tên nhân viên">
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="gender">Giới tính</label>
+                <select id="gender" name="gender">
+                  <option value="">-- Chọn --</option>
+                  <option value="Nam">Nam</option>
+                  <option value="Nữ">Nữ</option>
+                  <option value="Khác">Khác</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="birth-date">Ngày sinh</label>
+                <input id="birth-date" name="birthDate" type="date">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="phone">Số điện thoại</label>
+                <input id="phone" name="phone" maxlength="20" inputmode="tel">
+              </div>
+              <div class="form-group">
+                <label for="email">Email</label>
+                <input id="email" name="email" type="email" maxlength="160">
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="hometown">Quê quán</label>
+              <input id="hometown" name="hometown" maxlength="200">
+            </div>
+            <div class="actions">
+              <button id="staff-submit" class="btn btn-primary" type="submit">Lưu hồ sơ</button>
+              <button id="staff-cancel" class="btn btn-secondary" type="button" hidden>Hủy chỉnh sửa</button>
+            </div>
+          </form>
+        </section>
+
+        <section class="card">
+          <h2 class="card-title">Danh sách nhân viên</h2>
+          <div class="table-tools">
+            <input id="staff-search" class="search-input" type="search" placeholder="Tìm theo mã, tên, SĐT, email...">
+            <span id="staff-count"></span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Mã NV</th>
+                  <th>Họ tên</th>
+                  <th>Liên hệ</th>
+                  <th>Ngày sinh</th>
+                  <th>Quê quán</th>
+                  <th>Hành động</th>
+                </tr>
+              </thead>
+              <tbody id="staff-table-body">
+                <tr><td class="empty-cell" colspan="6">Đang tải dữ liệu...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

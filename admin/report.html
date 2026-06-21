@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Báo cáo thống kê - Jollibee Admin</title>
+  <link rel="icon" href="/assets/logo.png">
+  <link rel="stylesheet" href="/admin/assets/css/admin.css">
+  <script src="/admin/assets/js/api.js" defer></script>
+  <script src="/admin/assets/js/common.js" defer></script>
+  <script src="/admin/assets/js/report.js" defer></script>
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="sidebar-brand">JOLLIBEE ADMIN</div>
+    <nav class="sidebar-nav" aria-label="Điều hướng quản trị">
+      <a href="/admin/">Quản lý Tài khoản</a>
+      <a href="/admin/staff.html">Hồ sơ Nhân viên</a>
+      <a class="active" href="/admin/report.html">Báo cáo Thống kê</a>
+    </nav>
+  </aside>
+
+  <div class="page-shell">
+    <header class="topbar">
+      <img src="/assets/logo.png" alt="Jollibee">
+      <div class="topbar-user">
+        <span>Chào, <span class="user-name" data-user-name>Admin</span></span>
+        <button class="btn btn-danger" type="button" data-logout>Đăng xuất</button>
+      </div>
+    </header>
+
+    <main class="content">
+      <div class="page-heading">
+        <h1>Báo cáo thống kê</h1>
+        <p>Tổng hợp các đơn đã hoàn thành và xuất dữ liệu Excel.</p>
+      </div>
+
+      <section class="card">
+        <form id="report-form" class="report-controls">
+          <div class="form-group">
+            <label for="from-date">Từ ngày</label>
+            <input id="from-date" name="from" type="date">
+          </div>
+          <div class="form-group">
+            <label for="to-date">Đến ngày</label>
+            <input id="to-date" name="to" type="date">
+          </div>
+          <div class="form-group">
+            <label for="report-type">Loại báo cáo Excel</label>
+            <select id="report-type" name="type">
+              <option value="orders">Danh sách đơn hàng</option>
+              <option value="revenue">Doanh thu</option>
+              <option value="items">Số lượng món tiêu thụ</option>
+            </select>
+          </div>
+          <div class="actions">
+            <button class="btn btn-secondary" type="submit">Xem thống kê</button>
+            <button id="export-button" class="btn btn-primary" type="button">Xuất Excel</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="dashboard-cards" aria-live="polite">
+        <article class="metric-card green">
+          <div>
+            <h2>Tổng doanh thu</h2>
+            <div id="total-revenue" class="metric-value">0 ₫</div>
+            <div class="metric-note">Đơn giao thành công</div>
+          </div>
+          <div class="metric-icon" aria-hidden="true">💰</div>
+        </article>
+        <article class="metric-card blue">
+          <div>
+            <h2>Số đơn hoàn thành</h2>
+            <div id="completed-orders" class="metric-value">0</div>
+            <div class="metric-note">Đơn hàng</div>
+          </div>
+          <div class="metric-icon" aria-hidden="true">📦</div>
+        </article>
+        <article class="metric-card orange">
+          <div>
+            <h2>Món bán chạy nhất</h2>
+            <div id="top-item" class="metric-value">Chưa có dữ liệu</div>
+            <div id="top-item-note" class="metric-note">Đã bán: 0 phần</div>
+          </div>
+          <div class="metric-icon" aria-hidden="true">🍗</div>
+        </article>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

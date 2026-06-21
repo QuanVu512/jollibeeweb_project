@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Quản lý tài khoản - Jollibee Admin</title>
+  <link rel="icon" href="/assets/logo.png">
+  <link rel="stylesheet" href="/admin/assets/css/admin.css">
+  <script src="/admin/assets/js/api.js" defer></script>
+  <script src="/admin/assets/js/common.js" defer></script>
+  <script src="/admin/assets/js/accounts.js" defer></script>
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="sidebar-brand">JOLLIBEE ADMIN</div>
+    <nav class="sidebar-nav" aria-label="Điều hướng quản trị">
+      <a class="active" href="/admin/">Quản lý Tài khoản</a>
+      <a href="/admin/staff.html">Hồ sơ Nhân viên</a>
+      <a href="/admin/report.html">Báo cáo Thống kê</a>
+    </nav>
+  </aside>
+
+  <div class="page-shell">
+    <header class="topbar">
+      <img src="/assets/logo.png" alt="Jollibee">
+      <div class="topbar-user">
+        <span>Chào, <span class="user-name" data-user-name>Admin</span></span>
+        <button class="btn btn-danger" type="button" data-logout>Đăng xuất</button>
+      </div>
+    </header>
+
+    <main class="content">
+      <div class="page-heading">
+        <h1>Quản lý tài khoản</h1>
+        <p>Cấp quyền đăng nhập cho nhân viên đã có hồ sơ.</p>
+      </div>
+
+      <div class="grid-two">
+        <section class="card">
+          <h2 class="card-title">Cấp tài khoản</h2>
+          <form id="account-form">
+            <div class="form-group">
+              <label for="employee-id">Nhân viên chưa có tài khoản</label>
+              <select id="employee-id" name="employeeId" required>
+                <option value="">-- Chọn nhân viên --</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="username">Tên đăng nhập</label>
+              <input id="username" name="username" minlength="3" maxlength="50" pattern="[A-Za-z0-9._-]+" required placeholder="Ví dụ: nguyenvana">
+            </div>
+            <div class="form-group">
+              <label for="password">Mật khẩu</label>
+              <input id="password" name="password" type="password" minlength="8" autocomplete="new-password" required placeholder="Tối thiểu 8 ký tự">
+            </div>
+            <div class="form-group">
+              <label for="role">Vai trò</label>
+              <select id="role" name="role" required>
+                <option value="cashier">Thu ngân</option>
+                <option value="kitchen">Nhân viên bếp</option>
+                <option value="shipper">Nhân viên giao hàng</option>
+                <option value="admin">Quản trị viên</option>
+              </select>
+            </div>
+            <button id="account-submit" class="btn btn-primary btn-block" type="submit">Cấp tài khoản</button>
+          </form>
+        </section>
+
+        <section class="card">
+          <h2 class="card-title">Tài khoản hệ thống</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Tài khoản</th>
+                  <th>Nhân viên</th>
+                  <th>Vai trò</th>
+                  <th>Trạng thái</th>
+                  <th>Hành động</th>
+                </tr>
+              </thead>
+              <tbody id="account-table-body">
+                <tr><td class="empty-cell" colspan="5">Đang tải dữ liệu...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

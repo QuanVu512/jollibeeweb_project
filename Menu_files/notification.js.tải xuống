@@ -1,0 +1,134 @@
+define([
+    'jquery',
+    'ko',
+    'uiComponent',
+    'mage/url',
+    'mage/storage',
+    'Magento_Customer/js/customer-data',
+    'Magento_Ui/js/modal/modal',
+    'mage/translate'
+], function ($, ko, Component, urlBuilder, storage, customerData, modal) {
+    'use strict';
+    return Component.extend({
+        defaults: {template: 'Levinci_Customer/view/notification'},
+        notificationList: ko.observableArray([]),
+        initialize: function () {
+            this._super();
+            var isLoggedIn = !!(customerData.get('customer')().firstname);
+            if(isLoggedIn) {
+                this.getNotification();
+                this.confirmBtn();
+                this.closeXBtn();
+            }
+        },
+
+        getNotification: function () {
+            var self = this;
+            var serviceUrl = urlBuilder.build('customer/listnoti/notification');
+            return storage.post(serviceUrl, '').done(function (response) {
+                var notifications = JSON.parse(response);
+                notifications = notifications.map(function(notification) {
+                    return self.processNotification(notification);
+                });
+                self.notificationList(notifications);
+            }).fail(function (response) {
+                console.log(response);
+            });
+        },
+
+        processNotification: function(notification) {
+            if (this.storeCode == 'en') {
+                notification.title = notification.title_en??notification.title;
+                notification.content = notification.content_en??notification.content;
+            } else {
+                notification.title = notification.title;
+                notification.content = notification.content;
+            }
+            return notification;
+        },
+
+        clickBell: function () {
+            var notificationWrapper = $('.notification-data-wrapper');
+            notificationWrapper.toggleClass('disappear');
+            notificationWrapper.parent().toggleClass('active');
+        },
+
+        getTotalBell: function () {
+            return customerData.get('notification_count')().total_count;
+        },
+
+        notificationItem: function (data, event) {
+            var self = this;
+            var modalConfig = {
+                type: 'popup',
+                responsive: true,
+                modalClass: 'popup-notification',
+                innerScroll: true,
+                buttons: [],
+                opened: function ($Event) {
+                    $('.modal-header button.action-close', $Event.srcElement).hide();
+                },
+                clickableOverlay: false
+            };
+
+            var popupNotification = $('.notification-popup-wrapper');
+            var notiPopup = modal(modalConfig, popupNotification);
+            var notiContent = $('.notification-popup-wrapper .content .text');
+            var notiTitle = $('.notification-popup-wrapper .title');
+            var notificationWrapper = $('.notification-data-wrapper');
+
+            var orderView = data.order_view;
+
+
+            //send read noti ajax
+            self._senAjax(data);
+            //active class
+            $("#notification_" + data.notification_id).addClass('notification-active');
+            if (orderView) {
+                window.location = orderView;
+            } else {
+                notiTitle.text(data.title);
+                notiContent.text(data.content);
+                popupNotification.modal("openModal");
+                notificationWrapper.toggleClass('disappear');
+                notificationWrapper.parent().toggleClass('active');
+            }
+        },
+
+        clickMarkRead: function () {
+            //send read noti ajax
+            $(".notification-list .notification-items").not('.notification-active').addClass('notification-active');
+            this._senAjax(null);
+            alert($.mage.__('Mark as read successfully'));
+        },
+
+        _senAjax: function (data = null) {
+            var readUrl = urlBuilder.build("customer/read/notification");
+            var notificationId = data ? data.notification_id : '';
+            $.ajax({
+                url: readUrl,
+                type: 'POST',
+                data: {
+                    "notificationId": notificationId
+                }
+            }).done(function (response) {
+            });
+        },
+
+        confirmBtn: function () {
+            var popupNotification = $('.notification-popup-wrapper');
+            var confirmBtn = $('.notification-popup-wrapper .actions-toolbar .primary button');
+            confirmBtn.on('click', function () {
+                popupNotification.modal("closeModal");
+            });
+        },
+
+        closeXBtn: function () {
+            var popupNotification = $('.notification-popup-wrapper');
+            var closeXBtn = $('.notification-close-popup');
+            closeXBtn.on('click', function () {
+                popupNotification.modal("closeModal");
+            });
+        },
+    });
+});

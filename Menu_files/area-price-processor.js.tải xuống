@@ -1,0 +1,104 @@
+define([
+    'jquery',
+    'underscore',
+    'Magento_Customer/js/customer-data',
+    'Magento_Catalog/js/price-utils'
+], function ($, _, customerData, priceUtils) {
+    'use strict';
+
+    return {
+        /**
+         * Get area prices on catalog page
+         * @param productAreaPrice
+         * @param pointRatio
+         */
+        catalogDisplayProductAreaPrice: function (productAreaPrice, pointRatio) {
+            let self = this,
+                areaId = this._getSelectedLocation();
+
+            if (areaId) {
+                if (productAreaPrice[areaId] !== undefined) {
+                    _.each(productAreaPrice[areaId], function (price, productId) {
+                        var priceOption = jQuery('.js-product-area-price-' + productId ).parents().parents().first().data('price-options');
+                        $('.product.details.product-item-details .js-product-area-price-' + productId).attr('data-price-amount', (parseFloat(price[0]) + parseFloat(priceOption)));
+                        $('.product.details.product-item-details .js-product-area-price-' + productId + ' .price').text(priceUtils.formatPrice((parseFloat(price[0]) + parseFloat(priceOption)), window.websitePriceFormat));
+
+                        self._displayProductPointBasedOnAreaPrice(productId, price[0], pointRatio);
+                    });
+                }
+            }
+        },
+
+        /**
+         * Get area price for displaying on product page
+         * @param productAreaPrice
+         * @param currentProductId
+         */
+        getProductAreaPrice(productAreaPrice, currentProductId) {
+            let areaId = this._getSelectedLocation(),
+                areaPrice = 0;
+
+            if (areaId && productAreaPrice !== undefined) {
+                let areaPriceData = productAreaPrice.area_price;
+
+                if (areaPriceData[areaId] !== undefined) {
+                    _.each(areaPriceData[areaId], function (price, productId) {
+                        if (currentProductId == productId) {
+                            areaPrice = price[0];
+                        }
+                    });
+                }
+            }
+
+            return areaPrice;
+        },
+
+        /**
+         * @returns {null}
+         * @private
+         */
+        _getSelectedLocation: function () {
+            let areaId = null;
+
+            if ($.mage.cookies.get('csp') == 1 && $.mage.cookies.get('csd') == 5) {
+                areaId = 2;
+            } else {
+                _.each(location_provinces, function (province, key) {
+                    if (province.id == $.mage.cookies.get('csp')) {
+                        areaId = province.area_id;
+                    }
+                });
+            }
+
+            return areaId;
+        },
+
+        /**
+         * @param productId
+         * @param areaPrice
+         * @param pointRatio
+         * @private
+         */
+        _displayProductPointBasedOnAreaPrice: function (productId, areaPrice, pointRatio) {
+            let point = 0;
+
+            if (pointRatio) {
+                point = parseInt(areaPrice / pointRatio);
+
+                if (point === 1) {
+                    $('.js-product-point-' + productId).text('(+' + point + $.mage.__(' point') + ")");
+                } else {
+                    $('.js-product-point-' + productId).text('(+' + point + $.mage.__(' points') + ")");
+                }
+            }
+        },
+
+        /**
+         * Check if current page is cart item update page
+         * @returns {jQuery|boolean}
+         */
+        isCartItemUpdatePage: function () {
+            return $(document.body).hasClass('checkout-cart-configure');
+        }
+    }
+})
