@@ -1548,7 +1548,7 @@ if (typeof define === 'function') {
     require.config({
         map: {
             "*": {
-                "googleMapPlaceLibrary": "https://maps.googleapis.com/maps/api/js?key=REMOVED_GOOGLE_API_KEY&v=3.exp&libraries=places&language=vi"
+                "googleMapPlaceLibrary": "https://maps.googleapis.com/maps/api/js?key=AIzaSyCK3k3WZ5-xHZm93h8ZCbzx8ie0ZnKVIN4&v=3.exp&libraries=places&language=vi"
             }
         }
     });

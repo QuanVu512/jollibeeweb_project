@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Giao hàng</title>
+
+    <link
+      rel="icon"
+      type="image/x-icon"
+      href="https://jollibee.com.vn/media/favicon/default/favicon.png"
+    />
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap"
+      rel="stylesheet"
+    />
+
+    <link rel="stylesheet" href="shipper.css" />
+  </head>
+
+  <body>
+    <!-- HEADER -->
+    <div class="header-jollibee">
+      <div class="logo">
+        <img
+          src="https://jollibee.com.vn/static/version1775488343/frontend/Jollibee/default/vi_VN/images/logo.png"
+          alt="Jollibee Logo"
+        />
+        <span>Jollibee</span>
+      </div>
+    </div>
+
+    <!-- NAV MENU -->
+    <div class="nav-menu">
+      <button class="nav-link active" id="tab-new" type="button" data-tab="new">
+        📦 Đơn mới
+      </button>
+
+      <button
+        class="nav-link"
+        id="tab-shipping"
+        type="button"
+        data-tab="shipping"
+      >
+        🚚 Đang giao
+      </button>
+
+      <button
+        class="nav-link"
+        id="tab-history"
+        type="button"
+        data-tab="history"
+      >
+        📜 Lịch sử
+      </button>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="container">
+      <!-- TAB ĐƠN MỚI -->
+      <div id="content-new" class="tab-content">
+        <h2 class="title">
+          📦 Đơn mới
+          <span class="badge" id="new-count">0</span>
+        </h2>
+
+        <div id="new-orders"></div>
+      </div>
+
+      <!-- TAB ĐANG GIAO -->
+      <div id="content-shipping" class="tab-content" style="display: none">
+        <h2 class="title">
+          🚚 Đang giao
+          <span class="badge" id="shipping-count">0</span>
+        </h2>
+
+        <div id="shipping-orders"></div>
+      </div>
+
+      <!-- TAB LỊCH SỬ -->
+      <div id="content-history" class="tab-content" style="display: none">
+        <h2 class="title">
+          📜 Lịch sử
+          <span class="badge" id="history-count">0</span>
+        </h2>
+
+        <div id="history-orders"></div>
+      </div>
+
+      <div id="popup" class="popup">🔔 Có đơn mới!</div>
+    </div>
+
+    <!-- MODAL CHI TIẾT ĐƠN HÀNG -->
+    <div id="order-detail-modal" class="modal-overlay">
+      <div class="modal-box">
+        <button
+          class="modal-close"
+          type="button"
+          data-action="modal-close"
+          aria-label="Đóng chi tiết đơn hàng"
+        >
+          ×
+        </button>
+
+        <div id="order-detail-content">
+          <!-- Nội dung chi tiết đơn hàng sẽ được render bằng shipper.js -->
+        </div>
+      </div>
+    </div>
+
+    <script src="shipper.js"></script>
+  </body>
+</html>
