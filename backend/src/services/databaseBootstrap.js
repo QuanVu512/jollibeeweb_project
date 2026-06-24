@@ -13,6 +13,8 @@ const Supplier = require('../models/Supplier');
 const PaymentTransaction = require('../models/PaymentTransaction');
 const AuditLog = require('../models/AuditLog');
 const Counter = require('../models/Counter');
+const Ingredient = require('../models/Ingredient');
+const Recipe = require('../models/Recipe');
 
 const MODELS = [
   Role,
@@ -27,7 +29,9 @@ const MODELS = [
   Supplier,
   PaymentTransaction,
   AuditLog,
-  Counter
+  Counter,
+  Ingredient,
+  Recipe
 ];
 
 async function ensureCollection(Model) {

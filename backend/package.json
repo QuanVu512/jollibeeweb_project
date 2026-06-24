@@ -9,6 +9,7 @@
     "dev": "node --watch src/server.js",
     "start": "node src/server.js",
     "seed:admin": "node src/scripts/seedAdmin.js",
+    "seed:recipes": "node src/scripts/seedInventoryRecipes.js",
     "init:database": "node src/scripts/initDatabase.js",
     "migrate:mysql": "node src/scripts/migrateFromMySql.js"
   },
