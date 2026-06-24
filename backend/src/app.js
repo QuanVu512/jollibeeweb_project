@@ -9,6 +9,7 @@ const { notFound, errorHandler } = require("./middleware/errorHandler");
 const app = express();
 const adminDirectory = path.resolve(__dirname, "../../admin");
 const shipperDirectory = path.resolve(__dirname, "../../shipper");
+const publicAssetsDirectory = path.resolve(__dirname, "../../assets");
 const logoFile = path.resolve(__dirname, "../../Menu_files/logo.png");
 
 app.disable("x-powered-by");
@@ -39,6 +40,7 @@ app.get("/health", (_req, res) => {
 });
 app.use("/api/v1", apiRoutes);
 app.get("/assets/logo.png", (_req, res) => res.sendFile(logoFile));
+app.use("/assets", express.static(publicAssetsDirectory));
 app.use(
   "/admin",
   express.static(adminDirectory, { index: "index.html", extensions: ["html"] }),
