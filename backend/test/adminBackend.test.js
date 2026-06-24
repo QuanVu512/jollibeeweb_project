@@ -9,6 +9,8 @@ const {
 const { pagination, dateRange } = require('../src/utils/adminQuery');
 const Order = require('../src/models/Order');
 const { INGREDIENT_DEFINITIONS, RECIPE_DEFINITIONS } = require('../src/data/inventoryRecipes');
+const { getRoleLandingPage } = require('../src/constants/roleLandingPages');
+const { ROLES } = require('../src/constants/roles');
 
 test('kiểm tra và chuẩn hóa dữ liệu nhân viên', () => {
   const result = validateEmployeePayload({
@@ -85,4 +87,12 @@ test('công thức món ăn chỉ tham chiếu nguyên liệu đã khai báo', (
       assert.ok(item.quantityBase > 0);
     }
   }
+});
+
+test('mỗi vai trò đăng nhập được chuyển đến đúng khu vực', () => {
+  assert.equal(getRoleLandingPage(ROLES.ADMIN), '/admin/');
+  assert.equal(getRoleLandingPage(ROLES.CASHIER), '/banhang/quan_ly_don_hang.php');
+  assert.equal(getRoleLandingPage(ROLES.KITCHEN), '/bep/index.php');
+  assert.equal(getRoleLandingPage(ROLES.SHIPPER), '/shipper/shipper.html');
+  assert.equal(getRoleLandingPage(ROLES.CUSTOMER), '/homepage.php');
 });

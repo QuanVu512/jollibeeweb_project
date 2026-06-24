@@ -1,8 +1,7 @@
 const express = require('express');
 const { rateLimit } = require('express-rate-limit');
 const authController = require('../controllers/auth.controller');
-const { authenticate, authorize } = require('../middleware/auth');
-const { ROLES } = require('../constants/roles');
+const { authenticate } = require('../middleware/auth');
 const asyncHandler = require('../utils/asyncHandler');
 
 const router = express.Router();
@@ -15,7 +14,7 @@ const loginLimiter = rateLimit({
 });
 
 router.post('/login', loginLimiter, asyncHandler(authController.login));
-router.get('/me', authenticate, authorize(ROLES.ADMIN), asyncHandler(authController.me));
+router.get('/me', authenticate, asyncHandler(authController.me));
 router.post('/logout', authenticate, asyncHandler(authController.logout));
 
 module.exports = router;
