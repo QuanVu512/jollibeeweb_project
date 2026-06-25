@@ -53,9 +53,26 @@ app.use(
   }),
 );
 app.get("/", (_req, res) => res.redirect("/admin/login.html"));
-app.get("/kitchen-login.html", (_req, res) => res.sendFile(path.resolve(__dirname, '../public/kitchen-login.html')));
+app.get("/kitchen-login.html", (_req, res) => {
+  res.redirect("/bep/kitchen-login.html");
+});
 app.get(["/kitchen.html", "/bep/index.php"], (_req, res) => {
-  res.sendFile(path.resolve(__dirname, "../public/kitchen.html"));
+  res.redirect("/bep/kitchen.html");
+});
+
+const bepDirectory = path.resolve(__dirname, "../../bep");
+app.use(
+  "/bep",
+  express.static(bepDirectory, {
+    index: "kitchen.html",
+    extensions: ["html"],
+  }),
+);
+
+// Backward-compatible (bep) routes
+app.get("/kitchen-login.html", (_req, res) => res.redirect("/bep/kitchen-login.html"));
+app.get(["/kitchen.html", "/bep/index.php"], (_req, res) => {
+  res.redirect("/bep/kitchen.html");
 });
 
 app.use(notFound);

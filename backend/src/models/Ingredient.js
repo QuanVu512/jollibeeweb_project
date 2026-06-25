@@ -15,6 +15,9 @@ const ingredientSchema = new mongoose.Schema(
     code: { type: String, required: true, unique: true, trim: true, uppercase: true },
     name: { type: String, required: true, trim: true, maxlength: 120 },
     baseUnit: { type: String, required: true, trim: true, maxlength: 40 },
+    // Nơi sản xuất (có thể để null nếu chưa có dữ liệu)
+    productionPlace: { type: String, trim: true, maxlength: 160, default: null },
+
     stockQuantity: {
       type: Number,
       default: 0,
@@ -34,3 +37,4 @@ const ingredientSchema = new mongoose.Schema(
 ingredientSchema.index({ isActive: 1, stockQuantity: 1 });
 
 module.exports = mongoose.model('Ingredient', ingredientSchema);
+

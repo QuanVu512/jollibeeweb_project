@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Đăng nhập hệ thống - Jollibee</title>
+  <link rel="icon" href="/assets/logo.png" />
+  <style>
+    :root {
+      --brand: #e21b22;
+      --brand-dark: #b71116;
+      --background: #f0f2f5;
+      --text: #28323c;
+      --muted: #6b7785;
+      --surface: #ffffff;
+      --danger: #dc3545;
+      --danger-bg: #fff0f1;
+      --border: #e2e7ec;
+      --shadow: 0 18px 55px rgba(31, 45, 61, 0.14);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Segoe UI", Arial, sans-serif;
+      background: linear-gradient(135deg, #f6f7f9, #eceff3);
+      color: var(--text);
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+    .login-card {
+      width: min(440px, 100%);
+      background: var(--surface);
+      border-top: 5px solid var(--brand);
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      padding: 34px;
+    }
+    .login-logo {
+      display: block;
+      max-width: 125px;
+      max-height: 65px;
+      margin: 0 auto 20px;
+    }
+    .login-card h1 {
+      margin: 0 0 7px;
+      font-size: 23px;
+      text-align: center;
+    }
+    .login-card > p {
+      margin: 0 0 25px;
+      color: var(--muted);
+      font-size: 14px;
+      text-align: center;
+    }
+    .login-error {
+      display: none;
+      margin-bottom: 16px;
+      border-left: 4px solid var(--danger);
+      border-radius: 7px;
+      background: var(--danger-bg);
+      color: #92212c;
+      padding: 11px 13px;
+      font-size: 13px;
+      font-weight: 650;
+    }
+    .login-error.visible { display: block; }
+    .form-group { margin-bottom: 17px; }
+    label {
+      display: block;
+      margin-bottom: 7px;
+      color: #46515d;
+      font-size: 13px;
+      font-weight: 700;
+    }
+    input {
+      width: 100%;
+      border: 1px solid #cbd3dc;
+      border-radius: 8px;
+      outline: none;
+      background: #fbfcfd;
+      padding: 11px 12px;
+      transition: 160ms ease;
+    }
+    input:focus {
+      border-color: var(--brand);
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba(226, 27, 34, 0.1);
+    }
+    button {
+      width: 100%;
+      min-height: 42px;
+      border: 1px solid transparent;
+      border-radius: 7px;
+      background: var(--brand);
+      color: white;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 750;
+      transition: 160ms ease;
+    }
+    button:hover { background: var(--brand-dark); }
+  </style>
+</head>
+<body>
+  <main class="login-page">
+    <section class="login-card" aria-labelledby="login-title">
+      <img class="login-logo" src="/assets/logo.png" alt="Jollibee" />
+      <h1 id="login-title">Jollibee</h1>
+      <p>Đăng nhập để tiếp tục với vai trò của bạn</p>
+
+      <div id="login-error" class="login-error" role="alert"></div>
+      <form id="login-form">
+        <div class="form-group">
+          <label for="username">Tên đăng nhập</label>
+          <input id="username" name="username" type="text" autocomplete="username" required autofocus />
+        </div>
+        <div class="form-group">
+          <label for="password">Mật khẩu</label>
+          <input id="password" name="password" type="password" autocomplete="current-password" required />
+        </div>
+        <button id="login-button" type="submit">Đăng nhập</button>
+      </form>
+      <p style="text-align:center; margin-top:16px;">
+        <a href="/" style="color:#6b7785; font-size:13px; text-decoration:none;">← Về trang chủ</a>
+      </p>
+    </section>
+  </main>
+
+  <script>
+    const form = document.getElementById('login-form');
+    const errorBox = document.getElementById('login-error');
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const body = {
+        username: document.getElementById('username').value,
+        password: document.getElementById('password').value
+      };
+
+      errorBox.textContent = '';
+      errorBox.classList.remove('visible');
+
+      const response = await fetch('/api/v1/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        window.location.href = result.data.redirectTo;
+      } else {
+        errorBox.textContent = result.message || 'Đăng nhập thất bại';
+        errorBox.classList.add('visible');
+      }
+    });
+  </script>
+</body>
+</html>
+

@@ -73,6 +73,7 @@ router.post('/inventory/adjust', authenticate, authorize(ROLES.KITCHEN), asyncHa
   const { ingredientId, change, note = '' } = req.body || {};
   const delta = Number(change);
 
+
   if (!ingredientId || !Number.isFinite(delta)) {
     throw new ApiError(400, 'Vui lòng chọn nguyên liệu và nhập số lượng thay đổi.');
   }
