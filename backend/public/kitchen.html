@@ -374,7 +374,7 @@
     document.getElementById('logoutBtn').addEventListener('click', async () => {
       try {
         // Logout bằng GET để server tự redirect về trang phù hợp.
-        const redirectTo = encodeURIComponent('/kitchen.html');
+        const redirectTo = encodeURIComponent('/admin/login.html');
         window.location.href = `/api/v1/auth/logout?redirect=${redirectTo}`;
       } catch (e) {
         // Fallback: luôn xóa cookie phía server thông qua request logout.
