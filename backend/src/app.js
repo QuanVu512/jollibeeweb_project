@@ -19,7 +19,7 @@ app.use(
       directives: {
         defaultSrc: ["'self'"],
         imgSrc: ["'self'", "data:", "https://jollibee.com.vn"],
-        scriptSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'"],
         styleSrc: ["'self'", "'unsafe-inline'"],
         connectSrc: ["'self'"],
       },
@@ -53,6 +53,10 @@ app.use(
   }),
 );
 app.get("/", (_req, res) => res.redirect("/admin/login.html"));
+app.get("/kitchen-login.html", (_req, res) => res.sendFile(path.resolve(__dirname, '../public/kitchen-login.html')));
+app.get(["/kitchen.html", "/bep/index.php"], (_req, res) => {
+  res.sendFile(path.resolve(__dirname, "../public/kitchen.html"));
+});
 
 app.use(notFound);
 app.use(errorHandler);

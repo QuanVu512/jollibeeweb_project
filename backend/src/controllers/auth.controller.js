@@ -83,21 +83,35 @@ async function me(req, res) {
 }
 
 async function logout(req, res) {
-  await recordAudit(req, {
-    action: 'user.logout',
-    entityType: 'user',
-    entityId: req.user._id,
-    before: null,
-    after: null
-  });
-  await User.updateOne({ _id: req.user._id }, { $inc: { tokenVersion: 1 } });
+  if (req.user?._id) {
+    await recordAudit(req, {
+      action: 'user.logout',
+      entityType: 'user',
+      entityId: req.user._id,
+      before: null,
+      after: null
+    });
+    await User.updateOne({ _id: req.user._id }, { $inc: { tokenVersion: 1 } });
+  }
+
   res.clearCookie(config.cookieName, {
     httpOnly: true,
     secure: config.nodeEnv === 'production',
     sameSite: 'strict',
-    path: '/'
+    path: '/',
+    maxAge: 0,
+    expires: new Date(0)
   });
-  res.status(204).send();
+
+  const redirectTo = typeof req.query.redirect === 'string' && req.query.redirect.startsWith('/')
+    ? req.query.redirect
+    : '/admin/login.html';
+
+  if (req.method === 'GET') {
+    return res.redirect(redirectTo);
+  }
+
+  return res.status(204).send();
 }
 
 module.exports = { login, me, logout };

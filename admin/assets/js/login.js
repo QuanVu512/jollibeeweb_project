@@ -9,12 +9,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     location.replace(redirectTo);
   }
 
-  try {
-    const response = await window.AdminApi.request('/auth/me');
-    goToRoleHome(response);
-    return;
-  } catch (_error) {
-    // Chưa đăng nhập là trạng thái bình thường của trang này.
+  function shouldSkipAutoLogin() {
+    return new URLSearchParams(window.location.search).get('logout') === '1';
+  }
+
+  if (shouldSkipAutoLogin()) {
+    document.cookie = 'jollibee_admin_token=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; SameSite=Lax';
+    history.replaceState({}, '', window.location.pathname);
+  } else {
+    try {
+      const response = await window.AdminApi.request('/auth/me');
+      goToRoleHome(response);
+      return;
+    } catch (_error) {
+      // Chưa đăng nhập là trạng thái bình thường của trang này.
+    }
   }
 
   form.addEventListener('submit', async (event) => {
