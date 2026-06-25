@@ -83,7 +83,13 @@ const RECIPE_DEFINITIONS = Object.freeze([
     recipeCode: 'GA_RAN_1_MIENG',
     productCode: 'GA_RAN_1_MIENG',
     name: 'Gà rán - 1 miếng',
-    ingredients: [{ ingredientCode: 'BOT_CHIEN_GA', quantityBase: 1 / 15 }],
+    ingredients: [
+      {
+        ingredientCode: 'BOT_CHIEN_GA',
+        quantityBase: 1 / 15,
+        note: 'Hao trừ 1/15 pack bột chiên gà cho 1 miếng gà.'
+      }
+    ],
     note: 'Một miếng gà dùng 1/15 pack bột chiên. Chưa bao gồm thịt gà sống và dầu chiên.'
   },
   {
@@ -91,10 +97,10 @@ const RECIPE_DEFINITIONS = Object.freeze([
     productCode: 'MI_Y_PHOMAI',
     name: 'Mì Ý phô mai',
     ingredients: [
-      { ingredientCode: 'MI', quantityBase: 1 / 3 },
-      { ingredientCode: 'MUOI', quantityBase: 1 / 50 },
-      { ingredientCode: 'SOT_MI', quantityBase: 1 / 20 },
-      { ingredientCode: 'PHO_MAI_BAO', quantityBase: 75 }
+      { ingredientCode: 'MI', quantityBase: 1 / 3, note: 'Hao trừ 1/3 pack mì cho 1 phần.' },
+      { ingredientCode: 'MUOI', quantityBase: 1 / 50, note: 'Hao trừ 1/50 bag muối, tương đương 1 muỗng.' },
+      { ingredientCode: 'SOT_MI', quantityBase: 1 / 20, note: 'Hao trừ 1/20 pack sốt mì, tương đương 1 muỗng lớn.' },
+      { ingredientCode: 'PHO_MAI_BAO', quantityBase: 75, note: 'Hao trừ 75 gram phô mai bào, tương đương 1/40 pack 3kg.' }
     ],
     note: 'Một phần dùng 1/3 pack mì, 1/50 bag muối, 1/20 pack sốt và 75 gram phô mai.'
   },
@@ -103,9 +109,9 @@ const RECIPE_DEFINITIONS = Object.freeze([
     productCode: 'BURGER_GA',
     name: 'Burger gà',
     ingredients: [
-      { ingredientCode: 'CA_CHUA', quantityBase: 1 / 5 },
-      { ingredientCode: 'XA_LACH', quantityBase: 50 },
-      { ingredientCode: 'CHICKEN_STRIP', quantityBase: 1 / 6 }
+      { ingredientCode: 'CA_CHUA', quantityBase: 1 / 5, note: 'Hao trừ 1/5 quả cà chua, tương đương 1 lát.' },
+      { ingredientCode: 'XA_LACH', quantityBase: 50, note: 'Hao trừ 50 gram xà lách, tương đương 1 miếng.' },
+      { ingredientCode: 'CHICKEN_STRIP', quantityBase: 1 / 6, note: 'Hao trừ 1/6 pack gà không xương, tương đương 2 miếng vì 1 pack có 12 miếng.' }
     ],
     note: 'Một burger dùng 1/5 quả cà chua, 50 gram xà lách và 2 miếng gà không xương, tương đương 1/6 pack. Chưa bao gồm vỏ bánh và sốt.'
   },
@@ -114,8 +120,8 @@ const RECIPE_DEFINITIONS = Object.freeze([
     productCode: 'BURGER_TOM',
     name: 'Burger tôm',
     ingredients: [
-      { ingredientCode: 'XA_LACH', quantityBase: 50 },
-      { ingredientCode: 'BANH_NHAN_TOM', quantityBase: 1 }
+      { ingredientCode: 'XA_LACH', quantityBase: 50, note: 'Hao trừ 50 gram xà lách, tương đương 1 miếng.' },
+      { ingredientCode: 'BANH_NHAN_TOM', quantityBase: 1, note: 'Hao trừ 1 miếng bánh nhân tôm.' }
     ],
     note: 'Một burger dùng 50 gram xà lách và 1 miếng bánh nhân tôm. Chưa bao gồm vỏ bánh và sốt.'
   }
