@@ -66,14 +66,25 @@ test('đơn hàng tự tính thành tiền từ dữ liệu chi tiết', async (
   assert.equal(order.total, 105000);
 });
 
-test('quy đổi nguyên liệu theo đơn vị cơ sở không dùng số lẻ', () => {
+test('quy đổi nguyên liệu theo đơn vị tồn kho mới', () => {
   const byCode = new Map(INGREDIENT_DEFINITIONS.map(item => [item.code, item]));
   const packaging = (code, unit) => byCode.get(code).packaging.find(item => item.unit === unit);
 
-  assert.equal(packaging('BOT_CHIEN_GA', 'carton').baseQuantity, 120);
-  assert.equal(packaging('MI', 'carton').baseQuantity, 72);
-  assert.equal(packaging('SOT_MI', 'case').baseQuantity, 160);
+  assert.equal(byCode.get('BOT_CHIEN_GA').baseUnit, 'pack');
+  assert.equal(byCode.get('MI').baseUnit, 'pack');
+  assert.equal(byCode.get('MUOI').baseUnit, 'bag');
+  assert.equal(byCode.get('SOT_MI').baseUnit, 'pack');
+  assert.equal(byCode.get('PHO_MAI_BAO').baseUnit, 'gram');
+  assert.equal(byCode.get('CA_CHUA').baseUnit, 'quả');
+  assert.equal(byCode.get('XA_LACH').baseUnit, 'gram');
+  assert.equal(byCode.get('CHICKEN_STRIP').baseUnit, 'pack');
+
+  assert.equal(packaging('BOT_CHIEN_GA', 'carton').baseQuantity, 8);
+  assert.equal(packaging('MI', 'carton').baseQuantity, 24);
+  assert.equal(packaging('SOT_MI', 'case').baseQuantity, 8);
   assert.equal(packaging('PHO_MAI_BAO', 'pack').baseQuantity, 3000);
+  assert.equal(packaging('XA_LACH', 'kilogram').baseQuantity, 1000);
+  assert.equal(packaging('CHICKEN_STRIP', 'pack').baseQuantity, 1);
   assert.equal(packaging('BANH_NHAN_TOM', 'pack').baseQuantity, 6);
 });
 
@@ -83,7 +94,7 @@ test('công thức món ăn chỉ tham chiếu nguyên liệu đã khai báo', (
     assert.ok(recipe.ingredients.length > 0);
     for (const item of recipe.ingredients) {
       assert.ok(ingredientCodes.has(item.ingredientCode));
-      assert.ok(Number.isInteger(item.quantityBase));
+      assert.ok(Number.isFinite(item.quantityBase));
       assert.ok(item.quantityBase > 0);
     }
   }

@@ -4,7 +4,7 @@ const recipeIngredientSchema = new mongoose.Schema(
   {
     ingredient: { type: mongoose.Schema.Types.ObjectId, ref: 'Ingredient', required: true },
     ingredientCode: { type: String, required: true, trim: true, uppercase: true },
-    quantityBase: { type: Number, required: true, min: 1 },
+    quantityBase: { type: Number, required: true, min: 0.000001 },
     note: { type: String, trim: true, maxlength: 200, default: '' }
   },
   { _id: false }
