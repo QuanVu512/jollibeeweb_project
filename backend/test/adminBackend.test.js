@@ -102,8 +102,8 @@ test('công thức món ăn chỉ tham chiếu nguyên liệu đã khai báo', (
 
 test('mỗi vai trò đăng nhập được chuyển đến đúng khu vực', () => {
   assert.equal(getRoleLandingPage(ROLES.ADMIN), '/admin/');
-  assert.equal(getRoleLandingPage(ROLES.CASHIER), '/banhang/quan_ly_don_hang.php');
-  assert.equal(getRoleLandingPage(ROLES.KITCHEN), '/bep/index.php');
+  assert.equal(getRoleLandingPage(ROLES.CASHIER), '/banhang/quan_ly_don_hang.html');
+  assert.equal(getRoleLandingPage(ROLES.KITCHEN), '/banhang/bep_che_bien.html');
   assert.equal(getRoleLandingPage(ROLES.SHIPPER), '/shipper/shipper.html');
   assert.equal(getRoleLandingPage(ROLES.CUSTOMER), '/homepage.php');
 });

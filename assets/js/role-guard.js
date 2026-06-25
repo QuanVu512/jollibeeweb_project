@@ -19,7 +19,8 @@
     const user = payload?.data?.user;
     const redirectTo = payload?.data?.redirectTo;
 
-    if (!user || user.role !== requiredRole) {
+    const allowedRoles = requiredRole.split(',').map(r => r.trim());
+    if (!user || !allowedRoles.includes(user.role)) {
       location.replace(redirectTo || '/admin/login.html');
       return;
     }

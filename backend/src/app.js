@@ -9,6 +9,7 @@ const { notFound, errorHandler } = require("./middleware/errorHandler");
 const app = express();
 const adminDirectory = path.resolve(__dirname, "../../admin");
 const shipperDirectory = path.resolve(__dirname, "../../shipper");
+const banhangDirectory = path.resolve(__dirname, "../../banhang");
 const publicAssetsDirectory = path.resolve(__dirname, "../../assets");
 const logoFile = path.resolve(__dirname, "../../Menu_files/logo.png");
 
@@ -44,6 +45,10 @@ app.use("/assets", express.static(publicAssetsDirectory));
 app.use(
   "/admin",
   express.static(adminDirectory, { index: "index.html", extensions: ["html"] }),
+);
+app.use(
+  "/banhang",
+  express.static(banhangDirectory, { index: "tao_don_hang.html", extensions: ["html"] }),
 );
 app.use(
   "/shipper",
