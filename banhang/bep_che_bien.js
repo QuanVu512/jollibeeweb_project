@@ -1,5 +1,4 @@
 document.addEventListener("DOMContentLoaded", () => {
-  // Chờ RoleGuard tải xong
   let checkRoleGuard = setInterval(() => {
     if (window.RoleGuard && window.RoleGuard.user) {
       clearInterval(checkRoleGuard);
@@ -11,7 +10,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const user = window.RoleGuard.user;
     document.querySelector("#staff-name").textContent = user.displayName || user.username;
 
-    // Phân quyền trên thanh menu: Bếp không được thấy/vào các trang tạo đơn/xác nhận
     if (user.role === "kitchen") {
       const nav1 = document.querySelector("#nav-cashier-only-1");
       const nav2 = document.querySelector("#nav-cashier-only-2");
@@ -31,7 +29,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     loadPreparingOrders();
-    // Tự động tải lại mỗi 10 giây để hiển thị đơn hàng mới
     setInterval(loadPreparingOrders, 10000);
   }
 
@@ -72,7 +69,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const deliveryOrders = orders.filter(o => o.orderType === "delivery" || o.orderType === "pickup");
     const canComplete = canCompleteKitchenOrders();
 
-    // 1. Render Ăn tại chỗ
     if (dineInOrders.length === 0) {
       dineInTickets.innerHTML = `<p style="text-align: center; color: #888; padding: 20px 0;">Không có đơn ăn tại chỗ</p>`;
     } else {
@@ -93,12 +89,11 @@ document.addEventListener("DOMContentLoaded", () => {
             `).join("")}
           </ul>
           ${canComplete
-            ? `<button class="btn-action btn-serve" data-id="${order._id}" style="background:#007bff; box-shadow: 0 4px 0 #0056b3;">🍽️ PHỤC VỤ XONG</button>`
+            ? `<button class="btn-action btn-serve" data-id="${order._id}" style="background:#007bff; box-shadow: 0 4px 0 #0056b3;"><span class="emoji">🍽️</span> PHỤC VỤ XONG</button>`
             : disabledKitchenButton()}
         </div>
       `).join("");
 
-      // Gắn sự kiện phục vụ xong
       if (canComplete) {
         dineInTickets.querySelectorAll(".btn-serve").forEach(btn => {
           btn.addEventListener("click", () => handleServe(btn.dataset.id, btn));
@@ -106,7 +101,6 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
-    // 2. Render Giao hàng / Mang đi
     if (deliveryOrders.length === 0) {
       deliveryTickets.innerHTML = `<p style="text-align: center; color: #888; padding: 20px 0;">Không có đơn ship / mang về</p>`;
     } else {
@@ -130,13 +124,12 @@ document.addEventListener("DOMContentLoaded", () => {
               `).join("")}
             </ul>
             ${canComplete
-              ? `<button class="btn-action btn-ready" data-id="${order._id}" style="background:#28a745; box-shadow: 0 4px 0 #1e7e34;">🛵 LÀM XONG</button>`
+              ? `<button class="btn-action btn-ready" data-id="${order._id}" style="background:#28a745; box-shadow: 0 4px 0 #1e7e34;"><span class="emoji">🛵</span> LÀM XONG</button>`
               : disabledKitchenButton()}
           </div>
         `;
       }).join("");
 
-      // Gắn sự kiện làm xong
       if (canComplete) {
         deliveryTickets.querySelectorAll(".btn-ready").forEach(btn => {
           btn.addEventListener("click", () => handleReady(btn.dataset.id, btn));

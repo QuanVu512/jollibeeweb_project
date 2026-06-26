@@ -1,5 +1,4 @@
 document.addEventListener("DOMContentLoaded", () => {
-  // Chờ RoleGuard tải xong
   let checkRoleGuard = setInterval(() => {
     if (window.RoleGuard && window.RoleGuard.user) {
       clearInterval(checkRoleGuard);
@@ -38,7 +37,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function renderOrders(orders) {
     if (!orders || orders.length === 0) {
-      ordersContainer.innerHTML = `<p style="text-align: center; color: #888; font-weight: bold; padding: 40px 0; background: #fff; border-radius: 10px;">🎉 Hiện tại không có đơn hàng nào chờ xác nhận.</p>`;
+      ordersContainer.innerHTML = `<p style="text-align: center; color: #888; font-weight: bold; padding: 40px 0; background: #fff; border-radius: 10px;"><span class="emoji">🎉</span> Hiện tại không có đơn hàng nào chờ xác nhận.</p>`;
       return;
     }
 
@@ -56,7 +55,7 @@ document.addEventListener("DOMContentLoaded", () => {
               <p style="margin: 10px 0 0 0;">Tổng tiền: <span style="color:#d8262f; font-weight:900; font-size: 22px;">${formatPrice(order.total)}đ</span></p>
             </div>
             <div style="display: flex; align-items: center; gap: 10px;">
-              <button class="btn btn-outline btn-toggle-details" data-id="${order._id}">Chi tiết 🍝</button>
+              <button class="btn btn-outline btn-toggle-details" data-id="${order._id}">Chi tiết <span class="emoji">🍝</span></button>
               <button class="btn btn-red btn-accept" data-id="${order._id}">Chấp nhận</button>
               <button class="btn btn-gray btn-cancel" data-id="${order._id}">Hủy</button>
             </div>
@@ -88,7 +87,6 @@ document.addEventListener("DOMContentLoaded", () => {
       `;
     }).join("");
 
-    // Đăng ký sự kiện nút Chi tiết
     ordersContainer.querySelectorAll(".btn-toggle-details").forEach(btn => {
       btn.addEventListener("click", () => {
         const id = btn.dataset.id;
@@ -97,7 +95,6 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     });
 
-    // Đăng ký sự kiện nút Chấp nhận
     ordersContainer.querySelectorAll(".btn-accept").forEach(btn => {
       btn.addEventListener("click", async () => {
         const id = btn.dataset.id;
@@ -114,12 +111,11 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     });
 
-    // Đăng ký sự kiện nút Hủy
     ordersContainer.querySelectorAll(".btn-cancel").forEach(btn => {
       btn.addEventListener("click", async () => {
         const id = btn.dataset.id;
         const reason = prompt("Nhập lý do hủy đơn:");
-        if (reason === null) return; // Nhấn Hủy prompt
+        if (reason === null) return;
         
         try {
           btn.disabled = true;

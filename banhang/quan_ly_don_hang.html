@@ -6,10 +6,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
     <link rel="icon" href="/assets/logo.png">
     <style>
-        * { font-family: 'Nunito', sans-serif; box-sizing: border-box; }
+        * { font-family: 'Nunito', 'Segoe UI', -apple-system, sans-serif; box-sizing: border-box; }
+        input, select, textarea, button { font-family: 'Nunito', 'Segoe UI', -apple-system, sans-serif; }
+        .emoji { font-family: "Segoe UI Emoji", "Segoe UI Symbol", "Apple Color Emoji", "Noto Color Emoji", sans-serif; margin-right: 4px; }
         body { 
             background-color: #fdf5e6; 
-            background-image: url('data:image/svg+xml;utf8,<svg width="150" height="150" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><text x="10" y="40" font-size="20" opacity="0.04">🍅</text><text x="60" y="90" font-size="20" opacity="0.04">🌶️</text><text x="80" y="20" font-size="20" opacity="0.04">🍗</text></svg>');
+            background-image: url('data:image/svg+xml;utf8,<svg width="150" height="150" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><text x="20" y="30" font-size="20" opacity="0.04">🍅</text><text x="60" y="90" font-size="20" opacity="0.04">🌶️</text><text x="80" y="20" font-size="20" opacity="0.04">🍗</text></svg>');
             margin: 0; padding: 0; 
         }
         header { background-color: #fff; padding: 15px; text-align: center; border-bottom: 4px solid #d8262f; display: flex; justify-content: center; align-items: center; position: relative; z-index: 10; }
@@ -55,9 +57,7 @@
             <span id="staff-name">Nhân viên</span>
         </div>
         <div class="dropdown-content">
-            <a href="ho_so.html">👤 Sửa hồ sơ bản thân</a>
-            <a href="doi_mat_khau.html">🔑 Đổi mật khẩu</a>
-            <a href="#" id="btn-logout" style="color: #d8262f; border-bottom: none;">🚪 Đăng xuất</a>
+            <a href="#" id="btn-logout" style="color: #d8262f; border-bottom: none;"><span class="emoji">🚪</span> Đăng xuất</a>
         </div>
     </div>
 </header>

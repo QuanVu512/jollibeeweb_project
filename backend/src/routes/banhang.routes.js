@@ -21,9 +21,6 @@ router.get("/orders/preparing", anyStaff, asyncHandler(controller.getPreparingOr
 router.patch("/orders/:id/serve", cashierOrAdmin, asyncHandler(controller.serveOrder));
 router.patch("/orders/:id/ready", cashierOrAdmin, asyncHandler(controller.readyOrder));
 
-// Tài khoản chung
-router.get("/profile", anyStaff, asyncHandler(controller.getProfile));
-router.patch("/profile", anyStaff, asyncHandler(controller.updateProfile));
-router.patch("/password", anyStaff, asyncHandler(controller.changePassword));
+// Tài khoản chung - Đã gỡ bỏ tính năng sửa hồ sơ/đổi mật khẩu của phân hệ bán hàng
 
 module.exports = router;

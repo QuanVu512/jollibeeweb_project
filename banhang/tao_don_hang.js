@@ -1,5 +1,4 @@
 document.addEventListener("DOMContentLoaded", async () => {
-  // Chờ RoleGuard tải xong thông tin người dùng
   let checkRoleGuard = setInterval(() => {
     if (window.RoleGuard && window.RoleGuard.user) {
       clearInterval(checkRoleGuard);
@@ -11,7 +10,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     const user = window.RoleGuard.user;
     document.querySelector("#staff-name").textContent = user.displayName || user.username;
 
-    // Xử lý nút Đăng xuất
     const btnLogout = document.querySelector("#btn-logout");
     btnLogout.addEventListener("click", async (e) => {
       e.preventDefault();
@@ -27,7 +25,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   let products = [];
-  let cart = {}; // key: productId, value: { product, quantity }
+  let cart = {};
 
   const menuContainer = document.querySelector("#menu-container");
   const cartItems = document.querySelector("#cart-items");
@@ -59,7 +57,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       </div>
     `).join("");
 
-    // Gắn sự kiện thêm vào giỏ hàng
     menuContainer.querySelectorAll(".btn-add").forEach(btn => {
       btn.addEventListener("click", () => {
         const id = btn.dataset.id;
@@ -129,7 +126,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     cartTotal.textContent = formatPrice(total) + "đ";
     btnSubmitOrder.disabled = false;
 
-    // Gắn sự kiện thay đổi số lượng và xóa món
     cartItems.querySelectorAll(".qty-input").forEach(input => {
       input.addEventListener("change", (e) => {
         updateQuantity(input.dataset.id, e.target.value);
@@ -143,7 +139,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
-  // Gửi đơn hàng lên API
   orderForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     const orderType = document.querySelector("#order-type").value;

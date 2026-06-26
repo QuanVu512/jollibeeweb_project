@@ -39,7 +39,8 @@
       borderRadius: "8px",
       padding: "13px 15px",
       fontWeight: "800",
-      lineHeight: "1.35"
+      lineHeight: "1.35",
+      fontFamily: "'Nunito', 'Segoe UI', -apple-system, sans-serif"
     });
 
     ensureToastContainer().appendChild(item);
@@ -71,7 +72,8 @@
         background: "#fff",
         borderRadius: "10px",
         boxShadow: "0 20px 48px rgba(0,0,0,0.22)",
-        padding: "22px"
+        padding: "22px",
+        fontFamily: "'Nunito', 'Segoe UI', -apple-system, sans-serif"
       });
 
       const text = document.createElement("p");
@@ -81,7 +83,8 @@
         color: "#2b2b2b",
         fontSize: "17px",
         fontWeight: "800",
-        lineHeight: "1.45"
+        lineHeight: "1.45",
+        fontFamily: "'Nunito', 'Segoe UI', -apple-system, sans-serif"
       });
 
       const actions = document.createElement("div");
@@ -102,7 +105,8 @@
         fontWeight: "900",
         cursor: "pointer",
         background: "#ececec",
-        color: "#2b2b2b"
+        color: "#2b2b2b",
+        fontFamily: "'Nunito', 'Segoe UI', -apple-system, sans-serif"
       });
 
       const confirmButton = document.createElement("button");
@@ -115,7 +119,8 @@
         fontWeight: "900",
         cursor: "pointer",
         background: "#d8262f",
-        color: "#fff"
+        color: "#fff",
+        fontFamily: "'Nunito', 'Segoe UI', -apple-system, sans-serif"
       });
 
       function close(answer) {

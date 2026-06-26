@@ -96,7 +96,6 @@ async function createOrder(req, res) {
     });
   }
 
-  // Đơn hàng tại quầy đi thẳng vào bếp chế biến
   const order = new Order({
     customerName: customerName || "Khách lẻ",
     customerPhone: customerPhone || "",
@@ -108,12 +107,22 @@ async function createOrder(req, res) {
     createdBy: req.user._id
   });
 
-  await order.save();
+  let inventoryResult;
+  await mongoose.connection.transaction(async (session) => {
+    await order.validate();
+    inventoryResult = await deductIngredientsForOrder(order, req.user._id, { session });
+    order.inventoryDeductedAt = new Date();
+    order.inventoryDeductedBy = req.user._id;
+    if (order.statusHistory && order.statusHistory.length > 0) {
+      order.statusHistory[0].note = kitchenStatusNote(order.statusHistory[0].note || "Tạo đơn tại quầy", inventoryResult);
+    }
+    await order.save({ session });
+  });
 
   res.status(201).json({
     success: true,
-    message: "Tạo đơn hàng tại quầy thành công.",
-    data: { order }
+    message: kitchenResponseMessage("Tạo đơn hàng tại quầy thành công.", inventoryResult),
+    data: { order, inventory: inventoryResult }
   });
 }
 
@@ -134,28 +143,40 @@ async function getPreparingOrders(req, res) {
 }
 
 async function acceptOrder(req, res) {
-  const order = await Order.findById(req.params.id);
-  if (!order) {
-    throw new ApiError(404, "Không tìm thấy đơn hàng.");
-  }
+  let savedOrder;
+  let inventoryResult;
 
-  if (order.status !== ORDER_STATUS.PENDING) {
-    throw new ApiError(400, "Đơn hàng này không ở trạng thái chờ duyệt.");
-  }
+  await mongoose.connection.transaction(async (session) => {
+    const order = await Order.findById(req.params.id).session(session);
+    if (!order) {
+      throw new ApiError(404, "Không tìm thấy đơn hàng.");
+    }
 
-  order.status = ORDER_STATUS.PREPARING;
-  order.statusHistory.push({
-    status: ORDER_STATUS.PREPARING,
-    changedBy: req.user._id,
-    note: "Thu ngân chấp nhận đơn hàng chuyển xuống bếp"
+    if (order.status !== ORDER_STATUS.PENDING) {
+      throw new ApiError(400, "Đơn hàng này không ở trạng thái chờ duyệt.");
+    }
+
+    inventoryResult = await deductIngredientsForOrder(order, req.user._id, { session });
+    order.status = ORDER_STATUS.PREPARING;
+    if (!order.inventoryDeductedAt) {
+      order.inventoryDeductedAt = new Date();
+      order.inventoryDeductedBy = req.user._id;
+    }
+    
+    order.statusHistory.push({
+      status: ORDER_STATUS.PREPARING,
+      changedBy: req.user._id,
+      note: kitchenStatusNote("Thu ngân chấp nhận đơn hàng chuyển xuống bếp", inventoryResult)
+    });
+
+    await order.save({ session });
+    savedOrder = order;
   });
-
-  await order.save();
 
   res.json({
     success: true,
-    message: "Đã duyệt đơn hàng và chuyển xuống bếp.",
-    data: { order }
+    message: kitchenResponseMessage("Đã duyệt đơn hàng và chuyển xuống bếp.", inventoryResult),
+    data: { order: savedOrder, inventory: inventoryResult }
   });
 }
 
@@ -200,72 +221,6 @@ async function readyOrder(req, res) {
   });
 }
 
-async function updateProfile(req, res) {
-  const { fullName, phone, hometown, email, birthDate, gender } = req.body;
-
-  const user = await User.findById(req.user._id).populate("employee");
-  if (!user || !user.employee) {
-    throw new ApiError(404, "Không tìm thấy thông tin hồ sơ nhân viên.");
-  }
-
-  const employee = await Employee.findById(user.employee._id);
-  if (!employee) {
-    throw new ApiError(404, "Không tìm thấy hồ sơ nhân viên.");
-  }
-
-  if (fullName) employee.fullName = fullName;
-  if (phone !== undefined) employee.phone = phone;
-  if (hometown !== undefined) employee.hometown = hometown;
-  if (email !== undefined) employee.email = email;
-  if (birthDate !== undefined) employee.birthDate = birthDate ? new Date(birthDate) : null;
-  if (gender !== undefined) employee.gender = gender;
-
-  await employee.save();
-
-  res.json({
-    success: true,
-    message: "Cập nhật thông tin cá nhân thành công.",
-    data: { employee }
-  });
-}
-
-async function changePassword(req, res) {
-  const { oldPassword, newPassword } = req.body;
-
-  if (!oldPassword || !newPassword) {
-    throw new ApiError(400, "Vui lòng nhập mật khẩu cũ và mật khẩu mới.");
-  }
-
-  const user = await User.findById(req.user._id).select("+passwordHash");
-  if (!user || !(await user.comparePassword(oldPassword))) {
-    throw new ApiError(401, "Mật khẩu cũ không chính xác.");
-  }
-
-  user.passwordHash = await User.hashPassword(newPassword);
-  user.tokenVersion = (user.tokenVersion || 0) + 1;
-  await user.save();
-
-  res.clearCookie(config.cookieName, {
-    httpOnly: true,
-    secure: config.nodeEnv === "production",
-    sameSite: "strict",
-    path: "/"
-  });
-
-  res.json({
-    success: true,
-    message: "Đổi mật khẩu thành công. Vui lòng đăng nhập lại."
-  });
-}
-
-async function getProfile(req, res) {
-  const user = await User.findById(req.user._id).populate("employee");
-  if (!user || !user.employee) {
-    throw new ApiError(404, "Không tìm thấy thông tin hồ sơ nhân viên.");
-  }
-  res.json({ success: true, data: { employee: user.employee } });
-}
-
 module.exports = {
   getProducts,
   createOrder,
@@ -274,8 +229,5 @@ module.exports = {
   acceptOrder,
   cancelOrder,
   serveOrder,
-  readyOrder,
-  updateProfile,
-  changePassword,
-  getProfile
+  readyOrder
 };
