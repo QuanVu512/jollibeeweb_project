@@ -17,7 +17,6 @@ const ingredientSchema = new mongoose.Schema(
     supplierName: { type: String, trim: true, maxlength: 160, default: '' },
     baseUnit: { type: String, required: true, trim: true, maxlength: 40 },
     stockQuantity: { type: Number, default: 0, min: 0 },
-    reorderLevel: { type: Number, default: 0, min: 0 },
     packaging: { type: [packagingSchema], default: [] },
     isActive: { type: Boolean, default: true }
   },

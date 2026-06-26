@@ -142,6 +142,61 @@ a {
   align-items: start;
 }
 
+.work-entry-card {
+  margin-bottom: 24px;
+}
+
+.work-entry-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(180px, 1fr));
+  gap: 14px;
+}
+
+.work-entry-link {
+  display: flex;
+  min-height: 88px;
+  align-items: center;
+  gap: 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fbfcfd;
+  color: var(--text);
+  padding: 16px;
+  text-decoration: none;
+  transition: 160ms ease;
+}
+
+.work-entry-link:hover {
+  border-color: var(--brand);
+  background: #fff7f7;
+  transform: translateY(-1px);
+}
+
+.work-entry-icon {
+  display: inline-flex;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--brand);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.work-entry-link strong {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.work-entry-link small {
+  display: block;
+  color: var(--muted);
+  line-height: 1.35;
+}
+
 .card {
   border: 1px solid rgba(0, 0, 0, 0.03);
   border-top: 4px solid var(--brand);
@@ -467,7 +522,8 @@ tbody tr:hover {
 
 @media (max-width: 1000px) {
   .grid-two,
-  .dashboard-cards {
+  .dashboard-cards,
+  .work-entry-grid {
     grid-template-columns: 1fr;
   }
 

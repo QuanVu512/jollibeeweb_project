@@ -14,11 +14,13 @@ async function seedInventoryRecipes() {
       { code: definition.code },
       {
         $set: { ...definition, isActive: true },
-        $setOnInsert: { stockQuantity: 0, reorderLevel: 0 }
+        $setOnInsert: { stockQuantity: 0 }
       },
       { upsert: true, returnDocument: 'after', runValidators: true, setDefaultsOnInsert: true }
     );
   }
+
+  await Ingredient.collection.updateMany({}, { $unset: { reorderLevel: '' } });
 
   const ingredients = await Ingredient.find({
     code: { $in: INGREDIENT_DEFINITIONS.map(item => item.code) }

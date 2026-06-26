@@ -12,7 +12,7 @@ MongoDB gọi “bảng” là **collection**. Hệ thống hiện có 17 collec
 | `customers` | `customerCode`, `fullName`, `phone`, `email`, `birthDate`, `gender`, `addresses`, `loyaltyPoints`, `isActive`, `account`, `createdAt` | Khách mới, khách quay lại, phân nhóm khách hàng và điểm tích lũy |
 | `categories` | `code`, `name`, `slug`, `sortOrder`, `isActive` | Doanh số theo danh mục món |
 | `products` | `productCode`, `name`, `category`, `categoryCode`, `price`, `costPrice`, `stock`, `unit`, `reorderLevel`, `image`, `isActive` | Doanh số món, lợi nhuận, tồn kho thấp và giá trị tồn |
-| `ingredients` | `code`, `name`, `supplierName`, `baseUnit`, `stockQuantity`, `reorderLevel`, `packaging[]`, `isActive` | Tồn nguyên liệu theo đơn vị cơ sở, nhà cung cấp và quy đổi nhập kho/bán lẻ |
+| `ingredients` | `code`, `name`, `supplierName`, `baseUnit`, `stockQuantity`, `packaging[]`, `isActive` | Tồn nguyên liệu theo đơn vị cơ sở, nhà cung cấp và quy đổi nhập kho/bán lẻ |
 | `purchasematerials` | `code`, `name`, `ingredient`, `ingredientCode`, `orderUnit`, `orderUnitLabel`, `stockUnit`, `stockQuantityPerOrderUnit`, `supplierName`, `isActive` | Danh mục nguyên vật liệu đặt hàng theo đơn vị mua, quy đổi về nguyên liệu kiểm kho |
 | `carts` | `customer`, `items[]`, `updatedAt` | Giỏ hàng đang lưu và sản phẩm được quan tâm |
 | `orders` | mã đơn, khách hàng, thời gian, loại/nguồn đơn, tổng tiền, thanh toán, nhân viên xử lý, trạng thái và `items[]` | Collection chính cho doanh thu và hiệu suất vận hành |
