@@ -5,6 +5,7 @@ Phần này chuyển đúng ba chức năng trong thư mục `admin` PHP cũ san
 1. Quản lý hồ sơ nhân viên.
 2. Quản lý tài khoản và phân vai trò nhân viên.
 3. Báo cáo thống kê và xuất Excel.
+4. Gửi thông báo cho khách hàng.
 
 Không triển khai nghiệp vụ đặt hàng, thu ngân, bếp, kho hoặc shipper trong router admin.
 
@@ -39,6 +40,9 @@ MongoDB Atlas
 | Route báo cáo | `backend/src/routes/report.routes.js` |
 | Logic thống kê và Excel | `backend/src/controllers/report.controller.js` |
 | Model đơn dùng cho báo cáo | `backend/src/models/Order.js` |
+| Route thông báo khách hàng | `backend/src/routes/notification.routes.js` |
+| Logic gửi thông báo khách hàng | `backend/src/controllers/notification.controller.js` |
+| Model thông báo khách hàng | `backend/src/models/Notification.js` |
 | Kiểm tra dữ liệu đầu vào | `backend/src/validators/adminValidators.js` |
 | Ghi lịch sử thao tác admin | `backend/src/services/auditService.js` |
 | Xử lý lỗi chung | `backend/src/middleware/errorHandler.js` |
@@ -63,8 +67,10 @@ Tiền tố: `/api/v1/admin`
 | `DELETE` | `/accounts/:id` | Thu hồi tài khoản |
 | `GET` | `/reports/summary` | Doanh thu, số đơn, giá vốn, lợi nhuận và món bán chạy |
 | `GET` | `/reports/export` | Xuất Excel `orders`, `revenue` hoặc `items` |
+| `GET` | `/notifications` | Danh sách thông báo đã gửi cho khách hàng |
+| `POST` | `/notifications` | Lưu thông báo admin gửi cho khách hàng |
 
-Frontend hiện tại vẫn có thể dùng các đường dẫn cũ `/api/v1/employees`, `/api/v1/accounts` và `/api/v1/reports`.
+Frontend hiện tại vẫn có thể dùng các đường dẫn cũ `/api/v1/employees`, `/api/v1/accounts`, `/api/v1/reports` và `/api/v1/notifications`.
 
 ## Logic nhân viên
 
@@ -104,6 +110,12 @@ Báo cáo chỉ tính đơn `completed` và chưa hoàn tiền:
 - Món bán chạy: cộng `items.quantity` theo món.
 - Có thể lọc theo `from=YYYY-MM-DD` và `to=YYYY-MM-DD`.
 
+## Logic thông báo khách hàng
+
+- Admin nhập tiêu đề, nội dung, nhóm khách nhận và mức độ thông báo.
+- Backend lưu vào collection `notifications`, kèm người tạo, thời điểm gửi và số khách thuộc nhóm nhận tại thời điểm tạo.
+- Hiện chưa cần giao diện khách hàng; sau này frontend khách hàng chỉ cần truy vấn collection/API tương ứng để hiển thị.
+
 ## File frontend gọi API
 
 | Trang | JavaScript |
@@ -111,6 +123,7 @@ Báo cáo chỉ tính đơn `completed` và chưa hoàn tiền:
 | Quản lý tài khoản | `admin/assets/js/accounts.js` |
 | Hồ sơ nhân viên | `admin/assets/js/staff.js` |
 | Báo cáo | `admin/assets/js/report.js` |
+| Thông báo khách hàng | `admin/assets/js/notifications.js` |
 | Hàm gọi API chung | `admin/assets/js/api.js` |
 
 Các thành viên khác có thể sao chép cấu trúc route → validator → controller → model của phần admin, rồi thay model và quyền tương ứng với module của họ.

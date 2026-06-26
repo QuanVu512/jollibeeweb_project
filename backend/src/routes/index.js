@@ -8,6 +8,7 @@ const adminRoutes = require("./admin.routes");
 const shipperRoutes = require("./shipper.routes");
 const kitchenRoutes = require("./kitchen.routes");
 const banhangRoutes = require("./banhang.routes");
+const notificationRoutes = require("./notification.routes");
 
 const { authenticate, authorize } = require("../middleware/auth");
 const { ROLES } = require("../constants/roles");
@@ -25,6 +26,7 @@ router.use("/admin", ...adminOnly, adminRoutes);
 router.use("/employees", ...adminOnly, employeeRoutes);
 router.use("/accounts", ...adminOnly, accountRoutes);
 router.use("/reports", ...adminOnly, reportRoutes);
+router.use("/notifications", ...adminOnly, notificationRoutes);
 
 router.use("/shipper", ...shipperOnly, shipperRoutes);
 router.use("/kitchen", kitchenRoutes);

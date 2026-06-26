@@ -12,6 +12,8 @@ const { INGREDIENT_DEFINITIONS, ORDER_MATERIAL_DEFINITIONS, RECIPE_DEFINITIONS }
 const { getRoleLandingPage } = require('../src/constants/roleLandingPages');
 const { ROLES } = require('../src/constants/roles');
 const { calculateRecipeDeductions } = require('../src/services/inventoryRecipeService');
+const Notification = require('../src/models/Notification');
+const { validateNotificationPayload } = require('../src/validators/notificationValidators');
 
 test('kiểm tra và chuẩn hóa dữ liệu nhân viên', () => {
   const result = validateEmployeePayload({
@@ -207,6 +209,36 @@ test('báo rõ món chưa có công thức kho', () => {
   assert.deepEqual(result.missingRecipes, [
     { productCode: 'MON0099', name: 'Món chưa cấu hình' }
   ]);
+});
+
+test('kiểm tra dữ liệu thông báo khách hàng', async () => {
+  const payload = validateNotificationPayload({
+    title: '  Ưu đãi cuối tuần  ',
+    message: '  Giảm giá cho khách hàng thân thiết.  ',
+    audience: 'active_customers',
+    priority: 'important'
+  });
+
+  assert.deepEqual(payload, {
+    title: 'Ưu đãi cuối tuần',
+    message: 'Giảm giá cho khách hàng thân thiết.',
+    audience: 'active_customers',
+    priority: 'important'
+  });
+
+  const notification = new Notification({ ...payload, recipientCount: 12 });
+  await notification.validate();
+  assert.equal(notification.status, 'sent');
+  assert.equal(notification.recipientCount, 12);
+
+  assert.throws(
+    () => validateNotificationPayload({ title: '', message: 'Nội dung' }),
+    /tiêu đề/
+  );
+  assert.throws(
+    () => validateNotificationPayload({ title: 'Tiêu đề', message: 'Nội dung', audience: 'staff' }),
+    /Nhóm khách/
+  );
 });
 
 test('mỗi vai trò đăng nhập được chuyển đến đúng khu vực', () => {

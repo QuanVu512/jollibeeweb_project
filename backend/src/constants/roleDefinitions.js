@@ -5,7 +5,7 @@ const ROLE_DEFINITIONS = Object.freeze([
     key: ROLES.ADMIN,
     label: ROLE_LABELS[ROLES.ADMIN],
     description: 'Quản lý nhân viên, tài khoản, báo cáo và cấu hình hệ thống.',
-    permissions: ['employees.manage', 'accounts.manage', 'roles.view', 'reports.view', 'reports.export']
+    permissions: ['employees.manage', 'accounts.manage', 'roles.view', 'reports.view', 'reports.export', 'notifications.manage']
   },
   {
     key: ROLES.CASHIER,

@@ -16,6 +16,7 @@ const Counter = require('../models/Counter');
 const Ingredient = require('../models/Ingredient');
 const PurchaseMaterial = require('../models/PurchaseMaterial');
 const Recipe = require('../models/Recipe');
+const Notification = require('../models/Notification');
 
 const MODELS = [
   Role,
@@ -33,7 +34,8 @@ const MODELS = [
   Counter,
   Ingredient,
   PurchaseMaterial,
-  Recipe
+  Recipe,
+  Notification
 ];
 
 async function ensureCollection(Model) {
