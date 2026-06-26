@@ -8,7 +8,7 @@ const {
 } = require('../src/validators/adminValidators');
 const { pagination, dateRange } = require('../src/utils/adminQuery');
 const Order = require('../src/models/Order');
-const { INGREDIENT_DEFINITIONS, RECIPE_DEFINITIONS } = require('../src/data/inventoryRecipes');
+const { INGREDIENT_DEFINITIONS, ORDER_MATERIAL_DEFINITIONS, RECIPE_DEFINITIONS } = require('../src/data/inventoryRecipes');
 const { getRoleLandingPage } = require('../src/constants/roleLandingPages');
 const { ROLES } = require('../src/constants/roles');
 const { calculateRecipeDeductions } = require('../src/services/inventoryRecipeService');
@@ -125,6 +125,26 @@ test('công thức món ăn chỉ tham chiếu nguyên liệu đã khai báo', (
       assert.ok(item.quantityBase > 0);
     }
   }
+});
+
+test('nguyên vật liệu đặt hàng dùng đơn vị đặt riêng và quy đổi về kho', () => {
+  const byCode = new Map(INGREDIENT_DEFINITIONS.map(item => [item.code, item]));
+  assert.equal(ORDER_MATERIAL_DEFINITIONS.length, INGREDIENT_DEFINITIONS.length);
+
+  for (const item of ORDER_MATERIAL_DEFINITIONS) {
+    const ingredient = byCode.get(item.ingredientCode);
+    assert.ok(ingredient);
+    assert.ok(['case', 'bag', 'pack', 'pcs'].includes(item.orderUnit));
+    const packaging = ingredient.packaging.find(unit => unit.unit === item.orderUnit);
+    assert.ok(packaging);
+    assert.ok(packaging.baseQuantity > 0);
+  }
+
+  const orderUnit = (code) => ORDER_MATERIAL_DEFINITIONS.find(item => item.ingredientCode === code).orderUnit;
+  assert.equal(orderUnit('GAO'), 'bag');
+  assert.equal(orderUnit('CA_CHUA'), 'pcs');
+  assert.equal(orderUnit('KHOAI_TAY'), 'case');
+  assert.equal(orderUnit('GA_MIENG'), 'case');
 });
 
 test('công thức mới trừ đúng đơn vị theo món bán', () => {

@@ -1,6 +1,6 @@
 # Thiết kế dữ liệu MongoDB Atlas
 
-MongoDB gọi “bảng” là **collection**. Hệ thống hiện có 13 collection; khi backend khởi động, các collection và index cần thiết sẽ được tự tạo trên database `jollibee`.
+MongoDB gọi “bảng” là **collection**. Hệ thống hiện có 17 collection; khi backend khởi động, các collection và index cần thiết sẽ được tự tạo trên database `jollibee`.
 
 ## Danh sách collection và thuộc tính quan trọng
 
@@ -13,6 +13,7 @@ MongoDB gọi “bảng” là **collection**. Hệ thống hiện có 13 collec
 | `categories` | `code`, `name`, `slug`, `sortOrder`, `isActive` | Doanh số theo danh mục món |
 | `products` | `productCode`, `name`, `category`, `categoryCode`, `price`, `costPrice`, `stock`, `unit`, `reorderLevel`, `image`, `isActive` | Doanh số món, lợi nhuận, tồn kho thấp và giá trị tồn |
 | `ingredients` | `code`, `name`, `supplierName`, `baseUnit`, `stockQuantity`, `reorderLevel`, `packaging[]`, `isActive` | Tồn nguyên liệu theo đơn vị cơ sở, nhà cung cấp và quy đổi nhập kho/bán lẻ |
+| `purchasematerials` | `code`, `name`, `ingredient`, `ingredientCode`, `orderUnit`, `orderUnitLabel`, `stockUnit`, `stockQuantityPerOrderUnit`, `supplierName`, `isActive` | Danh mục nguyên vật liệu đặt hàng theo đơn vị mua, quy đổi về nguyên liệu kiểm kho |
 | `carts` | `customer`, `items[]`, `updatedAt` | Giỏ hàng đang lưu và sản phẩm được quan tâm |
 | `orders` | mã đơn, khách hàng, thời gian, loại/nguồn đơn, tổng tiền, thanh toán, nhân viên xử lý, trạng thái và `items[]` | Collection chính cho doanh thu và hiệu suất vận hành |
 | `suppliers` | `supplierCode`, `name`, `contactName`, `phone`, `email`, `address`, `taxCode`, `isActive` | Chi phí và số lần nhập theo nhà cung cấp |
@@ -24,6 +25,8 @@ MongoDB gọi “bảng” là **collection**. Hệ thống hiện có 13 collec
 ## Quy chuẩn đơn vị nguyên liệu
 
 `ingredients.packaging[].unit` dùng thống nhất 4 mã: `case` = thùng, `bag` = túi lớn, `pack` = túi nilon chứa đồ nhỏ, `pcs` = cái. `baseUnit` vẫn có thể là đơn vị kiểm kho như `kg` hoặc `gram` khi nguyên liệu cần cân đo trực tiếp.
+
+`purchasematerials` là bảng dùng cho đặt hàng nhà cung cấp. Mỗi dòng trỏ về một `ingredients` tương ứng và lưu `stockQuantityPerOrderUnit` để biết 1 đơn vị đặt hàng nhập vào kho thành bao nhiêu đơn vị kiểm kho. Ví dụ gạo đặt theo `bag` và vào kho thành `20 kg`; cà chua đặt theo `pcs` và vào kho thành `1 pcs`.
 
 ## Đơn hàng và chi tiết đơn hàng
 

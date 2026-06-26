@@ -157,6 +157,25 @@ const INGREDIENT_DEFINITIONS = Object.freeze([
   }
 ]);
 
+const ORDER_MATERIAL_DEFINITIONS = Object.freeze([
+  { code: 'BOT_CHIEN_GA', ingredientCode: 'BOT_CHIEN_GA', orderUnit: 'case', note: 'Đặt bột chiên gà theo thùng.' },
+  { code: 'MI', ingredientCode: 'MI', orderUnit: 'case', note: 'Đặt mì theo thùng.' },
+  { code: 'MUOI', ingredientCode: 'MUOI', orderUnit: 'bag', note: 'Đặt muối theo túi lớn.' },
+  { code: 'SOT_MI', ingredientCode: 'SOT_MI', orderUnit: 'case', note: 'Đặt sốt mì theo thùng.' },
+  { code: 'PHO_MAI_BAO', ingredientCode: 'PHO_MAI_BAO', orderUnit: 'pack', note: 'Đặt phô mai bào theo pack.' },
+  { code: 'CA_CHUA', ingredientCode: 'CA_CHUA', orderUnit: 'pcs', note: 'Đặt cà chua theo cái/quả.' },
+  { code: 'XA_LACH', ingredientCode: 'XA_LACH', orderUnit: 'bag', note: 'Đặt xà lách theo túi lớn.' },
+  { code: 'CHICKEN_STRIP', ingredientCode: 'CHICKEN_STRIP', orderUnit: 'case', note: 'Đặt gà không xương theo thùng.' },
+  { code: 'GA_MIENG', ingredientCode: 'GA_MIENG', orderUnit: 'case', note: 'Đặt gà miếng theo thùng.' },
+  { code: 'BANH_NHAN_TOM', ingredientCode: 'BANH_NHAN_TOM', orderUnit: 'case', note: 'Đặt bánh nhân tôm theo thùng.' },
+  { code: 'BANH_XOAI_DAO', ingredientCode: 'BANH_XOAI_DAO', orderUnit: 'case', note: 'Đặt bánh xoài đào theo thùng.' },
+  { code: 'GAO', ingredientCode: 'GAO', orderUnit: 'bag', note: 'Đặt gạo theo túi lớn.' },
+  { code: 'KHOAI_TAY', ingredientCode: 'KHOAI_TAY', orderUnit: 'case', note: 'Đặt khoai tây theo thùng.' },
+  { code: 'BOT_KEM_VANI', ingredientCode: 'BOT_KEM_VANI', orderUnit: 'case', note: 'Đặt bột kem vani theo thùng.' },
+  { code: 'SOT_CAY', ingredientCode: 'SOT_CAY', orderUnit: 'case', note: 'Đặt sốt cay theo thùng.' },
+  { code: 'PEPSI', ingredientCode: 'PEPSI', orderUnit: 'case', note: 'Đặt Pepsi theo thùng.' }
+]);
+
 const RECIPE_DEFINITIONS = Object.freeze([
   {
     recipeCode: 'MON0001_GA_GION_1_MIENG',
@@ -304,4 +323,4 @@ const RECIPE_DEFINITIONS = Object.freeze([
   }
 ]);
 
-module.exports = { INGREDIENT_DEFINITIONS, RECIPE_DEFINITIONS };
+module.exports = { INGREDIENT_DEFINITIONS, ORDER_MATERIAL_DEFINITIONS, RECIPE_DEFINITIONS };

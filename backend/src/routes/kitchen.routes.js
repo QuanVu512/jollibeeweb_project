@@ -1,5 +1,6 @@
 const express = require('express');
 const Ingredient = require('../models/Ingredient');
+const PurchaseMaterial = require('../models/PurchaseMaterial');
 const { renderKitchenPage } = require('../services/kitchenView');
 const { authenticate, authorize } = require('../middleware/auth');
 const { ROLES } = require('../constants/roles');
@@ -15,6 +16,14 @@ router.get('/view', authenticate, authorize(ROLES.KITCHEN), (_req, res) => {
 router.get('/ingredients', authenticate, authorize(ROLES.KITCHEN), asyncHandler(async (_req, res) => {
   const ingredients = await Ingredient.find({}).sort({ createdAt: -1 }).lean();
   res.json({ success: true, data: ingredients });
+}));
+
+router.get('/purchase-materials', authenticate, authorize(ROLES.KITCHEN), asyncHandler(async (_req, res) => {
+  const items = await PurchaseMaterial.find({ isActive: true })
+    .populate('ingredient', 'code name baseUnit stockQuantity')
+    .sort({ name: 1 })
+    .lean();
+  res.json({ success: true, data: items });
 }));
 
 router.post('/ingredients', authenticate, authorize(ROLES.KITCHEN), asyncHandler(async (req, res) => {
