@@ -135,11 +135,23 @@ function setupLogoutButton() {
 
   if (!logoutBtn) return;
 
-  logoutBtn.addEventListener("click", () => {
+  logoutBtn.addEventListener("click", async () => {
     const confirmLogout = confirm("Bạn có chắc muốn đăng xuất không?");
 
     if (!confirmLogout) return;
 
-    window.location.href = "/admin/index.html";
+    logoutBtn.disabled = true;
+    logoutBtn.textContent = "Đang đăng xuất...";
+
+    try {
+      await fetch("/api/v1/auth/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+    } catch (error) {
+      console.error("Lỗi đăng xuất:", error);
+    } finally {
+      location.replace("/admin/login.html");
+    }
   });
 }
