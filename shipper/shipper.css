@@ -22,7 +22,6 @@
 }
 
 * {
-  font-family: "Nunito", sans-serif;
   box-sizing: border-box;
 }
 
@@ -30,6 +29,14 @@ body {
   margin: 0;
   background-color: var(--page-bg);
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='150' height='150'><text x='10' y='40' font-size='20' opacity='0.08'>🍅</text><text x='80' y='20' font-size='20' opacity='0.08'>🍗</text><text x='60' y='100' font-size='20' opacity='0.08'>🌶️</text></svg>");
+  font-family: "Segoe UI", Arial, sans-serif;
+  color: var(--text-main);
+}
+
+button,
+input,
+select {
+  font: inherit;
 }
 
 /* =========================================================
@@ -149,11 +156,12 @@ body {
   cursor: pointer;
   color: white;
   text-decoration: none;
-  margin: 0 20px;
-  font-weight: 900;
+  margin: 0 24px;
+  font-weight: 700;
   font-size: 16px;
   padding: 8px 4px;
   border-bottom: 3px solid transparent;
+  letter-spacing: 0;
 }
 
 .nav-link.active,
