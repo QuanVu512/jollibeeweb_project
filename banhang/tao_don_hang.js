@@ -19,7 +19,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         await fetch("/api/v1/auth/logout", { method: "POST" });
         location.replace("/admin/login.html");
       } catch (err) {
-        alert("Đăng xuất thất bại!");
+        window.BanhangUi.toast("Đăng xuất thất bại.", "error");
       }
     });
 
@@ -160,7 +160,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     btnSubmitOrder.textContent = "Đang đặt hàng...";
 
     try {
-      await window.BanhangApi.request("/orders", {
+      const result = await window.BanhangApi.request("/orders", {
         method: "POST",
         body: JSON.stringify({
           customerName,
@@ -171,13 +171,18 @@ document.addEventListener("DOMContentLoaded", async () => {
         })
       });
 
-      alert("Đặt hàng thành công!");
+      const orderCode = result?.data?.order?.orderCode;
+      window.BanhangUi.toast(
+        orderCode ? `Đã tạo đơn ${orderCode}. Đơn đã chuyển xuống bếp.` : "Đặt hàng thành công. Đơn đã chuyển xuống bếp.",
+        "success",
+        4500
+      );
       cart = {};
       orderForm.reset();
       renderCart();
-      location.href = "bep_che_bien.html";
+      btnSubmitOrder.textContent = "Đặt hàng";
     } catch (err) {
-      alert("Lỗi đặt đơn: " + err.message);
+      window.BanhangUi.toast("Lỗi đặt đơn: " + err.message, "error", 5200);
       btnSubmitOrder.disabled = false;
       btnSubmitOrder.textContent = "Đặt hàng";
     }

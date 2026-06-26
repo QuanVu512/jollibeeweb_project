@@ -12,6 +12,7 @@ MongoDB gọi “bảng” là **collection**. Hệ thống hiện có 13 collec
 | `customers` | `customerCode`, `fullName`, `phone`, `email`, `birthDate`, `gender`, `addresses`, `loyaltyPoints`, `isActive`, `account`, `createdAt` | Khách mới, khách quay lại, phân nhóm khách hàng và điểm tích lũy |
 | `categories` | `code`, `name`, `slug`, `sortOrder`, `isActive` | Doanh số theo danh mục món |
 | `products` | `productCode`, `name`, `category`, `categoryCode`, `price`, `costPrice`, `stock`, `unit`, `reorderLevel`, `image`, `isActive` | Doanh số món, lợi nhuận, tồn kho thấp và giá trị tồn |
+| `ingredients` | `code`, `name`, `supplierName`, `baseUnit`, `stockQuantity`, `reorderLevel`, `packaging[]`, `isActive` | Tồn nguyên liệu theo đơn vị cơ sở, nhà cung cấp và quy đổi nhập kho/bán lẻ |
 | `carts` | `customer`, `items[]`, `updatedAt` | Giỏ hàng đang lưu và sản phẩm được quan tâm |
 | `orders` | mã đơn, khách hàng, thời gian, loại/nguồn đơn, tổng tiền, thanh toán, nhân viên xử lý, trạng thái và `items[]` | Collection chính cho doanh thu và hiệu suất vận hành |
 | `suppliers` | `supplierCode`, `name`, `contactName`, `phone`, `email`, `address`, `taxCode`, `isActive` | Chi phí và số lần nhập theo nhà cung cấp |
@@ -19,6 +20,10 @@ MongoDB gọi “bảng” là **collection**. Hệ thống hiện có 13 collec
 | `paymenttransactions` | `order`, `type`, `method`, `amount`, `status`, `transactionReference`, `processedBy`, `processedAt` | Tiền thu/hoàn, tỷ lệ giao dịch thành công và phương thức thanh toán |
 | `auditlogs` | `actor`, `action`, `entityType`, `entityId`, `before`, `after`, `ipAddress`, `createdAt` | Truy vết ai thay đổi dữ liệu và thời điểm thay đổi |
 | `counters` | `_id`, `sequence` | Sinh mã liên tục `NV`, `KH`, `MON`, `NCC`, `DH` |
+
+## Quy chuẩn đơn vị nguyên liệu
+
+`ingredients.packaging[].unit` dùng thống nhất 4 mã: `case` = thùng, `bag` = túi lớn, `pack` = túi nilon chứa đồ nhỏ, `pcs` = cái. `baseUnit` vẫn có thể là đơn vị kiểm kho như `kg` hoặc `gram` khi nguyên liệu cần cân đo trực tiếp.
 
 ## Đơn hàng và chi tiết đơn hàng
 

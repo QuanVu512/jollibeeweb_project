@@ -26,7 +26,7 @@ document.addEventListener("DOMContentLoaded", () => {
         await fetch("/api/v1/auth/logout", { method: "POST" });
         location.replace("/admin/login.html");
       } catch (err) {
-        alert("Đăng xuất thất bại!");
+        window.BanhangUi.toast("Đăng xuất thất bại.", "error");
       }
     });
 
@@ -37,6 +37,25 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const dineInTickets = document.querySelector("#dine-in-tickets");
   const deliveryTickets = document.querySelector("#delivery-tickets");
+
+  function canCompleteKitchenOrders() {
+    const role = window.RoleGuard?.user?.role;
+    return role === "cashier" || role === "admin";
+  }
+
+  function disabledKitchenButton() {
+    return `
+      <button class="btn-action" disabled title="Cần tài khoản thu ngân hoặc quản trị" style="background:#8d8d8d; box-shadow:none; cursor:not-allowed;">
+        CẦN QUYỀN THU NGÂN
+      </button>
+    `;
+  }
+
+  function showKitchenResult(result, fallbackMessage) {
+    const inventory = result?.data?.inventory;
+    const type = inventory?.missingRecipes?.length ? "warning" : "success";
+    window.BanhangUi.toast(result?.message || fallbackMessage, type, type === "warning" ? 6500 : 3800);
+  }
 
   async function loadPreparingOrders() {
     try {
@@ -51,6 +70,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function renderTickets(orders) {
     const dineInOrders = orders.filter(o => o.orderType === "dine_in");
     const deliveryOrders = orders.filter(o => o.orderType === "delivery" || o.orderType === "pickup");
+    const canComplete = canCompleteKitchenOrders();
 
     // 1. Render Ăn tại chỗ
     if (dineInOrders.length === 0) {
@@ -72,14 +92,18 @@ document.addEventListener("DOMContentLoaded", () => {
               </li>
             `).join("")}
           </ul>
-          <button class="btn-action btn-serve" data-id="${order._id}" style="background:#007bff; box-shadow: 0 4px 0 #0056b3;">🍽️ PHỤC VỤ XONG</button>
+          ${canComplete
+            ? `<button class="btn-action btn-serve" data-id="${order._id}" style="background:#007bff; box-shadow: 0 4px 0 #0056b3;">🍽️ PHỤC VỤ XONG</button>`
+            : disabledKitchenButton()}
         </div>
       `).join("");
 
       // Gắn sự kiện phục vụ xong
-      dineInTickets.querySelectorAll(".btn-serve").forEach(btn => {
-        btn.addEventListener("click", () => handleServe(btn.dataset.id, btn));
-      });
+      if (canComplete) {
+        dineInTickets.querySelectorAll(".btn-serve").forEach(btn => {
+          btn.addEventListener("click", () => handleServe(btn.dataset.id, btn));
+        });
+      }
     }
 
     // 2. Render Giao hàng / Mang đi
@@ -105,38 +129,50 @@ document.addEventListener("DOMContentLoaded", () => {
                 </li>
               `).join("")}
             </ul>
-            <button class="btn-action btn-ready" data-id="${order._id}" style="background:#28a745; box-shadow: 0 4px 0 #1e7e34;">🛵 LÀM XONG</button>
+            ${canComplete
+              ? `<button class="btn-action btn-ready" data-id="${order._id}" style="background:#28a745; box-shadow: 0 4px 0 #1e7e34;">🛵 LÀM XONG</button>`
+              : disabledKitchenButton()}
           </div>
         `;
       }).join("");
 
       // Gắn sự kiện làm xong
-      deliveryTickets.querySelectorAll(".btn-ready").forEach(btn => {
-        btn.addEventListener("click", () => handleReady(btn.dataset.id, btn));
-      });
+      if (canComplete) {
+        deliveryTickets.querySelectorAll(".btn-ready").forEach(btn => {
+          btn.addEventListener("click", () => handleReady(btn.dataset.id, btn));
+        });
+      }
     }
   }
 
   async function handleServe(id, btn) {
-    if (!confirm("Xác nhận phục vụ xong đơn này?")) return;
+    const confirmed = await window.BanhangUi.confirm("Xác nhận phục vụ xong đơn này?", {
+      confirmText: "Phục vụ xong"
+    });
+    if (!confirmed) return;
     try {
       btn.disabled = true;
-      await window.BanhangApi.request(`/orders/${id}/serve`, { method: "PATCH" });
+      const result = await window.BanhangApi.request(`/orders/${id}/serve`, { method: "PATCH" });
+      showKitchenResult(result, "Đơn hàng đã được phục vụ.");
       loadPreparingOrders();
     } catch (err) {
-      alert("Lỗi: " + err.message);
+      window.BanhangUi.toast("Lỗi: " + err.message, "error", 5600);
       btn.disabled = false;
     }
   }
 
   async function handleReady(id, btn) {
-    if (!confirm("Xác nhận đơn hàng đã chế biến xong, chờ giao hàng?")) return;
+    const confirmed = await window.BanhangUi.confirm("Xác nhận đơn hàng đã chế biến xong, chờ giao hàng?", {
+      confirmText: "Làm xong"
+    });
+    if (!confirmed) return;
     try {
       btn.disabled = true;
-      await window.BanhangApi.request(`/orders/${id}/ready`, { method: "PATCH" });
+      const result = await window.BanhangApi.request(`/orders/${id}/ready`, { method: "PATCH" });
+      showKitchenResult(result, "Đơn hàng đã sẵn sàng giao.");
       loadPreparingOrders();
     } catch (err) {
-      alert("Lỗi: " + err.message);
+      window.BanhangUi.toast("Lỗi: " + err.message, "error", 5600);
       btn.disabled = false;
     }
   }

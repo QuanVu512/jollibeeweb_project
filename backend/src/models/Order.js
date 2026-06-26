@@ -64,6 +64,8 @@ const orderSchema = new mongoose.Schema(
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
     acceptedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
     preparedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+    inventoryDeductedAt: { type: Date, default: null },
+    inventoryDeductedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
     assignedShipper: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
     statusHistory: { type: [statusHistorySchema], default: [] },
     notes: { type: String, trim: true, maxlength: 500, default: '' },

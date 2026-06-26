@@ -15,7 +15,7 @@ async function seedInventoryRecipes() {
         $set: { ...definition, isActive: true },
         $setOnInsert: { stockQuantity: 0, reorderLevel: 0 }
       },
-      { upsert: true, new: true, runValidators: true, setDefaultsOnInsert: true }
+      { upsert: true, returnDocument: 'after', runValidators: true, setDefaultsOnInsert: true }
     );
   }
 
@@ -48,7 +48,7 @@ async function seedInventoryRecipes() {
         },
         $setOnInsert: { version: 1 }
       },
-      { upsert: true, new: true, runValidators: true, setDefaultsOnInsert: true }
+      { upsert: true, returnDocument: 'after', runValidators: true, setDefaultsOnInsert: true }
     );
   }
 

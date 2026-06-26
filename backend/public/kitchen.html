@@ -111,6 +111,10 @@
                   <input id="name" name="name" required placeholder="VD: Bột chiên gà" />
                 </div>
                 <div class="form-group">
+                  <label for="supplierName">Nhà cung cấp</label>
+                  <input id="supplierName" name="supplierName" placeholder="VD: xưởng cung cấp gà ướp G" />
+                </div>
+                <div class="form-group">
                   <label for="baseUnit">Đơn vị</label>
                   <input id="baseUnit" name="baseUnit" required placeholder="VD: kg" />
                 </div>
@@ -149,6 +153,7 @@
               <tr>
                 <th>Mã</th>
                 <th>Tên</th>
+                <th>Nhà cung cấp</th>
                 <th>Đơn vị</th>
                 <th>Tồn kho</th>
                 <th>Mức cảnh báo</th>
@@ -230,7 +235,7 @@
 
     function renderTable() {
       if (!state.ingredients.length) {
-        inventoryTableBody.innerHTML = '<tr><td colspan="7" class="muted">Chưa có nguyên liệu nào. Hãy thêm nguyên liệu đầu tiên.</td></tr>';
+        inventoryTableBody.innerHTML = '<tr><td colspan="8" class="muted">Chưa có nguyên liệu nào. Hãy thêm nguyên liệu đầu tiên.</td></tr>';
         return;
       }
 
@@ -238,6 +243,7 @@
         <tr>
           <td>${item.code}</td>
           <td>${item.name}</td>
+          <td>${item.supplierName || '<span class="muted">Chưa ghi</span>'}</td>
           <td>${item.baseUnit}</td>
           <td>${item.stockQuantity}</td>
           <td>${item.reorderLevel}</td>
@@ -281,6 +287,7 @@
       const payload = {
         code: document.getElementById('code').value.trim().toUpperCase(),
         name: document.getElementById('name').value.trim(),
+        supplierName: document.getElementById('supplierName').value.trim(),
         baseUnit: document.getElementById('baseUnit').value.trim(),
         stockQuantity: Number(document.getElementById('stockQuantity').value || 0),
         reorderLevel: Number(document.getElementById('reorderLevel').value || 0),
@@ -315,6 +322,7 @@
         state.editingId = item._id;
         document.getElementById('code').value = item.code;
         document.getElementById('name').value = item.name;
+        document.getElementById('supplierName').value = item.supplierName || '';
         document.getElementById('baseUnit').value = item.baseUnit;
         document.getElementById('stockQuantity').value = item.stockQuantity;
         document.getElementById('reorderLevel').value = item.reorderLevel;

@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const Order = require("../models/Order");
 const Product = require("../models/Product");
 const User = require("../models/User");
@@ -5,6 +6,64 @@ const Employee = require("../models/Employee");
 const ApiError = require("../utils/ApiError");
 const { ORDER_STATUS } = require("../constants/orderStatus");
 const { config } = require("../config/env");
+const { deductIngredientsForOrder } = require("../services/inventoryRecipeService");
+
+function summarizeMissingRecipes(missingRecipes) {
+  if (!missingRecipes || missingRecipes.length === 0) return "";
+  const names = missingRecipes.slice(0, 3).map(item => item.name || item.productCode).join(", ");
+  const suffix = missingRecipes.length > 3 ? ` và ${missingRecipes.length - 3} món khác` : "";
+  return ` Chưa trừ kho cho món chưa có công thức: ${names}${suffix}.`;
+}
+
+function kitchenStatusNote(baseNote, inventoryResult) {
+  return `${baseNote}${summarizeMissingRecipes(inventoryResult?.missingRecipes)}`.slice(0, 300);
+}
+
+function kitchenResponseMessage(baseMessage, inventoryResult) {
+  const missingSummary = summarizeMissingRecipes(inventoryResult?.missingRecipes);
+  if (!missingSummary) return baseMessage;
+  return `${baseMessage}${missingSummary}`;
+}
+
+async function finishPreparingOrder(req, res, options) {
+  let savedOrder;
+  let inventoryResult = { deducted: [], missingRecipes: [], alreadyDeducted: false };
+
+  await mongoose.connection.transaction(async (session) => {
+    const order = await Order.findById(req.params.id).session(session);
+    if (!order) {
+      throw new ApiError(404, "Không tìm thấy đơn hàng.");
+    }
+
+    if (order.status !== ORDER_STATUS.PREPARING) {
+      throw new ApiError(400, "Đơn hàng không ở trạng thái đang chế biến.");
+    }
+
+    inventoryResult = await deductIngredientsForOrder(order, req.user._id, { session });
+
+    order.status = options.status;
+    order.preparedBy = req.user._id;
+    if (!order.inventoryDeductedAt) {
+      order.inventoryDeductedAt = new Date();
+      order.inventoryDeductedBy = req.user._id;
+    }
+
+    order.statusHistory.push({
+      status: options.status,
+      changedBy: req.user._id,
+      note: kitchenStatusNote(options.note, inventoryResult)
+    });
+
+    await order.save({ session });
+    savedOrder = order;
+  });
+
+  res.json({
+    success: true,
+    message: kitchenResponseMessage(options.message, inventoryResult),
+    data: { order: savedOrder, inventory: inventoryResult }
+  });
+}
 
 async function getProducts(req, res) {
   const items = await Product.find({ isActive: true }).sort({ name: 1 });
@@ -126,54 +185,18 @@ async function cancelOrder(req, res) {
 }
 
 async function serveOrder(req, res) {
-  const order = await Order.findById(req.params.id);
-  if (!order) {
-    throw new ApiError(404, "Không tìm thấy đơn hàng.");
-  }
-
-  if (order.status !== ORDER_STATUS.PREPARING) {
-    throw new ApiError(400, "Đơn hàng không ở trạng thái đang chế biến.");
-  }
-
-  order.status = ORDER_STATUS.COMPLETED;
-  order.statusHistory.push({
+  return finishPreparingOrder(req, res, {
     status: ORDER_STATUS.COMPLETED,
-    changedBy: req.user._id,
-    note: "Bếp hoàn thành chế biến và phục vụ tại bàn"
-  });
-
-  await order.save();
-
-  res.json({
-    success: true,
-    message: "Đơn hàng đã được phục vụ.",
-    data: { order }
+    note: "Bếp hoàn thành chế biến và phục vụ tại bàn",
+    message: "Đơn hàng đã được phục vụ."
   });
 }
 
 async function readyOrder(req, res) {
-  const order = await Order.findById(req.params.id);
-  if (!order) {
-    throw new ApiError(404, "Không tìm thấy đơn hàng.");
-  }
-
-  if (order.status !== ORDER_STATUS.PREPARING) {
-    throw new ApiError(400, "Đơn hàng không ở trạng thái đang chế biến.");
-  }
-
-  order.status = ORDER_STATUS.READY_FOR_DELIVERY;
-  order.statusHistory.push({
+  return finishPreparingOrder(req, res, {
     status: ORDER_STATUS.READY_FOR_DELIVERY,
-    changedBy: req.user._id,
-    note: "Bếp hoàn thành chế biến, chờ giao hàng"
-  });
-
-  await order.save();
-
-  res.json({
-    success: true,
-    message: "Đơn hàng đã sẵn sàng giao.",
-    data: { order }
+    note: "Bếp hoàn thành chế biến, chờ giao hàng",
+    message: "Đơn hàng đã sẵn sàng giao."
   });
 }
 

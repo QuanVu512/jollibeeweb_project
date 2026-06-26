@@ -7,7 +7,6 @@ const { ROLES } = require("../constants/roles");
 const router = express.Router();
 
 const cashierOrAdmin = authorize(ROLES.CASHIER, ROLES.ADMIN);
-const kitchenOrAdmin = authorize(ROLES.KITCHEN, ROLES.ADMIN);
 const anyStaff = authorize(ROLES.CASHIER, ROLES.KITCHEN, ROLES.ADMIN);
 
 // Thu ngân (Cashier)
@@ -19,8 +18,8 @@ router.patch("/orders/:id/cancel", cashierOrAdmin, asyncHandler(controller.cance
 
 // Bếp (Kitchen) / Thu ngân cũng có thể xem
 router.get("/orders/preparing", anyStaff, asyncHandler(controller.getPreparingOrders));
-router.patch("/orders/:id/serve", kitchenOrAdmin, asyncHandler(controller.serveOrder));
-router.patch("/orders/:id/ready", kitchenOrAdmin, asyncHandler(controller.readyOrder));
+router.patch("/orders/:id/serve", cashierOrAdmin, asyncHandler(controller.serveOrder));
+router.patch("/orders/:id/ready", cashierOrAdmin, asyncHandler(controller.readyOrder));
 
 // Tài khoản chung
 router.get("/profile", anyStaff, asyncHandler(controller.getProfile));

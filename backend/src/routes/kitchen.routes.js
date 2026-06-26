@@ -18,7 +18,7 @@ router.get('/ingredients', authenticate, authorize(ROLES.KITCHEN), asyncHandler(
 }));
 
 router.post('/ingredients', authenticate, authorize(ROLES.KITCHEN), asyncHandler(async (req, res) => {
-  const { code, name, baseUnit, stockQuantity = 0, reorderLevel = 0, isActive = true } = req.body || {};
+  const { code, name, supplierName = '', baseUnit, stockQuantity = 0, reorderLevel = 0, isActive = true } = req.body || {};
 
   if (!code || !name || !baseUnit) {
     throw new ApiError(400, 'Vui lòng nhập mã, tên và đơn vị nguyên liệu.');
@@ -27,6 +27,7 @@ router.post('/ingredients', authenticate, authorize(ROLES.KITCHEN), asyncHandler
   const ingredient = await Ingredient.create({
     code: String(code).trim().toUpperCase(),
     name: String(name).trim(),
+    supplierName: String(supplierName || '').trim(),
     baseUnit: String(baseUnit).trim(),
     stockQuantity: Number.isFinite(Number(stockQuantity)) ? Number(stockQuantity) : 0,
     reorderLevel: Number.isFinite(Number(reorderLevel)) ? Number(reorderLevel) : 0,
@@ -37,7 +38,7 @@ router.post('/ingredients', authenticate, authorize(ROLES.KITCHEN), asyncHandler
 }));
 
 router.put('/ingredients/:id', authenticate, authorize(ROLES.KITCHEN), asyncHandler(async (req, res) => {
-  const { code, name, baseUnit, stockQuantity = 0, reorderLevel = 0, isActive = true } = req.body || {};
+  const { code, name, supplierName = '', baseUnit, stockQuantity = 0, reorderLevel = 0, isActive = true } = req.body || {};
 
   if (!code || !name || !baseUnit) {
     throw new ApiError(400, 'Vui lòng nhập mã, tên và đơn vị nguyên liệu.');
@@ -50,6 +51,7 @@ router.put('/ingredients/:id', authenticate, authorize(ROLES.KITCHEN), asyncHand
 
   ingredient.code = String(code).trim().toUpperCase();
   ingredient.name = String(name).trim();
+  ingredient.supplierName = String(supplierName || '').trim();
   ingredient.baseUnit = String(baseUnit).trim();
   ingredient.stockQuantity = Number.isFinite(Number(stockQuantity)) ? Number(stockQuantity) : 0;
   ingredient.reorderLevel = Number.isFinite(Number(reorderLevel)) ? Number(reorderLevel) : 0;
