@@ -71,6 +71,7 @@ async function getProducts(req, res) {
 }
 
 async function createOrder(req, res) {
+  
   const { customerName, customerPhone, orderType, deliveryAddress, items } = req.body;
 
   if (!items || !Array.isArray(items) || items.length === 0) {
@@ -83,6 +84,41 @@ async function createOrder(req, res) {
     if (!product) {
       throw new ApiError(404, `Không tìm thấy sản phẩm với ID: ${item.productId}`);
     }
+
+    if (req.body.source === "web") {
+    const Order = mongoose.model("Order");
+    
+    const newOrder = new Order({
+      customerName: req.body.customerName,
+      customerPhone: req.body.customerPhone,
+      deliveryAddress: req.body.deliveryAddress,
+      orderType: req.body.orderType || "delivery",
+      source: "web",
+      branchCode: req.body.branchCode || "MAIN",
+      status: "pending", 
+      items: req.body.items,
+      subtotal: req.body.subtotal,
+      shippingFee: req.body.shippingFee || 0,
+      discount: req.body.discount || 0,
+      total: req.body.total,
+      payment: {
+        method: "cod",
+        status: "unpaid",
+        transactionReference: ""
+      },
+      statusHistory: [{
+        status: "pending",
+        note: "Khách đặt đơn từ Website"
+      }]
+    });
+
+    await newOrder.save();
+    return res.json({
+      success: true,
+      message: "Đặt hàng thành công! Vui lòng chờ thu ngân xác nhận đơn.",
+      data: { order: newOrder }
+    });
+  }
 
     populatedItems.push({
       product: product._id,

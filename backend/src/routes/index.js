@@ -9,6 +9,8 @@ const shipperRoutes = require("./shipper.routes");
 const kitchenRoutes = require("./kitchen.routes");
 const banhangRoutes = require("./banhang.routes");
 const notificationRoutes = require("./notification.routes");
+const productRoutes = require("./product.routes");
+const orderRoutes = require("./order.routes");
 
 const { authenticate, authorize } = require("../middleware/auth");
 const { ROLES } = require("../constants/roles");
@@ -31,5 +33,8 @@ router.use("/notifications", ...adminOnly, notificationRoutes);
 router.use("/shipper", ...shipperOnly, shipperRoutes);
 router.use("/kitchen", kitchenRoutes);
 router.use("/banhang", ...banhangStaff, banhangRoutes);
+
+router.use("/products", productRoutes);
+router.use("/orders", orderRoutes);
 
 module.exports = router;
