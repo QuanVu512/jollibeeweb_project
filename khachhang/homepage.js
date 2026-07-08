@@ -1,5 +1,6 @@
 let allProducts = []; 
 let cart = [];
+let isLoggedIn = false;
 
 document.addEventListener('DOMContentLoaded', () => {
     const guestMenu = document.getElementById('guest-menu');
@@ -13,6 +14,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const result = await response.json();
 
             if (response.ok && result.success) {
+                isLoggedIn = true;
+
                 guestMenu.style.display = 'none';
                 userMenu.style.display = 'flex';
                 displayName.textContent = result.data.user.displayName || result.data.user.fullName || "Khách hàng";
@@ -273,6 +276,15 @@ function toggleCart(forceShow = null) {
 
 async function submitOrder() {
     if (cart.length === 0) return alert("Giỏ hàng đang trống!");
+
+    if (!isLoggedIn) {
+        const userWantsToLogin = confirm("Bạn cần đăng nhập tài khoản để tiếp tục đặt hàng!\n\nNhấn 'OK' để sang trang Đăng nhập.\nNhấn 'Hủy' (Cancel) để ở lại.");
+        
+        if (userWantsToLogin) {
+            window.location.href = "/admin/login.html"; 
+        }
+        return; 
+    }
 
     const name = document.getElementById('cust-name').value;
     const phone = document.getElementById('cust-phone').value;

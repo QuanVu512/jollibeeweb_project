@@ -71,93 +71,94 @@ async function getProducts(req, res) {
 }
 
 async function createOrder(req, res) {
-  
-  const { customerName, customerPhone, orderType, deliveryAddress, items } = req.body;
+  const { customerName, customerPhone, orderType, deliveryAddress, items, source, branchCode, subtotal, shippingFee, discount, total } = req.body;
 
   if (!items || !Array.isArray(items) || items.length === 0) {
     throw new ApiError(400, "Đơn hàng phải có ít nhất một món ăn.");
   }
 
   const populatedItems = [];
+  let calculatedTotal = 0;
+
   for (const item of items) {
-    const product = await Product.findById(item.productId);
+    const pId = item.productId || item.product; 
+    const product = await Product.findById(pId);
     if (!product) {
-      throw new ApiError(404, `Không tìm thấy sản phẩm với ID: ${item.productId}`);
+      throw new ApiError(404, `Không tìm thấy sản phẩm với ID: ${pId}`);
     }
 
-    if (req.body.source === "web") {
-    const Order = mongoose.model("Order");
-    
-    const newOrder = new Order({
-      customerName: req.body.customerName,
-      customerPhone: req.body.customerPhone,
-      deliveryAddress: req.body.deliveryAddress,
-      orderType: req.body.orderType || "delivery",
-      source: "web",
-      branchCode: req.body.branchCode || "MAIN",
-      status: "pending", 
-      items: req.body.items,
-      subtotal: req.body.subtotal,
-      shippingFee: req.body.shippingFee || 0,
-      discount: req.body.discount || 0,
-      total: req.body.total,
-      payment: {
-        method: "cod",
-        status: "unpaid",
-        transactionReference: ""
-      },
-      statusHistory: [{
-        status: "pending",
-        note: "Khách đặt đơn từ Website"
-      }]
-    });
-
-    await newOrder.save();
-    return res.json({
-      success: true,
-      message: "Đặt hàng thành công! Vui lòng chờ thu ngân xác nhận đơn.",
-      data: { order: newOrder }
-    });
-  }
+    const quantity = Number(item.quantity) || 1;
+    const lineTotal = quantity * product.price;
+    calculatedTotal += lineTotal;
 
     populatedItems.push({
       product: product._id,
-      productCode: product.productCode,
+      productCode: product.productCode, 
       categoryCode: product.categoryCode || "",
       name: product.name,
-      quantity: Number(item.quantity) || 1,
+      quantity: quantity,
       unitPrice: product.price,
       costPrice: product.costPrice || 0,
-      lineTotal: (Number(item.quantity) || 1) * product.price
+      lineTotal: lineTotal
     });
   }
 
+  const isWeb = source === "web";
+  const orderStatus = isWeb ? ORDER_STATUS.PENDING : ORDER_STATUS.PREPARING;
+  const userId = req.user ? req.user._id : null; 
+
   const order = new Order({
-    customerName: customerName || "Khách lẻ",
+    customerName: customerName || (isWeb ? "Khách Web" : "Khách lẻ"),
     customerPhone: customerPhone || "",
-    orderType: orderType || "dine_in",
+    orderType: orderType || (isWeb ? "delivery" : "dine_in"),
     deliveryAddress: deliveryAddress || "",
     items: populatedItems,
-    status: ORDER_STATUS.PREPARING,
-    source: "pos",
-    createdBy: req.user._id
+    status: orderStatus,
+    source: isWeb ? "web" : "pos",
+    branchCode: branchCode || "MAIN",
+    subtotal: subtotal || calculatedTotal,
+    shippingFee: shippingFee || 0,
+    discount: discount || 0,
+    total: total || calculatedTotal,
+    createdBy: userId
   });
+
+  if (isWeb) {
+    order.payment = {
+      method: "cod",
+      status: "unpaid",
+      transactionReference: ""
+    };
+    order.statusHistory = [{
+      status: ORDER_STATUS.PENDING,
+      note: "Khách đặt đơn từ Website"
+    }];
+  } else {
+    order.statusHistory = [{
+      status: ORDER_STATUS.PREPARING,
+      note: "Tạo đơn tại quầy"
+    }];
+  }
 
   let inventoryResult;
   await mongoose.connection.transaction(async (session) => {
     await order.validate();
-    inventoryResult = await deductIngredientsForOrder(order, req.user._id, { session });
+    
+    inventoryResult = await deductIngredientsForOrder(order, userId, { session });
+    
     order.inventoryDeductedAt = new Date();
-    order.inventoryDeductedBy = req.user._id;
+    if (userId) order.inventoryDeductedBy = userId;
+
     if (order.statusHistory && order.statusHistory.length > 0) {
-      order.statusHistory[0].note = kitchenStatusNote(order.statusHistory[0].note || "Tạo đơn tại quầy", inventoryResult);
+      order.statusHistory[0].note = kitchenStatusNote(order.statusHistory[0].note, inventoryResult);
     }
+
     await order.save({ session });
   });
 
   res.status(201).json({
     success: true,
-    message: kitchenResponseMessage("Tạo đơn hàng tại quầy thành công.", inventoryResult),
+    message: isWeb ? "Đặt hàng thành công! Vui lòng chờ nhà hàng xác nhận đơn." : kitchenResponseMessage("Tạo đơn hàng tại quầy thành công.", inventoryResult),
     data: { order, inventory: inventoryResult }
   });
 }
