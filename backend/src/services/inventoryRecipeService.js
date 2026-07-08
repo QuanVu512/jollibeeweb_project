@@ -51,15 +51,22 @@ function calculateRecipeDeductions(order, recipesByProductCode) {
       if (!ingredientId || !Number.isFinite(quantityBase) || quantityBase <= 0) continue;
 
       const quantity = roundQuantity((quantityBase * orderQuantity) / yieldQuantity);
+      
       const existing = deductionsByIngredient.get(ingredientId) || {
         ingredient: recipeIngredient.ingredient?._id || recipeIngredient.ingredient,
         ingredientCode: recipeIngredient.ingredientCode,
         ingredientName: getIngredientName(recipeIngredient),
         baseUnit: getIngredientUnit(recipeIngredient),
-        quantity: 0
+        quantity: 0,
+        dishNames: [] 
       };
 
       existing.quantity = roundQuantity(existing.quantity + quantity);
+      
+      if (!existing.dishNames.includes(item.name)) {
+        existing.dishNames.push(item.name || productCode);
+      }
+      
       deductionsByIngredient.set(ingredientId, existing);
     }
   }
@@ -136,9 +143,12 @@ async function deductIngredientsForOrder(order, userId, options = {}) {
         throw new ApiError(400, `Nguyên liệu ${deduction.ingredientName} không còn hoạt động trong kho.`);
       }
 
+      const dishes = deduction.dishNames ? deduction.dishNames.join(' và ') : 'món ăn này';
+      const stockLeft = formatQuantity(currentIngredient.stockQuantity, currentIngredient.baseUnit);
+
       throw new ApiError(
         400,
-        `Không đủ nguyên liệu ${currentIngredient.name}. Cần ${formatQuantity(deduction.quantity, currentIngredient.baseUnit)}, hiện còn ${formatQuantity(currentIngredient.stockQuantity, currentIngredient.baseUnit)}.`
+        `Xin lỗi! Trong kho hiện chỉ còn ${stockLeft} ${currentIngredient.name} (đây là nguyên liệu tạo ra món ${dishes}). Bạn vui lòng chọn món khác nhé!`
       );
     }
 
