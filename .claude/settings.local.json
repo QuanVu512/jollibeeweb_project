@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -n \"\\\\\\\\api\\\\|/api\" bep/kitchen.html)",
+      "Bash(node -e \"require\\(''./bep/kitchen.html''\\)\")"
+    ]
+  }
+}

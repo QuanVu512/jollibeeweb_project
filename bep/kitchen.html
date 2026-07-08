@@ -72,7 +72,7 @@
       <p>Quản lý nguyên liệu</p>
     </div>
     <nav class="sidebar-nav">
-      <button class="active" data-view="ingredients">Nguyên liệu</button>
+      <button class="active" data-view="ingredients">Đặt hàng</button>
       <button data-view="inventory">Quản lý kho hàng</button>
     </nav>
   </aside>
@@ -80,8 +80,8 @@
   <div class="content">
     <header class="topbar">
       <div>
-        <h1 id="pageTitle">Nguyên liệu</h1>
-        <div class="muted">Theo dõi tồn kho, thêm nguyên liệu mới và cập nhật kho hàng</div>
+        <h1 id="pageTitle">Đặt hàng nguyên liệu</h1>
+        <div class="muted">Chọn nguyên liệu và đặt đơn hàng</div>
       </div>
       <div class="actions">
         <button id="logoutBtn" type="button">Đăng xuất</button>
@@ -96,54 +96,73 @@
           <div class="stat"><strong id="activeIngredients">0</strong><span>Đang sử dụng</span></div>
         </div>
 
-        <div class="grid">
-          <section class="card">
-            <h2>Thêm / sửa nguyên liệu</h2>
-            <div id="notice" class="notice" style="display:none"></div>
-            <form id="ingredientForm">
-              <div class="form-grid">
-                <div class="form-group">
-                  <label for="code">Mã nguyên liệu</label>
-                  <input id="code" name="code" required placeholder="VD: BOT_GA" />
-                </div>
-                <div class="form-group">
-                  <label for="name">Tên nguyên liệu</label>
-                  <input id="name" name="name" required placeholder="VD: Bột chiên gà" />
-                </div>
-                <div class="form-group">
-                  <label for="baseUnit">Đơn vị</label>
-                  <input id="baseUnit" name="baseUnit" required placeholder="VD: kg" />
-                </div>
-                <div class="form-group">
-                  <label for="stockQuantity">Tồn kho hiện tại</label>
-                  <input id="stockQuantity" name="stockQuantity" type="number" min="0" value="0" />
-                </div>
-                <div class="form-group">
-                  <label for="reorderLevel">Mức cảnh báo</label>
-                  <input id="reorderLevel" name="reorderLevel" type="number" min="0" value="0" />
-                </div>
-                <div class="form-group">
-                  <label for="isActive">Trạng thái</label>
-                  <select id="isActive" name="isActive">
-                    <option value="true">Đang dùng</option>
-                    <option value="false">Tạm ngưng</option>
-                  </select>
-                </div>
-              </div>
-              <div class="inline-actions">
-                <button class="btn btn-primary" type="submit">Lưu nguyên liệu</button>
-                <button class="btn btn-secondary" type="reset" id="cancelEdit">Hủy</button>
-              </div>
-            </form>
-          </section>
+        <div id="notice" class="notice" style="display:none"></div>
+          <div class="card">
+          <h2>Danh sách nguyên liệu</h2>
+          <div class="muted" style="margin-bottom: 12px;">Hiển thị nguyên liệu và nơi sản xuất</div>
+          <table>
+            <thead>
+              <tr>
+                <th style="width:40px"><input type="checkbox" id="selectAllIngredients" /></th>
+                <th>Mã</th>
+                <th>Tên</th>
+                <th>Đơn vị</th>
+                <th>Trạng thái</th>
+                <th>Nơi sản xuất</th>
+                <th style="width:90px">Số lượng</th>
 
+              </tr>
+            </thead>
+            <tbody id="ingredientsTableBody"></tbody>
+          </table>
         </div>
+
+        <div class="card" style="margin-top: 18px;">
+          <h2>Đơn hàng</h2>
+          <div class="muted" style="margin-bottom: 12px;">Danh sách nguyên liệu đã chọn để đặt hàng</div>
+          <table>
+            <thead>
+              <tr>
+                <th>Mã</th>
+                <th>Tên</th>
+                <th>Đơn vị</th>
+                <th>Số lượng đặt</th>
+                <th style="width:50px"></th>
+              </tr>
+            </thead>
+            <tbody id="orderTableBody"></tbody>
+          </table>
+          <div class="form-group" style="margin-top: 12px;">
+            <label for="orderNote">Ghi chú đơn hàng</label>
+            <input id="orderNote" placeholder="VD: Giao hàng trước 10h sáng" />
+          </div>
+          <button class="btn btn-primary" id="submitOrderBtn" type="button" style="margin-top: 8px;">Gửi đơn hàng</button>
+        </div>
+
       </section>
 
       <section id="inventoryView" class="view">
         <div class="card">
-          <h2>Quản lý kho hàng</h2>
-          <div class="muted" style="margin-bottom: 12px;">Danh sách nguyên liệu hiện có trong kho và công cụ cập nhật tồn kho.</div>
+          <h2>Đơn hàng đã đặt</h2>
+          <div class="muted" style="margin-bottom: 12px;">Danh sách đơn hàng đã gửi từ bếp. Nhấn "Nhập kho" để cộng nguyên liệu vào tồn kho.</div>
+          <table>
+            <thead>
+              <tr>
+                <th>Mã đơn</th>
+                <th>Nguyên liệu</th>
+                <th>Trạng thái</th>
+                <th>Ghi chú</th>
+                <th>Thời gian</th>
+                <th>Thao tác</th>
+              </tr>
+            </thead>
+            <tbody id="ordersTableBody"></tbody>
+          </table>
+        </div>
+
+        <div class="card" style="margin-top: 18px;" id="ingredientsInventoryCard">
+          <h2>Nguyên liệu trong kho</h2>
+          <div class="muted" style="margin-bottom: 12px;">Danh sách nguyên liệu hiện có trong kho (đã được nhập từ đơn hàng).</div>
           <table>
             <thead>
               <tr>
@@ -153,48 +172,20 @@
                 <th>Tồn kho</th>
                 <th>Mức cảnh báo</th>
                 <th>Trạng thái</th>
-                <th>Thao tác</th>
               </tr>
             </thead>
-            <tbody id="inventoryTableBody"></tbody>
+            <tbody id="ingredientsInventoryTableBody"></tbody>
           </table>
-        </div>
-
-        <div class="card" style="margin-top: 18px;">
-          <div class="form-group">
-            <label for="stockIngredient">Nguyên liệu</label>
-            <select id="stockIngredient"></select>
-          </div>
-          <div class="form-grid">
-            <div class="form-group">
-              <label for="stockChange">Số lượng</label>
-              <input id="stockChange" type="number" min="1" value="1" />
-            </div>
-            <div class="form-group">
-              <label for="stockType">Loại thao tác</label>
-              <select id="stockType">
-                <option value="import">Nhập kho</option>
-                <option value="export">Xuất kho</option>
-              </select>
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="stockNote">Ghi chú</label>
-            <input id="stockNote" placeholder="VD: nhập hàng đầu ngày" />
-          </div>
-          <button class="btn btn-success" id="adjustStockBtn" type="button">Cập nhật kho</button>
         </div>
       </section>
     </main>
   </div>
 
   <script>
-    const state = { ingredients: [], editingId: null };
+    const state = { ingredients: [], orderHistory: [], orderItems: {} };
     const notice = document.getElementById('notice');
-    const form = document.getElementById('ingredientForm');
-    const inventoryTableBody = document.getElementById('inventoryTableBody');
-    const stockIngredient = document.getElementById('stockIngredient');
-    const cancelEdit = document.getElementById('cancelEdit');
+    const ordersTableBody = document.getElementById('ordersTableBody');
+    const ingredientsInventoryTableBody = document.getElementById('ingredientsInventoryTableBody');
     const navButtons = document.querySelectorAll('.sidebar-nav button');
     const views = { ingredients: document.getElementById('ingredientsView'), inventory: document.getElementById('inventoryView') };
 
@@ -207,14 +198,6 @@
       }, 2500);
     }
 
-    function resetForm() {
-      form.reset();
-      document.getElementById('stockQuantity').value = '0';
-      document.getElementById('reorderLevel').value = '0';
-      document.getElementById('isActive').value = 'true';
-      state.editingId = null;
-    }
-
     function renderStats() {
       document.getElementById('totalIngredients').textContent = state.ingredients.length;
       const lowStock = state.ingredients.filter((item) => item.stockQuantity <= (item.reorderLevel || 0)).length;
@@ -222,39 +205,164 @@
       document.getElementById('activeIngredients').textContent = state.ingredients.filter((item) => item.isActive).length;
     }
 
-    function renderInventorySelect() {
-      stockIngredient.innerHTML = state.ingredients.length
-        ? state.ingredients.map((item) => `<option value="${item._id}">${item.name} (${item.stockQuantity} ${item.baseUnit})</option>`).join('')
-        : '<option value="">Chưa có nguyên liệu</option>';
+    function renderOrdersTable() {
+      if (!state.orderHistory.length) {
+        ordersTableBody.innerHTML = '<tr><td colspan="6" class="muted">Chưa có đơn hàng nào.</td></tr>';
+        return;
+      }
+      ordersTableBody.innerHTML = state.orderHistory.map(order => {
+        const statusLabels = { pending: 'Chờ nhập kho', confirmed: 'Đã nhập kho', cancelled: 'Đã hủy' };
+        const statusBadge = order.status === 'pending'
+          ? '<span class="pill">Chờ nhập kho</span>'
+          : order.status === 'confirmed'
+            ? '<span class="pill" style="background:#e7f8ee;color:#198754;">Đã nhập kho</span>'
+            : '<span class="pill low" style="background:#f1f1f1;color:#999;">Đã hủy</span>';
+        const itemsSummary = order.items
+          ? order.items.map(i => i.ingredientName).join(', ')
+          : '';
+        return `
+        <tr>
+          <td>${order.orderCode || order._id || ''}</td>
+          <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${itemsSummary}">${itemsSummary || (order.items ? order.items.length + ' mục' : '')}</td>
+          <td>${statusBadge}</td>
+          <td>${(order.note || '').toString().slice(0, 30)}</td>
+          <td>${order.createdAt ? new Date(order.createdAt).toLocaleString('vi-VN') : ''}</td>
+          <td class="row-actions">
+            ${order.status === 'pending' ? `
+              <button type="button" class="btn btn-success confirm-order-btn" data-id="${order._id}" style="padding:4px 8px;font-size:12px;margin-right:4px;">Nhập kho</button>
+              <button type="button" class="btn btn-danger delete-order-btn" data-id="${order._id}" style="padding:4px 8px;font-size:12px;">Hủy</button>
+            ` : order.status === 'confirmed' ? `
+              <span class="muted" style="font-size:12px;">✓ Đã nhập</span>
+            ` : `
+              <span class="muted" style="font-size:12px;">✕ Đã hủy</span>
+            `}
+          </td>
+        </tr>
+      `}).join('');
     }
 
-    function renderTable() {
+    function renderIngredientsInventoryTable() {
       if (!state.ingredients.length) {
-        inventoryTableBody.innerHTML = '<tr><td colspan="7" class="muted">Chưa có nguyên liệu nào. Hãy thêm nguyên liệu đầu tiên.</td></tr>';
+        ingredientsInventoryTableBody.innerHTML = '<tr><td colspan="6" class="muted">Chưa có nguyên liệu trong kho.</td></tr>';
+        return;
+      }
+      ingredientsInventoryTableBody.innerHTML = state.ingredients.map(item => `
+        <tr>
+          <td>${item.code || ''}</td>
+          <td>${item.name || ''}</td>
+          <td>${item.baseUnit || ''}</td>
+          <td>${item.stockQuantity ?? ''}</td>
+          <td>${item.reorderLevel ?? ''}</td>
+          <td>${item.isActive ? '<span class="pill">Đang dùng</span>' : '<span class="pill low">Tạm ngưng</span>'}</td>
+        </tr>
+      `).join('');
+    }
+
+    const ingredientsTableBody = document.getElementById('ingredientsTableBody');
+    const orderTableBody = document.getElementById('orderTableBody');
+
+    function renderIngredientsTable() {
+      if (!state.ingredients.length) {
+        ingredientsTableBody.innerHTML = '<tr><td colspan="9" class="muted">Chưa có nguyên liệu nào.</td></tr>';
         return;
       }
 
-      inventoryTableBody.innerHTML = state.ingredients.map((item) => `
+      ingredientsTableBody.innerHTML = state.ingredients.map((item) => `
+        <tr>
+          <td><input type="checkbox" class="ingredient-checkbox" data-id="${item._id}" ${state.orderItems[item._id] ? 'checked' : ''} /></td>
+          <td>${item.code}</td>
+          <td>${item.name}</td>
+          <td>${item.baseUnit || ''}</td>
+
+          <td>${item.isActive ? '<span class="pill">Đang dùng</span>' : '<span class="pill low">Tạm ngưng</span>'}</td>
+
+          <td>${item.productionPlace ?? ''}</td>
+
+          <td><input type="number" class="order-qty" data-id="${item._id}" min="1" value="${state.orderItems[item._id] || 1}" style="width:70px;padding:6px 8px;" /></td>
+        </tr>
+      `).join('');
+    }
+
+    function renderOrderTable() {
+      const selectedItems = state.ingredients.filter(item => state.orderItems[item._id]);
+      if (!selectedItems.length) {
+        orderTableBody.innerHTML = '<tr><td colspan="5" class="muted">Chưa chọn nguyên liệu nào.</td></tr>';
+        return;
+      }
+      orderTableBody.innerHTML = selectedItems.map(item => `
         <tr>
           <td>${item.code}</td>
           <td>${item.name}</td>
           <td>${item.baseUnit}</td>
-          <td>${item.stockQuantity}</td>
-          <td>${item.reorderLevel}</td>
-          <td>${item.isActive ? '<span class="pill">Đang dùng</span>' : '<span class="pill low">Tạm ngưng</span>'}</td>
-          <td class="row-actions">
-            <button class="btn btn-secondary" data-action="edit" data-id="${item._id}">Sửa</button>
-            <button class="btn btn-danger" data-action="delete" data-id="${item._id}">Xóa</button>
-          </td>
+          <td>${state.orderItems[item._id]}</td>
+          <td><button type="button" class="btn btn-danger remove-order-item" data-id="${item._id}" style="padding:4px 8px;font-size:12px;">Xóa</button></td>
         </tr>
       `).join('');
     }
+
+    // Event delegation for checkboxes, qty inputs, and remove buttons
+    document.addEventListener('change', (e) => {
+      if (e.target.classList.contains('ingredient-checkbox')) {
+        const id = e.target.dataset.id;
+        if (e.target.checked) {
+          const qtyInput = document.querySelector(`.order-qty[data-id="${id}"]`);
+          state.orderItems[id] = Number(qtyInput?.value) || 1;
+        } else {
+          delete state.orderItems[id];
+        }
+        renderIngredientsTable();
+        renderOrderTable();
+      }
+
+      if (e.target.classList.contains('order-qty')) {
+        const id = e.target.dataset.id;
+        const value = Number(e.target.value);
+        if (value > 0) {
+          state.orderItems[id] = value;
+          const checkbox = document.querySelector(`.ingredient-checkbox[data-id="${id}"]`);
+          if (checkbox && !checkbox.checked) {
+            checkbox.checked = true;
+          }
+          renderOrderTable();
+        }
+      }
+    });
+
+    document.addEventListener('click', (e) => {
+      if (e.target.classList.contains('remove-order-item')) {
+        const id = e.target.dataset.id;
+        delete state.orderItems[id];
+        renderIngredientsTable();
+        renderOrderTable();
+      }
+    });
+
+    document.getElementById('selectAllIngredients').addEventListener('change', (e) => {
+      if (e.target.checked) {
+        state.ingredients.forEach(item => {
+          state.orderItems[item._id] = 1;
+        });
+      } else {
+        state.orderItems = {};
+      }
+      renderIngredientsTable();
+      renderOrderTable();
+    });
 
     function switchView(viewName) {
       Object.entries(views).forEach(([key, view]) => {
         view.classList.toggle('active', key === viewName);
       });
-      document.getElementById('pageTitle').textContent = viewName === 'inventory' ? 'Quản lý kho hàng' : 'Nguyên liệu';
+      const title = document.getElementById('pageTitle');
+      const subtitle = document.querySelector('.topbar .muted');
+      if (viewName === 'inventory') {
+        title.textContent = 'Quản lý kho hàng';
+        subtitle.textContent = 'Theo dõi đơn hàng và tồn kho nguyên liệu';
+        loadTransactionHistory();
+      } else {
+        title.textContent = 'Đặt hàng nguyên liệu';
+        subtitle.textContent = 'Chọn nguyên liệu và đặt đơn hàng';
+      }
       navButtons.forEach((button) => button.classList.toggle('active', button.dataset.view === viewName));
     }
 
@@ -269,65 +377,65 @@
         if (!response.ok) throw new Error(payload?.message || 'Không thể tải nguyên liệu.');
         state.ingredients = payload.data || [];
         renderStats();
-        renderInventorySelect();
-        renderTable();
+        renderIngredientsInventoryTable();
+        renderIngredientsTable();
       } catch (error) {
         showNotice(error.message, 'error');
       }
     }
 
-    form.addEventListener('submit', async (event) => {
-      event.preventDefault();
-      const payload = {
-        code: document.getElementById('code').value.trim().toUpperCase(),
-        name: document.getElementById('name').value.trim(),
-        baseUnit: document.getElementById('baseUnit').value.trim(),
-        stockQuantity: Number(document.getElementById('stockQuantity').value || 0),
-        reorderLevel: Number(document.getElementById('reorderLevel').value || 0),
-        isActive: document.getElementById('isActive').value === 'true'
-      };
-
+    async function loadTransactionHistory() {
       try {
-        const response = await fetch(state.editingId ? `/api/v1/kitchen/ingredients/${state.editingId}` : '/api/v1/kitchen/ingredients', {
-          method: state.editingId ? 'PUT' : 'POST',
-          credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        const result = await response.json();
-        if (!response.ok) throw new Error(result?.message || 'Không thể lưu nguyên liệu.');
-        showNotice(state.editingId ? 'Đã cập nhật nguyên liệu.' : 'Đã thêm nguyên liệu mới.');
-        resetForm();
-        await loadIngredients();
+        const response = await fetch('/api/v1/kitchen/orders', { credentials: 'include' });
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload?.message || 'Không thể tải đơn hàng.');
+        state.orderHistory = payload.data || [];
+        renderOrdersTable();
       } catch (error) {
-        showNotice(error.message, 'error');
+        showNotice('Không thể tải đơn hàng: ' + error.message, 'error');
       }
-    });
+    }
 
-    inventoryTableBody.addEventListener('click', async (event) => {
-      const button = event.target.closest('button[data-action]');
-      if (!button) return;
-      const id = button.getAttribute('data-id');
-      const action = button.getAttribute('data-action');
-      if (action === 'edit') {
-        const item = state.ingredients.find((entry) => entry._id === id);
-        if (!item) return;
-        state.editingId = item._id;
-        document.getElementById('code').value = item.code;
-        document.getElementById('name').value = item.name;
-        document.getElementById('baseUnit').value = item.baseUnit;
-        document.getElementById('stockQuantity').value = item.stockQuantity;
-        document.getElementById('reorderLevel').value = item.reorderLevel;
-        document.getElementById('isActive').value = String(item.isActive);
-        switchView('ingredients');
-      }
-      if (action === 'delete') {
-        if (!window.confirm('Bạn có chắc muốn xóa nguyên liệu này?')) return;
+    // Xử lý nút Nhập kho / Hủy trong bảng đơn hàng
+    ordersTableBody.addEventListener('click', async (e) => {
+      const confirmBtn = e.target.closest('.confirm-order-btn');
+      const deleteBtn = e.target.closest('.delete-order-btn');
+      if (!confirmBtn && !deleteBtn) return;
+
+      const orderId = (confirmBtn || deleteBtn).dataset.id;
+      if (!orderId) return;
+
+      if (deleteBtn) {
+        if (!confirm('Bạn có chắc muốn hủy đơn hàng này?')) return;
         try {
-          const response = await fetch(`/api/v1/kitchen/ingredients/${id}`, { method: 'DELETE', credentials: 'include' });
+          const response = await fetch(`/api/v1/kitchen/orders/${orderId}`, {
+            method: 'DELETE',
+            credentials: 'include'
+          });
           const result = await response.json();
-          if (!response.ok) throw new Error(result?.message || 'Không thể xóa nguyên liệu.');
-          showNotice('Đã xóa nguyên liệu.');
+          if (!response.ok) throw new Error(result?.message || 'Không thể hủy đơn hàng.');
+          showNotice('Đã hủy đơn hàng!');
+          await loadTransactionHistory();
+          await loadIngredients();
+        } catch (error) {
+          showNotice(error.message, 'error');
+        }
+        return;
+      }
+
+      if (confirmBtn) {
+        try {
+          const response = await fetch(`/api/v1/kitchen/orders/${orderId}/confirm`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ note: '' })
+          });
+          const result = await response.json();
+          if (!response.ok) throw new Error(result?.message || 'Không thể xác nhận đơn hàng.');
+          showNotice('Đã nhập kho thành công! Nguyên liệu đã được cộng vào tồn kho.');
+          // Refresh cả bảng đơn hàng và bảng nguyên liệu
+          await loadTransactionHistory();
           await loadIngredients();
         } catch (error) {
           showNotice(error.message, 'error');
@@ -335,53 +443,53 @@
       }
     });
 
-    document.getElementById('adjustStockBtn').addEventListener('click', async () => {
-      const ingredientId = stockIngredient.value;
-      const change = Number(document.getElementById('stockChange').value || 0);
-      const stockType = document.getElementById('stockType').value;
-      const note = document.getElementById('stockNote').value.trim();
-      if (!ingredientId) {
-        showNotice('Vui lòng chọn nguyên liệu trước.', 'error');
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      window.location.href = '/api/v1/auth/logout';
+    });
+
+    // Gửi đơn hàng
+    document.getElementById('submitOrderBtn').addEventListener('click', async () => {
+      const items = Object.entries(state.orderItems).map(([ingredientId, quantity]) => ({
+        ingredientId,
+        quantityBase: quantity
+      }));
+      if (!items.length) {
+        showNotice('Vui lòng chọn ít nhất 1 nguyên liệu.', 'error');
         return;
       }
-      if (!change) {
-        showNotice('Vui lòng nhập số lượng.', 'error');
+      // Kiểm tra ingredientId có phải ObjectId hợp lệ không
+      const invalidItems = items.filter(i => !/^[0-9a-fA-F]{24}$/.test(i.ingredientId));
+      if (invalidItems.length > 0) {
+        showNotice('Dữ liệu nguyên liệu không hợp lệ (ID sai).', 'error');
         return;
       }
+      const note = document.getElementById('orderNote').value.trim();
       try {
-        const response = await fetch('/api/v1/kitchen/inventory/adjust', {
+        const response = await fetch('/api/v1/kitchen/orders', {
           method: 'POST',
           credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ingredientId, change: stockType === 'import' ? change : -change, note })
+          body: JSON.stringify({ items, note })
         });
         const result = await response.json();
-        if (!response.ok) throw new Error(result?.message || 'Không thể cập nhật kho.');
-        showNotice('Đã cập nhật kho hàng.');
-        document.getElementById('stockChange').value = '1';
-        document.getElementById('stockNote').value = '';
-        await loadIngredients();
+        if (!response.ok) throw new Error(result?.message || 'Không thể gửi đơn hàng.');
+        showNotice('Đã gửi đơn hàng thành công! Vào "Quản lý kho hàng" để nhập kho.');
+        // Reset giỏ hàng
+        state.orderItems = {};
+        document.getElementById('orderNote').value = '';
+        renderIngredientsTable();
+        renderOrderTable();
+        // Refresh danh sách đơn hàng (để khi chuyển tab sẽ thấy đơn mới)
+        await loadTransactionHistory();
       } catch (error) {
         showNotice(error.message, 'error');
       }
     });
 
-    cancelEdit.addEventListener('click', (event) => {
-      event.preventDefault();
-      resetForm();
-    });
-
-    document.getElementById('logoutBtn').addEventListener('click', async () => {
-      try {
-        const redirectTo = encodeURIComponent('/admin/login.html');
-        window.location.href = `/api/v1/auth/logout?redirect=${redirectTo}`;
-      } catch (e) {
-        window.location.href = '/api/v1/auth/logout';
-      }
-    });
-
+    // Khởi tạo
     loadIngredients();
+    loadTransactionHistory();
   </script>
+
 </body>
 </html>
-

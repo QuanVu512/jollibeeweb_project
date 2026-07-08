@@ -1,5 +1,5 @@
 const express = require('express');
-const Ingredient = require('../models/Ingredient');
+const PurchaseMaterial = require('../models/PurchaseMaterial');
 const { renderKitchenPage } = require('../services/kitchenView');
 const { authenticate, authorize } = require('../middleware/auth');
 const { ROLES } = require('../constants/roles');
@@ -13,63 +13,12 @@ router.get('/view', authenticate, authorize(ROLES.KITCHEN), (_req, res) => {
 });
 
 router.get('/ingredients', authenticate, authorize(ROLES.KITCHEN), asyncHandler(async (_req, res) => {
-  const ingredients = await Ingredient.find({}).sort({ createdAt: -1 }).lean();
+  const ingredients = await PurchaseMaterial.find({}).sort({ createdAt: -1 }).lean();
   res.json({ success: true, data: ingredients });
 }));
 
-router.post('/ingredients', authenticate, authorize(ROLES.KITCHEN), asyncHandler(async (req, res) => {
-  const { code, name, baseUnit, stockQuantity = 0, reorderLevel = 0, isActive = true } = req.body || {};
-
-  if (!code || !name || !baseUnit) {
-    throw new ApiError(400, 'Vui lòng nhập mã, tên và đơn vị nguyên liệu.');
-  }
-
-  const ingredient = await Ingredient.create({
-    code: String(code).trim().toUpperCase(),
-    name: String(name).trim(),
-    baseUnit: String(baseUnit).trim(),
-    stockQuantity: Number.isFinite(Number(stockQuantity)) ? Number(stockQuantity) : 0,
-    reorderLevel: Number.isFinite(Number(reorderLevel)) ? Number(reorderLevel) : 0,
-    isActive: typeof isActive === 'boolean' ? isActive : true
-  });
-
-  res.status(201).json({ success: true, data: ingredient });
-}));
-
-router.put('/ingredients/:id', authenticate, authorize(ROLES.KITCHEN), asyncHandler(async (req, res) => {
-  const { code, name, baseUnit, stockQuantity = 0, reorderLevel = 0, isActive = true } = req.body || {};
-
-  if (!code || !name || !baseUnit) {
-    throw new ApiError(400, 'Vui lòng nhập mã, tên và đơn vị nguyên liệu.');
-  }
-
-  const ingredient = await Ingredient.findById(req.params.id);
-  if (!ingredient) {
-    throw new ApiError(404, 'Không tìm thấy nguyên liệu.');
-  }
-
-  ingredient.code = String(code).trim().toUpperCase();
-  ingredient.name = String(name).trim();
-  ingredient.baseUnit = String(baseUnit).trim();
-  ingredient.stockQuantity = Number.isFinite(Number(stockQuantity)) ? Number(stockQuantity) : 0;
-  ingredient.reorderLevel = Number.isFinite(Number(reorderLevel)) ? Number(reorderLevel) : 0;
-  ingredient.isActive = typeof isActive === 'boolean' ? isActive : true;
-  await ingredient.save();
-
-  res.json({ success: true, data: ingredient });
-}));
-
-router.delete('/ingredients/:id', authenticate, authorize(ROLES.KITCHEN), asyncHandler(async (req, res) => {
-  const ingredient = await Ingredient.findById(req.params.id);
-  if (!ingredient) {
-    throw new ApiError(404, 'Không tìm thấy nguyên liệu.');
-  }
-
-  await ingredient.deleteOne();
-  res.json({ success: true, data: { id: req.params.id } });
-}));
-
 router.post('/inventory/adjust', authenticate, authorize(ROLES.KITCHEN), asyncHandler(async (req, res) => {
+
   const { ingredientId, change, note = '' } = req.body || {};
   const delta = Number(change);
 
@@ -78,7 +27,7 @@ router.post('/inventory/adjust', authenticate, authorize(ROLES.KITCHEN), asyncHa
     throw new ApiError(400, 'Vui lòng chọn nguyên liệu và nhập số lượng thay đổi.');
   }
 
-  const ingredient = await Ingredient.findById(ingredientId);
+  const ingredient = await PurchaseMaterial.findById(ingredientId);
   if (!ingredient) {
     throw new ApiError(404, 'Không tìm thấy nguyên liệu.');
   }

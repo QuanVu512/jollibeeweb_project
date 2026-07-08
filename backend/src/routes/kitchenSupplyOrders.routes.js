@@ -1,7 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 
-const Ingredient = require('../models/Ingredient');
+const PurchaseMaterial = require('../models/PurchaseMaterial');
 const KitchenSupplyOrder = require('../models/KitchenSupplyOrder');
 const { authenticate, authorize } = require('../middleware/auth');
 const { ROLES } = require('../constants/roles');
@@ -15,10 +15,12 @@ router.get(
   '/orders',
   authenticate,
   authorize(ROLES.KITCHEN),
-  asyncHandler(async (_req, res) => {
+  asyncHandler(async (req, res) => {
+    console.log('GET /orders - User:', req.user);
     const orders = await KitchenSupplyOrder.find({})
       .sort({ createdAt: -1 })
       .lean();
+    console.log('Orders count:', orders.length);
     res.json({ success: true, data: orders });
   })
 );
@@ -60,7 +62,7 @@ router.post(
 
     // Validate ingredient tồn tại
     const ingredientIds = validItems.map((i) => i.ingredient);
-    const ingredients = await Ingredient.find({ _id: { $in: ingredientIds } }).select('_id code name');
+    const ingredients = await PurchaseMaterial.find({ _id: { $in: ingredientIds } }).select('_id code name');
     const ingredientMap = new Map(ingredients.map((x) => [String(x._id), x]));
 
     const finalItems = validItems.map((i) => {
@@ -79,7 +81,9 @@ router.post(
 
     const order = await KitchenSupplyOrder.create({
       items: finalItems,
-      note
+      note,
+      createdBy: req.user?._id || null,
+      status: 'pending'
     });
 
     res.status(201).json({ success: true, data: order });
@@ -113,13 +117,14 @@ router.post(
 
     // Cộng kho theo từng item
     for (const item of order.items) {
-      const ingredient = await Ingredient.findById(item.ingredient);
+      const ingredient = await PurchaseMaterial.findById(item.ingredient);
       if (!ingredient) {
         throw new ApiError(404, `Không tìm thấy nguyên liệu: ${item.ingredient}`);
       }
 
       ingredient.stockQuantity = ingredient.stockQuantity + Number(item.quantityBase);
-      await ingredient.save();
+      // Chỉ validate field đã thay đổi, tránh lỗi baseUnit rỗng từ dữ liệu cũ
+      await ingredient.save({ validateModifiedOnly: true });
     }
 
     order.status = 'confirmed';
@@ -134,5 +139,33 @@ router.post(
   })
 );
 
-module.exports = router;
+// Hủy đơn đặt nguyên liệu
+router.delete(
+  '/orders/:id',
+  authenticate,
+  authorize(ROLES.KITCHEN),
+  asyncHandler(async (req, res) => {
+    const { id } = req.params;
 
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      throw new ApiError(400, 'ID đơn đặt không hợp lệ.');
+    }
+
+    const order = await KitchenSupplyOrder.findById(id);
+    if (!order) {
+      throw new ApiError(404, 'Không tìm thấy đơn đặt.');
+    }
+
+    if (order.status === 'confirmed') {
+      throw new ApiError(400, 'Đơn đặt đã được xác nhận, không thể hủy.');
+    }
+
+    order.status = 'cancelled';
+    order.cancelledBy = req.user?._id || null;
+    await order.save();
+
+    res.json({ success: true, data: order });
+  })
+);
+
+module.exports = router;

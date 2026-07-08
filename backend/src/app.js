@@ -69,13 +69,8 @@ app.use(
   }),
 );
 
-// Backward-compatible (bep) routes
-app.get("/kitchen-login.html", (_req, res) => res.redirect("/bep/kitchen-login.html"));
-app.get(["/kitchen.html", "/bep/index.php"], (_req, res) => {
-  res.redirect("/bep/kitchen.html");
-});
-
 app.use(notFound);
+
 app.use(errorHandler);
 
 module.exports = app;

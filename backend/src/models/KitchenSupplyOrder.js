@@ -14,7 +14,7 @@ const kitchenSupplyOrderItemSchema = new mongoose.Schema(
 
 const kitchenSupplyOrderSchema = new mongoose.Schema(
   {
-    orderCode: { type: String, trim: true, unique: true },
+    orderCode: { type: String, trim: true, default: undefined },
 
     items: { type: [kitchenSupplyOrderItemSchema], default: [], validate: (v) => v.length > 0 },
 
@@ -39,4 +39,3 @@ const kitchenSupplyOrderSchema = new mongoose.Schema(
 kitchenSupplyOrderSchema.index({ status: 1, createdAt: -1 });
 
 module.exports = mongoose.model('KitchenSupplyOrder', kitchenSupplyOrderSchema);
-
