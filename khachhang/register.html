@@ -40,7 +40,7 @@
             <button type="submit" class="btn-submit">ĐĂNG KÝ NGAY</button>
         </form>
         
-        <p class="link-text">Đã có tài khoản? <a href="login.html">Đăng nhập tại đây</a></p>
+        <p class="link-text">Đã có tài khoản? <a href="/admin/login.html">Đăng nhập tại đây</a></p>
     </div>
 
     <script>
@@ -69,7 +69,7 @@
 
                 if (response.ok) {
                     alert("Đăng ký thành công! Hãy đăng nhập để tiếp tục.");
-                    window.location.href = "login.html"; 
+                    window.location.href = "/admin/login.html"; 
                 } else {
                     alert("Lỗi: " + (result.message || "Tên đăng nhập đã tồn tại!"));
                 }

@@ -14,16 +14,22 @@ const banhangDirectory = path.resolve(__dirname, "../../banhang");
 const publicAssetsDirectory = path.resolve(__dirname, "../../assets");
 const logoFile = path.resolve(__dirname, "../../Menu_files/logo.png");
 
+const khachhangDirectory = path.resolve(__dirname, "../../khachhang");
+const menuFilesDirectory = path.resolve(__dirname, "../../Menu_files");
+
 app.disable("x-powered-by");
 app.use(
   helmet({
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        imgSrc: ["'self'", "data:", "https://jollibee.com.vn"],
+        imgSrc: ["'self'", "data:", "https://jollibee.com.vn", "https://images.unsplash.com", "https://placehold.co"],
         scriptSrc: ["'self'", "'unsafe-inline'"],
+
+        scriptSrcAttr: ["'unsafe-inline'"],
+
         styleSrc: ["'self'", "'unsafe-inline'"],
-        connectSrc: ["'self'", "http://localhost:3000", "http://localhost:5500"],
+        connectSrc: ["'self'", "http://localhost:3000"],
       },
     },
   }),
@@ -59,7 +65,15 @@ app.use(
     extensions: ["html"],
   }),
 );
-app.get("/", (_req, res) => res.redirect("/admin/login.html"));
+app.use(
+  "/khachhang",
+  express.static(khachhangDirectory, { index: "homepage.html", extensions: ["html"] })
+);
+app.use("/Menu_files", express.static(menuFilesDirectory));
+
+//app.get("/", (_req, res) => res.redirect("/admin/login.html"));
+// Sửa thành:
+app.get("/", (_req, res) => res.redirect("/khachhang/homepage.html"));
 app.get("/kitchen-login.html", (_req, res) => res.sendFile(path.resolve(__dirname, '../public/kitchen-login.html')));
 app.get(["/kitchen.html", "/bep/index.php"], (_req, res) => {
   res.sendFile(path.resolve(__dirname, "../public/kitchen.html"));
