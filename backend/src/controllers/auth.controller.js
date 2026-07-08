@@ -4,6 +4,7 @@ const { getRoleLandingPage } = require('../constants/roleLandingPages');
 const User = require('../models/User');
 const ApiError = require('../utils/ApiError');
 const { recordAudit } = require('../services/auditService');
+const Customer = require('../models/Customer');
 
 function publicUser(user) {
   return {
@@ -114,4 +115,44 @@ async function logout(req, res) {
   return res.status(204).send();
 }
 
-module.exports = { login, me, logout };
+async function register(req, res) {
+  const { displayName, username, password } = req.body;
+
+  if (!username || !password || !displayName) {
+    throw new ApiError(400, 'Vui lòng nhập đủ họ tên, tài khoản và mật khẩu.');
+  }
+
+  const cleanUsername = username.trim().toLowerCase();
+
+  const existingUser = await User.findOne({ username: cleanUsername });
+  if (existingUser) {
+    throw new ApiError(409, 'Tên đăng nhập hoặc số điện thoại này đã tồn tại!');
+  }
+
+  const passwordHash = await User.hashPassword(password);
+
+  const newCustomer = new Customer({
+    fullName: displayName, 
+    phone: cleanUsername
+  });
+  await newCustomer.save();
+
+  const newUser = new User({
+    username: cleanUsername,
+    passwordHash: passwordHash,
+    role: 'customer', 
+    displayName: displayName,
+    customer: newCustomer._id,
+    isActive: true,
+    tokenVersion: 0
+  });
+  await newUser.save();
+
+  res.status(201).json({
+    success: true,
+    message: 'Đăng ký thành công',
+    data: { username: newUser.username, displayName: newUser.displayName }
+  });
+}
+
+module.exports = { login, me, logout, register };
