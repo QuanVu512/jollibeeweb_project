@@ -16,23 +16,8 @@ const ingredientSchema = new mongoose.Schema(
     name: { type: String, required: true, trim: true, maxlength: 120 },
     supplierName: { type: String, trim: true, maxlength: 160, default: '' },
     baseUnit: { type: String, required: true, trim: true, maxlength: 40 },
-<<<<<<< HEAD
-    // Nơi sản xuất (có thể để null nếu chưa có dữ liệu)
     productionPlace: { type: String, trim: true, maxlength: 160, default: null },
-
-    stockQuantity: {
-      type: Number,
-      default: 0,
-      min: 0,
-      validate: {
-        validator: Number.isInteger,
-        message: 'Tồn kho nguyên liệu phải là số nguyên theo đơn vị cơ sở.'
-      }
-    },
-    reorderLevel: { type: Number, default: 0, min: 0 },
-=======
     stockQuantity: { type: Number, default: 0, min: 0 },
->>>>>>> b4e66d9c387d1ab92c9d50485b7aac3d0f2fc1d5
     packaging: { type: [packagingSchema], default: [] },
     isActive: { type: Boolean, default: true }
   },
@@ -42,4 +27,3 @@ const ingredientSchema = new mongoose.Schema(
 ingredientSchema.index({ isActive: 1, stockQuantity: 1 });
 
 module.exports = mongoose.model('Ingredient', ingredientSchema);
-

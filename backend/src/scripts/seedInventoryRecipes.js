@@ -61,6 +61,7 @@ async function seedInventoryRecipes() {
     { code: { $nin: ORDER_MATERIAL_DEFINITIONS.map(item => item.code) } },
     { $set: { isActive: false } }
   );
+  await PurchaseMaterial.collection.updateMany({}, { $unset: { stockQuantity: '' } });
 
   for (const definition of RECIPE_DEFINITIONS) {
     const recipeIngredients = definition.ingredients.map(item => {
