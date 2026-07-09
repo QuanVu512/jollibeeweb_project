@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Tạo đơn tại quầy</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="icon" href="/assets/logo.png">
+    <style>
+        * { font-family: 'Nunito', 'Segoe UI', -apple-system, sans-serif; box-sizing: border-box; }
+        input, select, textarea, button { font-family: 'Nunito', 'Segoe UI', -apple-system, sans-serif; }
+        .emoji { font-family: "Segoe UI Emoji", "Segoe UI Symbol", "Apple Color Emoji", "Noto Color Emoji", sans-serif; margin-right: 4px; }
+        body { background-color: #fdf5e6; background-image: url('data:image/svg+xml;utf8,<svg width="150" height="150" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><text x="10" y="40" font-size="20" opacity="0.04">🍗</text><text x="70" y="80" font-size="20" opacity="0.04">🌶️</text></svg>'); margin: 0; padding: 0; }
+        header { background-color: #fff; padding: 15px; text-align: center; border-bottom: 4px solid #d8262f; display: flex; justify-content: center; align-items: center; position: relative; }
+        header img { height: 75px; }
+        .user-menu { position: absolute; right: 30px; display: inline-block; }
+        .avatar-btn { background: #fff; border: 2px solid #d8262f; border-radius: 50px; padding: 5px 15px; cursor: pointer; display: flex; align-items: center; gap: 10px; font-weight: 700; color: #d8262f; }
+        .avatar-btn img { width: 35px; height: 35px; border-radius: 50%; }
+        .dropdown-content { display: none; position: absolute; right: 0; background-color: white; min-width: 200px; box-shadow: 0px 8px 16px rgba(0,0,0,0.2); border-radius: 8px; overflow: hidden; border: 1px solid #eee; z-index: 100; }
+        .dropdown-content a { color: #2b2b2b; padding: 12px 16px; text-decoration: none; display: block; font-size: 14px; text-align: left; border-bottom: 1px solid #eee; }
+        .dropdown-content a:hover { background-color: #fdf5e6; color: #d8262f; }
+        .user-menu:hover .dropdown-content { display: block; }
+        
+        .nav-menu { background-color: #2b2b2b; padding: 12px; text-align: center; }
+        .nav-menu a { color: white; text-decoration: none; margin: 0 20px; font-weight: 700; text-transform: uppercase; }
+        .nav-menu a.active { color: #f3a22f; }
+        
+        .main-container { display: flex; max-width: 1200px; margin: 30px auto; gap: 20px; padding: 0 20px; }
+        .menu-side { flex: 2; display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; align-content: start; }
+        .food-card { background: #fff; padding: 20px; border-radius: 12px; text-align: center; border: 1px solid #eee; box-shadow: 0 4px 8px rgba(0,0,0,0.05); display: flex; flex-direction: column; justify-content: space-between; }
+        .btn-add { background: #d8262f; color: white; border: none; padding: 10px 20px; border-radius: 20px; cursor: pointer; font-weight: 900; margin-top: 10px; width: 100%; transition: background-color 0.2s; }
+        .btn-add:hover { background-color: #b51c22; }
+        
+        .cart-side { flex: 1; background: #fff; padding: 25px; border-radius: 15px; border: 2px solid #ffefef; box-shadow: 0 10px 20px rgba(0,0,0,0.05); height: fit-content; }
+        .btn-order { background: #28a745; color: white; width: 100%; padding: 15px; border: none; border-radius: 8px; font-weight: 900; cursor: pointer; margin-top: 20px; box-shadow: 0 4px 0 #1e7e34; font-size: 16px; text-transform: uppercase; }
+        .btn-order:hover { background-color: #218838; }
+        .btn-order:disabled { background-color: #6c757d; box-shadow: 0 4px 0 #495057; cursor: not-allowed; }
+        
+        .cart-table { width: 100%; border-collapse: collapse; }
+        .cart-table td { padding: 10px 0; border-bottom: 1px solid #eee; }
+        .qty-input { width: 50px; padding: 5px; text-align: center; border-radius: 4px; border: 1px solid #ddd; }
+        .btn-remove { background: none; border: none; color: #d8262f; cursor: pointer; font-size: 16px; font-weight: bold; }
+    </style>
+    <script src="/assets/js/role-guard.js" defer></script>
+    <script src="/banhang/banhang-api.js" defer></script>
+    <script src="/banhang/tao_don_hang.js" defer></script>
+</head>
+<body data-required-role="cashier, admin">
+<header>
+    <img src="https://jollibee.com.vn/static/version1775488343/frontend/Jollibee/default/vi_VN/images/logo.png" alt="Jollibee Logo">
+    <div class="user-menu">
+        <div class="avatar-btn">
+            <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="User">
+            <span id="staff-name">Nhân viên</span>
+        </div>
+        <div class="dropdown-content">
+            <a href="#" id="btn-logout" style="color: #d8262f; border-bottom: none;"><span class="emoji">🚪</span> Đăng xuất</a>
+        </div>
+    </div>
+</header>
+<div class="nav-menu">
+    <a href="tao_don_hang.html" class="active">Tạo đơn tại quầy</a>
+    <a href="quan_ly_don_hang.html">Xác nhận đơn hàng</a>
+    <a href="bep_che_bien.html">Bếp chế biến</a>
+</div>
+<div class="main-container">
+    <div class="menu-side" id="menu-container">
+        <!-- Dish cards will load here via JavaScript -->
+        <p style="text-align: center; grid-column: 1/-1; color: #888;">Đang tải danh sách món ăn...</p>
+    </div>
+    <div class="cart-side">
+        <h3 style="color: #d8262f; margin-top: 0;"><span class="emoji">🛒</span> Giỏ hàng quầy</h3>
+        <table class="cart-table">
+            <tbody id="cart-items">
+                <!-- Cart items will render here -->
+                <tr>
+                    <td colspan="3" align="center" style="color: #888; padding: 20px 0;">Giỏ hàng trống</td>
+                </tr>
+            </tbody>
+        </table>
+        <h2 style="text-align: right; color: #d8262f; margin: 20px 0;" id="cart-total">0đ</h2>
+        
+        <form id="order-form">
+            <p><b>Hình thức:</b></p>
+            <select id="order-type" name="order_type" style="width:100%; padding:10px; margin-bottom:10px; border-radius: 5px; border: 1px solid #ddd; font-weight: bold;">
+                <option value="dine_in">🍽️ Ăn tại chỗ (Phục vụ)</option>
+                <option value="pickup">Mang về</option>
+                <option value="delivery">🛵 Giao hàng / Ship</option>
+            </select>
+            
+            <p><b>Bàn ăn / Địa chỉ:</b></p>
+            <input type="text" id="delivery-address" name="dia_chi" placeholder="Nhập số bàn (nếu ăn tại chỗ) hoặc địa chỉ giao" style="width:100%; padding:10px; border-radius: 5px; border: 1px solid #ddd; margin-bottom: 10px;" required>
+            
+            <p><b>Tên khách hàng (Tùy chọn):</b></p>
+            <input type="text" id="customer-name" placeholder="Tên khách hàng" style="width:100%; padding:10px; border-radius: 5px; border: 1px solid #ddd; margin-bottom: 10px;">
+
+            <p><b>Số điện thoại (Tùy chọn):</b></p>
+            <input type="text" id="customer-phone" placeholder="Số điện thoại" style="width:100%; padding:10px; border-radius: 5px; border: 1px solid #ddd; margin-bottom: 10px;">
+
+            <button type="submit" id="btn-submit-order" class="btn-order" disabled>Đặt hàng</button>
+        </form>
+    </div>
+</div>
+</body>
+</html>

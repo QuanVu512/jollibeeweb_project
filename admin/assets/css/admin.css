@@ -28,7 +28,8 @@ body {
 
 button,
 input,
-select {
+select,
+textarea {
   font: inherit;
 }
 
@@ -142,6 +143,61 @@ a {
   align-items: start;
 }
 
+.work-entry-card {
+  margin-bottom: 24px;
+}
+
+.work-entry-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(180px, 1fr));
+  gap: 14px;
+}
+
+.work-entry-link {
+  display: flex;
+  min-height: 88px;
+  align-items: center;
+  gap: 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fbfcfd;
+  color: var(--text);
+  padding: 16px;
+  text-decoration: none;
+  transition: 160ms ease;
+}
+
+.work-entry-link:hover {
+  border-color: var(--brand);
+  background: #fff7f7;
+  transform: translateY(-1px);
+}
+
+.work-entry-icon {
+  display: inline-flex;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--brand);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.work-entry-link strong {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.work-entry-link small {
+  display: block;
+  color: var(--muted);
+  line-height: 1.35;
+}
+
 .card {
   border: 1px solid rgba(0, 0, 0, 0.03);
   border-top: 4px solid var(--brand);
@@ -179,7 +235,8 @@ a {
 }
 
 .form-group input,
-.form-group select {
+.form-group select,
+.form-group textarea {
   width: 100%;
   border: 1px solid #cbd3dc;
   border-radius: 8px;
@@ -190,10 +247,16 @@ a {
 }
 
 .form-group input:focus,
-.form-group select:focus {
+.form-group select:focus,
+.form-group textarea:focus {
   border-color: var(--brand);
   background: #fff;
   box-shadow: 0 0 0 3px rgba(226, 27, 34, 0.1);
+}
+
+.form-group textarea {
+  min-height: 160px;
+  resize: vertical;
 }
 
 .actions {
@@ -278,6 +341,23 @@ a {
 .table-wrap {
   width: 100%;
   overflow-x: auto;
+}
+
+.table-title {
+  margin-bottom: 0;
+  border-bottom: 0;
+  padding-bottom: 0;
+  text-align: left;
+}
+
+.notification-grid {
+  grid-template-columns: minmax(300px, 0.85fr) minmax(560px, 1.15fr);
+}
+
+.message-preview {
+  max-width: 280px;
+  white-space: normal;
+  line-height: 1.45;
 }
 
 table {
@@ -467,7 +547,8 @@ tbody tr:hover {
 
 @media (max-width: 1000px) {
   .grid-two,
-  .dashboard-cards {
+  .dashboard-cards,
+  .work-entry-grid {
     grid-template-columns: 1fr;
   }
 

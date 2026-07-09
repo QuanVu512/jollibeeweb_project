@@ -64,6 +64,8 @@ const orderSchema = new mongoose.Schema(
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
     acceptedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
     preparedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+    inventoryDeductedAt: { type: Date, default: null },
+    inventoryDeductedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
     assignedShipper: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
     statusHistory: { type: [statusHistorySchema], default: [] },
     notes: { type: String, trim: true, maxlength: 500, default: '' },
@@ -83,12 +85,21 @@ orderSchema.index({ createdBy: 1, orderedAt: -1 });
 
 orderSchema.pre('validate', async function assignOrderCode() {
   if (!this.orderCode) {
-    const counter = await Counter.findByIdAndUpdate(
-      'order',
-      { $inc: { sequence: 1 } },
-      { new: true, upsert: true, setDefaultsOnInsert: true }
-    );
-    this.orderCode = `DH${String(counter.sequence).padStart(6, '0')}`;
+    let unique = false;
+    let code = '';
+    while (!unique) {
+      const counter = await Counter.findByIdAndUpdate(
+        'order',
+        { $inc: { sequence: 1 } },
+        { new: true, upsert: true, setDefaultsOnInsert: true }
+      );
+      code = `DH${String(counter.sequence).padStart(6, '0')}`;
+      const existing = await this.constructor.findOne({ orderCode: code });
+      if (!existing) {
+        unique = true;
+      }
+    }
+    this.orderCode = code;
   }
 
   this.items.forEach((item) => {

@@ -5,19 +5,19 @@ const ROLE_DEFINITIONS = Object.freeze([
     key: ROLES.ADMIN,
     label: ROLE_LABELS[ROLES.ADMIN],
     description: 'Quản lý nhân viên, tài khoản, báo cáo và cấu hình hệ thống.',
-    permissions: ['employees.manage', 'accounts.manage', 'roles.view', 'reports.view', 'reports.export']
+    permissions: ['employees.manage', 'accounts.manage', 'roles.view', 'reports.view', 'reports.export', 'notifications.manage']
   },
   {
     key: ROLES.CASHIER,
     label: ROLE_LABELS[ROLES.CASHIER],
-    description: 'Tạo đơn tại quầy, tiếp nhận hoặc hủy đơn online và xem thông tin khách hàng.',
-    permissions: ['products.view', 'customers.view', 'customers.create', 'orders.create', 'orders.accept', 'orders.cancel']
+    description: 'Tạo đơn tại quầy, tiếp nhận hoặc hủy đơn online, xác nhận đơn đã hoàn tất và xem thông tin khách hàng.',
+    permissions: ['products.view', 'customers.view', 'customers.create', 'orders.create', 'orders.accept', 'orders.cancel', 'orders.prepare', 'orders.ready']
   },
   {
     key: ROLES.KITCHEN,
     label: ROLE_LABELS[ROLES.KITCHEN],
-    description: 'Chế biến đơn, cập nhật trạng thái bếp, quản lý món ăn và tồn kho.',
-    permissions: ['orders.kitchen.view', 'orders.prepare', 'orders.ready', 'products.manage', 'inventory.manage']
+    description: 'Xem đơn cần chế biến, quản lý món ăn và tồn kho.',
+    permissions: ['orders.kitchen.view', 'products.manage', 'inventory.manage']
   },
   {
     key: ROLES.SHIPPER,

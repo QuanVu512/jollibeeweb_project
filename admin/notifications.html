@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Thông báo khách hàng</title>
+  <link rel="icon" href="/assets/logo.png">
+  <link rel="stylesheet" href="/admin/assets/css/admin.css">
+  <script src="/assets/js/role-guard.js" defer></script>
+  <script src="/admin/assets/js/api.js" defer></script>
+  <script src="/admin/assets/js/common.js" defer></script>
+  <script src="/admin/assets/js/notifications.js" defer></script>
+</head>
+<body data-required-role="admin">
+  <aside class="sidebar">
+    <div class="sidebar-brand">JOLLIBEE ADMIN</div>
+    <nav class="sidebar-nav" aria-label="Điều hướng quản trị">
+      <a href="/admin/">Quản lý tài khoản</a>
+      <a href="/admin/staff.html">Hồ sơ nhân viên</a>
+      <a href="/admin/report.html">Báo cáo thống kê</a>
+      <a class="active" href="/admin/notifications.html">Thông báo khách hàng</a>
+    </nav>
+  </aside>
+
+  <div class="page-shell">
+    <header class="topbar">
+      <img src="/assets/logo.png" alt="Jollibee">
+      <div class="topbar-user">
+        <span>Chào, <span class="user-name" data-user-name>Admin</span></span>
+        <button class="btn btn-danger" type="button" data-logout>Đăng xuất</button>
+      </div>
+    </header>
+
+    <main class="content">
+      <div class="page-heading">
+        <h1>Thông báo khách hàng</h1>
+      </div>
+
+      <div class="grid-two notification-grid">
+        <section class="card">
+          <h2 class="card-title">Gửi thông báo</h2>
+          <form id="notification-form">
+            <div class="form-group">
+              <label for="notification-title">Tiêu đề</label>
+              <input id="notification-title" name="title" maxlength="120" required placeholder="Tiêu đề thông báo">
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="notification-audience">Nhóm khách nhận</label>
+                <select id="notification-audience" name="audience">
+                  <option value="all_customers">Tất cả khách hàng</option>
+                  <option value="active_customers">Khách hàng đang hoạt động</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="notification-priority">Mức độ</label>
+                <select id="notification-priority" name="priority">
+                  <option value="normal">Bình thường</option>
+                  <option value="important">Quan trọng</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="notification-message">Nội dung</label>
+              <textarea id="notification-message" name="message" maxlength="1000" rows="8" required placeholder="Nhập nội dung thông báo cho khách hàng"></textarea>
+            </div>
+            <button id="notification-submit" class="btn btn-primary btn-block" type="submit">Gửi thông báo</button>
+          </form>
+        </section>
+
+        <section class="card">
+          <div class="table-tools">
+            <h2 class="card-title table-title">Lịch sử thông báo</h2>
+            <input id="notification-search" class="search-input" type="search" placeholder="Tìm theo tiêu đề hoặc nội dung...">
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Tiêu đề</th>
+                  <th>Nhóm nhận</th>
+                  <th>Mức độ</th>
+                  <th>Người gửi</th>
+                  <th>Thời điểm</th>
+                  <th>Nội dung</th>
+                </tr>
+              </thead>
+              <tbody id="notification-table-body">
+                <tr><td class="empty-cell" colspan="6">Đang tải dữ liệu...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

@@ -10,16 +10,10 @@
       href="https://jollibee.com.vn/media/favicon/default/favicon.png"
     />
 
-    <link
-      href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap"
-      rel="stylesheet"
-    />
-
     <link rel="stylesheet" href="shipper.css" />
-    <script src="/assets/js/role-guard.js" defer></script>
   </head>
 
-  <body data-required-role="shipper">
+  <body>
     <!-- HEADER -->
     <div class="header-jollibee">
       <div class="logo">
@@ -28,6 +22,24 @@
           alt="Jollibee Logo"
         />
         <span>Jollibee</span>
+      </div>
+
+      <div class="shipper-profile">
+        <div class="shipper-avatar">👤</div>
+
+        <div class="shipper-info">
+          <div class="shipper-name">
+            Shipper: <span id="shipper-name">Nguyễn Văn A</span>
+          </div>
+
+          <div class="shipper-code">
+            Mã NV: <span id="shipper-code">SP001</span>
+          </div>
+        </div>
+
+        <button class="logout-btn" type="button" id="logout-btn">
+          Đăng xuất
+        </button>
       </div>
     </div>
 
@@ -109,6 +121,10 @@
       </div>
     </div>
 
-    <script src="shipper.js"></script>
+    <script src="js/shipper.utils.js"></script>
+    <script src="js/shipper.api.js"></script>
+    <script src="js/shipper.render.js"></script>
+    <script src="js/shipper.actions.js"></script>
+    <script src="js/shipper.main.js"></script>
   </body>
 </html>

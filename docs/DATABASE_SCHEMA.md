@@ -1,6 +1,6 @@
 # Thiết kế dữ liệu MongoDB Atlas
 
-MongoDB gọi “bảng” là **collection**. Hệ thống hiện có 13 collection; khi backend khởi động, các collection và index cần thiết sẽ được tự tạo trên database `jollibee`.
+MongoDB gọi “bảng” là **collection**. Hệ thống hiện có 18 collection; khi backend khởi động, các collection và index cần thiết sẽ được tự tạo trên database `jollibee`.
 
 ## Danh sách collection và thuộc tính quan trọng
 
@@ -12,13 +12,24 @@ MongoDB gọi “bảng” là **collection**. Hệ thống hiện có 13 collec
 | `customers` | `customerCode`, `fullName`, `phone`, `email`, `birthDate`, `gender`, `addresses`, `loyaltyPoints`, `isActive`, `account`, `createdAt` | Khách mới, khách quay lại, phân nhóm khách hàng và điểm tích lũy |
 | `categories` | `code`, `name`, `slug`, `sortOrder`, `isActive` | Doanh số theo danh mục món |
 | `products` | `productCode`, `name`, `category`, `categoryCode`, `price`, `costPrice`, `stock`, `unit`, `reorderLevel`, `image`, `isActive` | Doanh số món, lợi nhuận, tồn kho thấp và giá trị tồn |
+| `ingredients` | `code`, `name`, `supplierName`, `baseUnit`, `stockQuantity`, `packaging[]`, `isActive` | Tồn nguyên liệu theo đơn vị cơ sở, nhà cung cấp và quy đổi nhập kho/bán lẻ |
+| `purchasematerials` | `code`, `name`, `ingredient`, `ingredientCode`, `orderUnit`, `orderUnitLabel`, `stockUnit`, `stockQuantityPerOrderUnit`, `supplierName`, `isActive` | Danh mục nguyên vật liệu đặt hàng theo đơn vị mua, quy đổi về nguyên liệu kiểm kho |
+| `recipes` | `recipeCode`, `productCode`, `name`, `ingredients[]`, `yieldQuantity`, `orderTypes`, `isActive` | Công thức trừ kho nguyên liệu theo từng món bán |
+| `kitchensupplyorders` | `items[]`, `status`, `note`, `createdBy`, `confirmedBy`, `cancelledBy`, `createdAt` | Lưu lịch sử đặt hàng nguyên vật liệu của bếp nếu dùng luồng đặt hàng |
 | `carts` | `customer`, `items[]`, `updatedAt` | Giỏ hàng đang lưu và sản phẩm được quan tâm |
 | `orders` | mã đơn, khách hàng, thời gian, loại/nguồn đơn, tổng tiền, thanh toán, nhân viên xử lý, trạng thái và `items[]` | Collection chính cho doanh thu và hiệu suất vận hành |
 | `suppliers` | `supplierCode`, `name`, `contactName`, `phone`, `email`, `address`, `taxCode`, `isActive` | Chi phí và số lần nhập theo nhà cung cấp |
 | `inventorytransactions` | `product`, `type`, `quantityChange`, `stockBefore`, `stockAfter`, `unitCost`, `totalCost`, `supplier`, `supplierName`, `referenceCode`, `order`, `createdBy`, `createdAt` | Nhập/xuất/điều chỉnh kho, chi phí nhập và đối chiếu tồn |
 | `paymenttransactions` | `order`, `type`, `method`, `amount`, `status`, `transactionReference`, `processedBy`, `processedAt` | Tiền thu/hoàn, tỷ lệ giao dịch thành công và phương thức thanh toán |
+| `notifications` | `title`, `message`, `audience`, `priority`, `status`, `recipientCount`, `createdBy`, `sentAt` | Lưu thông báo admin gửi cho khách hàng để giao diện khách hàng hiển thị sau này |
 | `auditlogs` | `actor`, `action`, `entityType`, `entityId`, `before`, `after`, `ipAddress`, `createdAt` | Truy vết ai thay đổi dữ liệu và thời điểm thay đổi |
 | `counters` | `_id`, `sequence` | Sinh mã liên tục `NV`, `KH`, `MON`, `NCC`, `DH` |
+
+## Quy chuẩn đơn vị nguyên liệu
+
+`ingredients.packaging[].unit` dùng thống nhất 4 mã: `case` = thùng, `bag` = túi lớn, `pack` = túi nilon chứa đồ nhỏ, `pcs` = cái. `baseUnit` vẫn có thể là đơn vị kiểm kho như `kg` hoặc `gram` khi nguyên liệu cần cân đo trực tiếp.
+
+`purchasematerials` là bảng dùng cho đặt hàng nhà cung cấp. Mỗi dòng trỏ về một `ingredients` tương ứng và lưu `stockQuantityPerOrderUnit` để biết 1 đơn vị đặt hàng nhập vào kho thành bao nhiêu đơn vị kiểm kho. Ví dụ gạo đặt theo `bag` và vào kho thành `20 kg`; cà chua đặt theo `pcs` và vào kho thành `1 pcs`.
 
 ## Đơn hàng và chi tiết đơn hàng
 

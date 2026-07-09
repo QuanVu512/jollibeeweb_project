@@ -92,7 +92,7 @@
       <section id="ingredientsView" class="view active">
         <div class="stats">
           <div class="stat"><strong id="totalIngredients">0</strong><span>Tổng nguyên liệu</span></div>
-          <div class="stat"><strong id="lowStockCount">0</strong><span>Đang sắp hết</span></div>
+          <div class="stat"><strong id="inStockCount">0</strong><span>Có tồn kho</span></div>
           <div class="stat"><strong id="activeIngredients">0</strong><span>Đang sử dụng</span></div>
         </div>
 
@@ -111,16 +111,16 @@
                   <input id="name" name="name" required placeholder="VD: Bột chiên gà" />
                 </div>
                 <div class="form-group">
+                  <label for="supplierName">Nhà cung cấp</label>
+                  <input id="supplierName" name="supplierName" placeholder="VD: xưởng cung cấp gà ướp G" />
+                </div>
+                <div class="form-group">
                   <label for="baseUnit">Đơn vị</label>
                   <input id="baseUnit" name="baseUnit" required placeholder="VD: kg" />
                 </div>
                 <div class="form-group">
                   <label for="stockQuantity">Tồn kho hiện tại</label>
                   <input id="stockQuantity" name="stockQuantity" type="number" min="0" value="0" />
-                </div>
-                <div class="form-group">
-                  <label for="reorderLevel">Mức cảnh báo</label>
-                  <input id="reorderLevel" name="reorderLevel" type="number" min="0" value="0" />
                 </div>
                 <div class="form-group">
                   <label for="isActive">Trạng thái</label>
@@ -149,9 +149,9 @@
               <tr>
                 <th>Mã</th>
                 <th>Tên</th>
+                <th>Nhà cung cấp</th>
                 <th>Đơn vị</th>
                 <th>Tồn kho</th>
-                <th>Mức cảnh báo</th>
                 <th>Trạng thái</th>
                 <th>Thao tác</th>
               </tr>
@@ -210,15 +210,14 @@
     function resetForm() {
       form.reset();
       document.getElementById('stockQuantity').value = '0';
-      document.getElementById('reorderLevel').value = '0';
       document.getElementById('isActive').value = 'true';
       state.editingId = null;
     }
 
     function renderStats() {
       document.getElementById('totalIngredients').textContent = state.ingredients.length;
-      const lowStock = state.ingredients.filter((item) => item.stockQuantity <= (item.reorderLevel || 0)).length;
-      document.getElementById('lowStockCount').textContent = lowStock;
+      const inStock = state.ingredients.filter((item) => Number(item.stockQuantity) > 0).length;
+      document.getElementById('inStockCount').textContent = inStock;
       document.getElementById('activeIngredients').textContent = state.ingredients.filter((item) => item.isActive).length;
     }
 
@@ -238,9 +237,9 @@
         <tr>
           <td>${item.code}</td>
           <td>${item.name}</td>
+          <td>${item.supplierName || '<span class="muted">Chưa ghi</span>'}</td>
           <td>${item.baseUnit}</td>
           <td>${item.stockQuantity}</td>
-          <td>${item.reorderLevel}</td>
           <td>${item.isActive ? '<span class="pill">Đang dùng</span>' : '<span class="pill low">Tạm ngưng</span>'}</td>
           <td class="row-actions">
             <button class="btn btn-secondary" data-action="edit" data-id="${item._id}">Sửa</button>
@@ -281,9 +280,9 @@
       const payload = {
         code: document.getElementById('code').value.trim().toUpperCase(),
         name: document.getElementById('name').value.trim(),
+        supplierName: document.getElementById('supplierName').value.trim(),
         baseUnit: document.getElementById('baseUnit').value.trim(),
         stockQuantity: Number(document.getElementById('stockQuantity').value || 0),
-        reorderLevel: Number(document.getElementById('reorderLevel').value || 0),
         isActive: document.getElementById('isActive').value === 'true'
       };
 
@@ -315,9 +314,9 @@
         state.editingId = item._id;
         document.getElementById('code').value = item.code;
         document.getElementById('name').value = item.name;
+        document.getElementById('supplierName').value = item.supplierName || '';
         document.getElementById('baseUnit').value = item.baseUnit;
         document.getElementById('stockQuantity').value = item.stockQuantity;
-        document.getElementById('reorderLevel').value = item.reorderLevel;
         document.getElementById('isActive').value = String(item.isActive);
         switchView('ingredients');
       }

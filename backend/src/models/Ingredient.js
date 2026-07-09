@@ -4,7 +4,7 @@ const packagingSchema = new mongoose.Schema(
   {
     unit: { type: String, required: true, trim: true, maxlength: 40 },
     label: { type: String, required: true, trim: true, maxlength: 80 },
-    baseQuantity: { type: Number, required: true, min: 1 },
+    baseQuantity: { type: Number, required: true, min: 0.000001 },
     note: { type: String, trim: true, maxlength: 200, default: '' }
   },
   { _id: false }
@@ -14,7 +14,9 @@ const ingredientSchema = new mongoose.Schema(
   {
     code: { type: String, required: true, unique: true, trim: true, uppercase: true },
     name: { type: String, required: true, trim: true, maxlength: 120 },
+    supplierName: { type: String, trim: true, maxlength: 160, default: '' },
     baseUnit: { type: String, required: true, trim: true, maxlength: 40 },
+<<<<<<< HEAD
     // Nơi sản xuất (có thể để null nếu chưa có dữ liệu)
     productionPlace: { type: String, trim: true, maxlength: 160, default: null },
 
@@ -28,6 +30,9 @@ const ingredientSchema = new mongoose.Schema(
       }
     },
     reorderLevel: { type: Number, default: 0, min: 0 },
+=======
+    stockQuantity: { type: Number, default: 0, min: 0 },
+>>>>>>> b4e66d9c387d1ab92c9d50485b7aac3d0f2fc1d5
     packaging: { type: [packagingSchema], default: [] },
     isActive: { type: Boolean, default: true }
   },

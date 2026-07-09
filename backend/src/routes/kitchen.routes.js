@@ -7,18 +7,19 @@ const ApiError = require('../utils/ApiError');
 const asyncHandler = require('../utils/asyncHandler');
 
 const router = express.Router();
+const kitchenOrAdmin = authorize(ROLES.KITCHEN, ROLES.ADMIN);
 
-router.get('/view', authenticate, authorize(ROLES.KITCHEN), (_req, res) => {
+router.get('/view', authenticate, kitchenOrAdmin, (_req, res) => {
   res.send(renderKitchenPage([]));
 });
 
-router.get('/ingredients', authenticate, authorize(ROLES.KITCHEN), asyncHandler(async (_req, res) => {
+router.get('/ingredients', authenticate, kitchenOrAdmin, asyncHandler(async (_req, res) => {
   const ingredients = await Ingredient.find({}).sort({ createdAt: -1 }).lean();
   res.json({ success: true, data: ingredients });
 }));
 
-router.post('/ingredients', authenticate, authorize(ROLES.KITCHEN), asyncHandler(async (req, res) => {
-  const { code, name, baseUnit, stockQuantity = 0, reorderLevel = 0, isActive = true } = req.body || {};
+router.post('/ingredients', authenticate, kitchenOrAdmin, asyncHandler(async (req, res) => {
+  const { code, name, supplierName = '', baseUnit, stockQuantity = 0, isActive = true } = req.body || {};
 
   if (!code || !name || !baseUnit) {
     throw new ApiError(400, 'Vui lòng nhập mã, tên và đơn vị nguyên liệu.');
@@ -27,17 +28,17 @@ router.post('/ingredients', authenticate, authorize(ROLES.KITCHEN), asyncHandler
   const ingredient = await Ingredient.create({
     code: String(code).trim().toUpperCase(),
     name: String(name).trim(),
+    supplierName: String(supplierName || '').trim(),
     baseUnit: String(baseUnit).trim(),
     stockQuantity: Number.isFinite(Number(stockQuantity)) ? Number(stockQuantity) : 0,
-    reorderLevel: Number.isFinite(Number(reorderLevel)) ? Number(reorderLevel) : 0,
     isActive: typeof isActive === 'boolean' ? isActive : true
   });
 
   res.status(201).json({ success: true, data: ingredient });
 }));
 
-router.put('/ingredients/:id', authenticate, authorize(ROLES.KITCHEN), asyncHandler(async (req, res) => {
-  const { code, name, baseUnit, stockQuantity = 0, reorderLevel = 0, isActive = true } = req.body || {};
+router.put('/ingredients/:id', authenticate, kitchenOrAdmin, asyncHandler(async (req, res) => {
+  const { code, name, supplierName = '', baseUnit, stockQuantity = 0, isActive = true } = req.body || {};
 
   if (!code || !name || !baseUnit) {
     throw new ApiError(400, 'Vui lòng nhập mã, tên và đơn vị nguyên liệu.');
@@ -50,16 +51,16 @@ router.put('/ingredients/:id', authenticate, authorize(ROLES.KITCHEN), asyncHand
 
   ingredient.code = String(code).trim().toUpperCase();
   ingredient.name = String(name).trim();
+  ingredient.supplierName = String(supplierName || '').trim();
   ingredient.baseUnit = String(baseUnit).trim();
   ingredient.stockQuantity = Number.isFinite(Number(stockQuantity)) ? Number(stockQuantity) : 0;
-  ingredient.reorderLevel = Number.isFinite(Number(reorderLevel)) ? Number(reorderLevel) : 0;
   ingredient.isActive = typeof isActive === 'boolean' ? isActive : true;
   await ingredient.save();
 
   res.json({ success: true, data: ingredient });
 }));
 
-router.delete('/ingredients/:id', authenticate, authorize(ROLES.KITCHEN), asyncHandler(async (req, res) => {
+router.delete('/ingredients/:id', authenticate, kitchenOrAdmin, asyncHandler(async (req, res) => {
   const ingredient = await Ingredient.findById(req.params.id);
   if (!ingredient) {
     throw new ApiError(404, 'Không tìm thấy nguyên liệu.');
@@ -69,7 +70,7 @@ router.delete('/ingredients/:id', authenticate, authorize(ROLES.KITCHEN), asyncH
   res.json({ success: true, data: { id: req.params.id } });
 }));
 
-router.post('/inventory/adjust', authenticate, authorize(ROLES.KITCHEN), asyncHandler(async (req, res) => {
+router.post('/inventory/adjust', authenticate, kitchenOrAdmin, asyncHandler(async (req, res) => {
   const { ingredientId, change, note = '' } = req.body || {};
   const delta = Number(change);
 
