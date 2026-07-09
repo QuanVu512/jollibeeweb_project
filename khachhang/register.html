@@ -5,38 +5,64 @@
     <title>Đăng ký - Jollibee</title>
     <style>
         body { font-family: Arial, sans-serif; background-color: #f4f4f4; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .auth-container { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 100%; max-width: 400px; text-align: center; }
+        .auth-container { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 100%; max-width: 450px; text-align: center; height: auto; max-height: 90vh; overflow-y: auto;}
         .auth-container img { width: 100px; margin-bottom: 20px; }
         .auth-container h2 { color: #e21b22; margin-bottom: 20px; }
         .form-group { margin-bottom: 15px; text-align: left; }
         .form-group label { display: block; font-weight: bold; margin-bottom: 5px; color: #333; }
-        .form-group input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+        .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
         .btn-submit { background: #e21b22; color: white; border: none; padding: 12px; width: 100%; border-radius: 5px; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.2s; margin-top: 10px;}
         .btn-submit:hover { background: #b9151c; }
         .link-text { margin-top: 15px; font-size: 14px; }
         .link-text a { color: #e21b22; text-decoration: none; font-weight: bold; }
+        
+        .auth-container::-webkit-scrollbar { width: 6px; }
+        .auth-container::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
     </style>
 </head>
 <body>
     <div class="auth-container">
-        <a href="homepage.html">
+        <a href="/khachhang/homepage.html">
             <img src="https://jollibee.com.vn/static/version1772723312/frontend/Jollibee/default/vi_VN/images/logo.png" alt="Logo">
         </a>
         <h2>Đăng Ký Tài Khoản</h2>
         
         <form id="registerForm">
             <div class="form-group">
-                <label>Họ và tên</label>
+                <label>Họ và tên *</label>
                 <input type="text" id="reg-name" placeholder="Ví dụ: Nguyễn Văn A" required>
             </div>
             <div class="form-group">
-                <label>Tên đăng nhập (hoặc Số điện thoại)</label>
+                <label>Tên đăng nhập (hoặc Số điện thoại) *</label>
                 <input type="text" id="reg-username" placeholder="Nhập tài khoản viết liền không dấu" required>
             </div>
             <div class="form-group">
-                <label>Mật khẩu</label>
+                <label>Mật khẩu *</label>
                 <input type="password" id="reg-password" placeholder="Nhập mật khẩu" required>
             </div>
+
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="reg-email" placeholder="Ví dụ: abc@gmail.com">
+            </div>
+            <div class="form-group">
+                <label>Địa chỉ</label>
+                <input type="text" id="reg-address" placeholder="Nhập địa chỉ nhận hàng mặc định">
+            </div>
+            <div class="form-group">
+                <label>Giới tính</label>
+                <select id="reg-gender">
+                    <option value="">Chọn giới tính</option>
+                    <option value="male">Nam</option>
+                    <option value="female">Nữ</option>
+                    <option value="other">Khác</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Ngày sinh</label>
+                <input type="date" id="reg-birthdate">
+            </div>
+
             <button type="submit" class="btn-submit">ĐĂNG KÝ NGAY</button>
         </form>
         
@@ -47,15 +73,22 @@
         document.getElementById('registerForm').addEventListener('submit', async (e) => {
             e.preventDefault(); 
 
-            const name = document.getElementById('reg-name').value;
+            const displayName = document.getElementById('reg-name').value;
             const username = document.getElementById('reg-username').value;
             const password = document.getElementById('reg-password').value;
+            const email = document.getElementById('reg-email').value;
+            const address = document.getElementById('reg-address').value;
+            const gender = document.getElementById('reg-gender').value;
+            const birthDate = document.getElementById('reg-birthdate').value;
 
             const payload = {
-                displayName: name,
+                displayName: displayName,
                 username: username,
                 password: password,
-                role: "customer" 
+                email: email,
+                address: address,
+                gender: gender,
+                birthDate: birthDate
             };
 
             try {
@@ -71,7 +104,7 @@
                     alert("Đăng ký thành công! Hãy đăng nhập để tiếp tục.");
                     window.location.href = "/admin/login.html"; 
                 } else {
-                    alert("Lỗi: " + (result.message || "Tên đăng nhập đã tồn tại!"));
+                    alert("Lỗi: " + (result.message || "Đăng ký thất bại!"));
                 }
             } catch (error) {
                 console.error(error);
