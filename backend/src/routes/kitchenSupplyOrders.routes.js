@@ -3,12 +3,26 @@ const mongoose = require('mongoose');
 
 const Ingredient = require('../models/Ingredient');
 const KitchenSupplyOrder = require('../models/KitchenSupplyOrder');
+const PurchaseMaterial = require('../models/PurchaseMaterial');
 const { authenticate, authorize } = require('../middleware/auth');
 const { ROLES } = require('../constants/roles');
 const ApiError = require('../utils/ApiError');
 const asyncHandler = require('../utils/asyncHandler');
+const { calculateStockDelta } = require('../services/kitchenSupplyOrderService');
 
 const router = express.Router();
+
+router.get(
+  '/purchase-materials',
+  authenticate,
+  authorize(ROLES.KITCHEN),
+  asyncHandler(async (_req, res) => {
+    const purchaseMaterials = await PurchaseMaterial.find({ isActive: true })
+      .sort({ name: 1 })
+      .lean();
+    res.json({ success: true, data: purchaseMaterials });
+  })
+);
 
 // Lịch sử đơn đặt nguyên liệu (bếp thao tác)
 router.get(
@@ -78,6 +92,7 @@ router.post(
     });
 
     const order = await KitchenSupplyOrder.create({
+      createdBy: req.user?._id || null,
       items: finalItems,
       note
     });
@@ -111,14 +126,20 @@ router.post(
       throw new ApiError(400, 'Đơn đặt đã bị hủy.');
     }
 
-    // Cộng kho theo từng item
+    const purchaseMaterials = await PurchaseMaterial.find({
+      ingredient: { $in: order.items.map((item) => item.ingredient) }
+    }).lean();
+    const purchaseMaterialMap = new Map(purchaseMaterials.map((item) => [String(item.ingredient), item]));
+
     for (const item of order.items) {
       const ingredient = await Ingredient.findById(item.ingredient);
       if (!ingredient) {
         throw new ApiError(404, `Không tìm thấy nguyên liệu: ${item.ingredient}`);
       }
 
-      ingredient.stockQuantity = ingredient.stockQuantity + Number(item.quantityBase);
+      const purchaseMaterial = purchaseMaterialMap.get(String(item.ingredient));
+      const stockDelta = calculateStockDelta(Number(item.quantityBase), purchaseMaterial);
+      ingredient.stockQuantity = ingredient.stockQuantity + stockDelta;
       await ingredient.save();
     }
 
@@ -128,6 +149,41 @@ router.post(
       order.note = [order.note, String(note)].filter(Boolean).join(' | ').slice(0, 300);
     }
 
+    await order.save();
+
+    res.json({ success: true, data: order });
+  })
+);
+
+router.post(
+  '/orders/:id/cancel',
+  authenticate,
+  authorize(ROLES.KITCHEN),
+  asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const { note = '' } = req.body || {};
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      throw new ApiError(400, 'ID đơn đặt không hợp lệ.');
+    }
+
+    const order = await KitchenSupplyOrder.findById(id);
+    if (!order) {
+      throw new ApiError(404, 'Không tìm thấy đơn đặt.');
+    }
+
+    if (order.status === 'confirmed') {
+      throw new ApiError(400, 'Đơn đã được chấp nhận, không thể hủy.');
+    }
+    if (order.status === 'cancelled') {
+      return res.json({ success: true, data: order });
+    }
+
+    order.status = 'cancelled';
+    order.cancelledBy = req.user?._id || null;
+    if (note) {
+      order.note = [order.note, String(note)].filter(Boolean).join(' | ').slice(0, 300);
+    }
     await order.save();
 
     res.json({ success: true, data: order });
