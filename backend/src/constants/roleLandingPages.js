@@ -5,7 +5,6 @@ const ROLE_LANDING_PAGES = Object.freeze({
   [ROLES.CASHIER]: '/banhang/quan_ly_don_hang.html',
   [ROLES.KITCHEN]: '/kitchen.html',
   [ROLES.SHIPPER]: '/shipper/shipper.html',
-  [ROLES.CUSTOMER]: '/homepage.php',
   [ROLES.CUSTOMER]: '/khachhang/homepage.html'
 });
 

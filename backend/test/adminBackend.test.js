@@ -246,5 +246,5 @@ test('mỗi vai trò đăng nhập được chuyển đến đúng khu vực', (
   assert.equal(getRoleLandingPage(ROLES.CASHIER), '/banhang/quan_ly_don_hang.html');
   assert.equal(getRoleLandingPage(ROLES.KITCHEN), '/kitchen.html');
   assert.equal(getRoleLandingPage(ROLES.SHIPPER), '/shipper/shipper.html');
-  assert.equal(getRoleLandingPage(ROLES.CUSTOMER), '/homepage.php');
+  assert.equal(getRoleLandingPage(ROLES.CUSTOMER), '/khachhang/homepage.html');
 });

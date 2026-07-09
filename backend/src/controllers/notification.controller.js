@@ -49,6 +49,17 @@ async function listNotifications(req, res) {
   res.json({ success: true, data: { items, pagination: paginationResult(page, limit, total) } });
 }
 
+async function listCustomerNotifications(req, res) {
+  const limit = Math.min(Math.max(Number(req.query.limit) || 8, 1), 20);
+  const items = await Notification.find({ status: 'sent' })
+    .select('title message audience priority sentAt createdAt')
+    .sort({ priority: 1, sentAt: -1, createdAt: -1 })
+    .limit(limit)
+    .lean();
+
+  res.json({ success: true, data: { items } });
+}
+
 async function createNotification(req, res) {
   const payload = validateNotificationPayload(req.body);
   const recipientCount = await Customer.countDocuments(audienceFilter(payload.audience));
@@ -76,4 +87,4 @@ async function createNotification(req, res) {
   });
 }
 
-module.exports = { listNotifications, createNotification };
+module.exports = { listNotifications, listCustomerNotifications, createNotification };

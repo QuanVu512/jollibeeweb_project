@@ -8,6 +8,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const displayName = document.getElementById('display-user-name');
     const btnLogout = document.getElementById('btn-logout');
 
+    // ==================== PHẦN THÔNG BÁO KHÁCH HÀNG ====================
+    // Vùng này dùng cho nút chuông thông báo trên homepage khách hàng.
+    // Nếu cần sửa giao diện/thay đổi cách lấy thông báo, bạn chỉnh trong vùng này.
+    const notificationWrapper = document.getElementById('notification-wrapper');
+    const notificationButton = document.getElementById('notification-button');
+    const notificationPanel = document.getElementById('notification-panel');
+    const notificationClose = document.getElementById('notification-close');
+    const notificationList = document.getElementById('notification-list');
+    const notificationCount = document.getElementById('notification-count');
+    let notificationsLoaded = false;
+    let notificationsReady = false;
+    // ================== HẾT PHẦN KHAI BÁO THÔNG BÁO ==================
+
     async function checkLoginStatus() {
         try {
             const response = await fetch('http://localhost:3000/api/v1/auth/me');
@@ -18,6 +31,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 guestMenu.style.display = 'none';
                 userMenu.style.display = 'flex';
+
+                if (result.data.user.role === 'customer' && notificationWrapper) {
+                    notificationWrapper.style.display = 'flex';
+                    setupNotifications();
+                }
                 displayName.textContent = result.data.user.displayName || result.data.user.fullName || "Khách hàng";
             }
         } catch (error) {
@@ -36,6 +54,117 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
+    // ==================== LOGIC THÔNG BÁO KHÁCH HÀNG ====================
+    // Các hàm bên dưới xử lý:
+    // 1. Gọi API lấy thông báo từ backend.
+    // 2. Hiển thị số lượng thông báo trên nút chuông.
+    // 3. Mở/đóng bảng danh sách thông báo.
+    function escapeHtml(value) {
+        return String(value || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    function formatNotificationTime(value) {
+        if (!value) return '';
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return '';
+        return new Intl.DateTimeFormat('vi-VN', {
+            hour: '2-digit',
+            minute: '2-digit',
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+        }).format(date);
+    }
+
+    function renderNotifications(items) {
+        if (!notificationList || !notificationCount) return;
+
+        if (!items || items.length === 0) {
+            notificationList.innerHTML = '<p class="notification-empty">Hiện chưa có thông báo mới.</p>';
+            notificationCount.style.display = 'none';
+            notificationCount.textContent = '0';
+            return;
+        }
+
+        notificationCount.textContent = items.length > 9 ? '9+' : String(items.length);
+        notificationCount.style.display = 'flex';
+
+        notificationList.innerHTML = items.map(item => {
+            const isImportant = item.priority === 'important';
+            const time = formatNotificationTime(item.sentAt || item.createdAt);
+            return `
+                <article class="notification-item">
+                    <div class="notification-item-title">
+                        <span>${escapeHtml(item.title)}</span>
+                        ${isImportant ? '<span class="notification-priority">Quan trọng</span>' : ''}
+                    </div>
+                    <div class="notification-message">${escapeHtml(item.message)}</div>
+                    ${time ? `<div class="notification-time">${time}</div>` : ''}
+                </article>
+            `;
+        }).join('');
+    }
+
+    async function loadNotifications() {
+        if (!notificationList) return;
+        notificationList.innerHTML = '<p class="notification-empty">Đang tải thông báo...</p>';
+
+        try {
+            const response = await fetch('http://localhost:3000/api/v1/customer/notifications?limit=8', {
+                credentials: 'include'
+            });
+            const result = await response.json();
+
+            if (!response.ok || !result.success) {
+                throw new Error(result.message || 'Không thể tải thông báo.');
+            }
+
+            renderNotifications(result.data?.items || []);
+            notificationsLoaded = true;
+        } catch (error) {
+            console.error('Lỗi tải thông báo:', error);
+            notificationList.innerHTML = '<p class="notification-error">Không thể tải thông báo. Vui lòng thử lại sau.</p>';
+        }
+    }
+
+    function setupNotifications() {
+        if (!notificationWrapper || !notificationButton || !notificationPanel) return;
+        if (notificationsReady) return;
+        notificationsReady = true;
+
+        notificationButton.addEventListener('click', async (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            notificationPanel.classList.toggle('show');
+
+            if (notificationPanel.classList.contains('show') && !notificationsLoaded) {
+                await loadNotifications();
+            }
+        });
+
+        if (notificationClose) {
+            notificationClose.addEventListener('click', (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                notificationPanel.classList.remove('show');
+            });
+        }
+
+        document.addEventListener('click', (event) => {
+            if (!notificationWrapper.contains(event.target)) {
+                notificationPanel.classList.remove('show');
+            }
+        });
+
+        loadNotifications();
+    }
+    // ================== HẾT LOGIC THÔNG BÁO KHÁCH HÀNG ==================
 
     async function fetchProducts() {
         try {
