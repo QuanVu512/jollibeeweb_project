@@ -1,16 +1,7 @@
-/* =========================================================
-   SHIPPER MAIN
-   File điều phối chính: khởi tạo trang, gắn sự kiện, load dữ liệu
-========================================================= */
-
-/* ===================== CẤU HÌNH CHUNG ===================== */
-
 const API_URL = "/api/v1/shipper/orders";
 
 let currentTab = "new";
 let allOrders = [];
-
-/* ===================== KHỞI TẠO TRANG ===================== */
 
 document.addEventListener("DOMContentLoaded", () => {
   setupTabEvents();
@@ -23,13 +14,11 @@ document.addEventListener("DOMContentLoaded", () => {
   showTab(currentTab);
   loadAllOrders();
 
-  // Tự động tải lại danh sách đơn sau mỗi 10 giây
   setInterval(() => {
     loadAllOrders();
   }, 10000);
 });
 
-/* ===================== GẮN SỰ KIỆN GIAO DIỆN ===================== */
 
 function setupTabEvents() {
   document.querySelectorAll(".nav-link").forEach((button) => {
@@ -92,7 +81,6 @@ function setupGlobalActionEvents() {
   });
 }
 
-/* ===================== XỬ LÝ TAB ===================== */
 
 function showTab(tab) {
   if (!tab) return;
@@ -114,7 +102,6 @@ function showTab(tab) {
   if (selectedTab) selectedTab.classList.add("active");
 }
 
-/* ===================== LOAD DANH SÁCH ĐƠN HÀNG ===================== */
 
 async function loadAllOrders() {
   try {

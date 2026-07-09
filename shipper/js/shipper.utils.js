@@ -95,8 +95,6 @@ function getFoodIcon(name) {
   return "🍽️";
 }
 
-/* ===================== THANH TOÁN ===================== */
-
 function getPaymentMethodText(method) {
   const methodMap = {
     cod: "COD",
@@ -133,8 +131,6 @@ function getNeedCollectAmount(order) {
 
   return 0;
 }
-
-/* ===================== FORMAT / BẢO VỆ HTML ===================== */
 
 function formatMoney(value) {
   if (!value) return "0";

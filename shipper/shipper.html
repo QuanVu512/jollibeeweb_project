@@ -14,7 +14,6 @@
   </head>
 
   <body>
-    <!-- HEADER -->
     <div class="header-jollibee">
       <div class="logo">
         <img
@@ -43,7 +42,6 @@
       </div>
     </div>
 
-    <!-- NAV MENU -->
     <div class="nav-menu">
       <button class="nav-link active" id="tab-new" type="button" data-tab="new">
         📦 Đơn mới
@@ -68,9 +66,7 @@
       </button>
     </div>
 
-    <!-- MAIN CONTENT -->
     <div class="container">
-      <!-- TAB ĐƠN MỚI -->
       <div id="content-new" class="tab-content">
         <h2 class="title">
           📦 Đơn mới
@@ -80,7 +76,6 @@
         <div id="new-orders"></div>
       </div>
 
-      <!-- TAB ĐANG GIAO -->
       <div id="content-shipping" class="tab-content" style="display: none">
         <h2 class="title">
           🚚 Đang giao
@@ -90,7 +85,6 @@
         <div id="shipping-orders"></div>
       </div>
 
-      <!-- TAB LỊCH SỬ -->
       <div id="content-history" class="tab-content" style="display: none">
         <h2 class="title">
           📜 Lịch sử
@@ -103,7 +97,6 @@
       <div id="popup" class="popup">🔔 Có đơn mới!</div>
     </div>
 
-    <!-- MODAL CHI TIẾT ĐƠN HÀNG -->
     <div id="order-detail-modal" class="modal-overlay">
       <div class="modal-box">
         <button
@@ -115,9 +108,7 @@
           ×
         </button>
 
-        <div id="order-detail-content">
-          <!-- Nội dung chi tiết đơn hàng sẽ được render bằng shipper.js -->
-        </div>
+        <div id="order-detail-content"></div>
       </div>
     </div>
 

@@ -1,10 +1,3 @@
-/* =========================================================
-   SHIPPER RENDER
-   Chứa toàn bộ hàm render HTML cho card và modal
-========================================================= */
-
-/* ===================== EMPTY STATE ===================== */
-
 function renderEmptyState(icon, text) {
   return `
     <div class="empty-state">
@@ -13,8 +6,6 @@ function renderEmptyState(icon, text) {
     </div>
   `;
 }
-
-/* ===================== CARD ĐƠN HÀNG ===================== */
 
 function renderOrderCard(order, type) {
   const orderCode = order.orderCode || order._id;
@@ -123,8 +114,6 @@ function renderCardActionButtons(order, type) {
     </button>
   `;
 }
-
-/* ===================== MODAL CHI TIẾT ĐƠN HÀNG ===================== */
 
 function renderOrderDetailModal(order) {
   const orderCode = order.orderCode || order._id;

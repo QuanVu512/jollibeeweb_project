@@ -1,10 +1,3 @@
-/* =========================================================
-   SHIPPER ACTIONS
-   Xử lý các thao tác: nhận đơn, hoàn thành, thất bại, modal, gọi điện, bản đồ
-========================================================= */
-
-/* ===================== HÀNH ĐỘNG ĐƠN HÀNG ===================== */
-
 async function acceptOrder(id) {
   try {
     await requestApi(`${API_URL}/${id}/accept`, {
@@ -59,8 +52,6 @@ async function failOrder(id) {
   }
 }
 
-/* ===================== MODAL CHI TIẾT ĐƠN HÀNG ===================== */
-
 function viewDetail(id) {
   const order = allOrders.find((item) => String(item._id) === String(id));
 
@@ -89,8 +80,6 @@ function closeDetailModal() {
   if (content) content.innerHTML = "";
 }
 
-/* ===================== GỌI ĐIỆN / MỞ BẢN ĐỒ ===================== */
-
 function callCustomer(phone) {
   if (!phone || phone === "Chưa có SĐT") {
     alert("Đơn hàng chưa có số điện thoại.");
@@ -113,14 +102,10 @@ function openMap(address) {
   window.open(mapUrl, "_blank");
 }
 
-/* ===================== THÔNG TIN TÀI KHOẢN SHIPPER ===================== */
-
 function loadShipperProfile() {
   const shipperName = document.getElementById("shipper-name");
   const shipperCode = document.getElementById("shipper-code");
 
-  // Tạm thời hiển thị dữ liệu demo.
-  // Sau này có thể thay bằng API /api/v1/auth/me nếu backend cho quyền shipper.
   if (shipperName) {
     shipperName.textContent = "An Moi";
   }

@@ -1,7 +1,4 @@
-/* =========================================================
-   SHIPPER API
-   Chứa hàm gọi API dùng chung
-========================================================= */
+
 
 async function requestApi(url, options = {}) {
   const res = await fetch(url, {
