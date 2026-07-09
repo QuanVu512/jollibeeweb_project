@@ -116,43 +116,68 @@ async function logout(req, res) {
 }
 
 async function register(req, res) {
-  const { displayName, username, password } = req.body;
+  try {
+      console.log("=== 1. DỮ LIỆU FRONTEND GỬI LÊN ===");
+      console.log(req.body);
 
-  if (!username || !password || !displayName) {
-    throw new ApiError(400, 'Vui lòng nhập đủ họ tên, tài khoản và mật khẩu.');
+      const { displayName, username, password, email, address, gender, birthDate } = req.body;
+
+      if (!username || !password || !displayName) {
+         console.log("-> Bị chặn vì thiếu họ tên, tài khoản hoặc mật khẩu");
+         return res.status(400).json({ success: false, message: 'Vui lòng nhập đủ họ tên, tài khoản và mật khẩu.' });
+      }
+
+      const cleanUsername = username.trim().toLowerCase();
+
+      const existingUser = await User.findOne({ username: cleanUsername });
+      if (existingUser) {
+         return res.status(409).json({ success: false, message: 'Tên đăng nhập hoặc số điện thoại này đã tồn tại!' });
+      }
+
+      const passwordHash = await User.hashPassword(password);
+
+      const customerData = {
+        fullName: displayName,
+        phone: cleanUsername
+      };
+      
+      if (email && email.trim() !== "") customerData.email = email.trim();
+      if (address && address.trim() !== "") customerData.address = address.trim();
+      if (gender && gender.trim() !== "") customerData.gender = gender;
+      if (birthDate && birthDate.trim() !== "") customerData.birthDate = birthDate;
+
+      console.log("=== 2. CHUẨN BỊ LƯU VÀO BẢNG CUSTOMER ===");
+      console.log(customerData);
+
+      const newCustomer = new Customer(customerData);
+      await newCustomer.save();
+
+      const newUser = new User({
+        username: cleanUsername,
+        passwordHash: passwordHash,
+        role: 'customer', 
+        displayName: displayName,
+        customer: newCustomer._id,
+        isActive: true,
+        tokenVersion: 0
+      });
+      await newUser.save();
+
+      newCustomer.account = newUser._id;
+      await newCustomer.save();
+
+      console.log("-> ĐĂNG KÝ THÀNH CÔNG!");
+      return res.status(201).json({
+        success: true,
+        message: 'Đăng ký tài khoản thành công!',
+        data: { username: newUser.username, displayName: newUser.displayName }
+      });
+
+  } catch (error) {
+      console.log("=== 🚨 LỖI CRASH Ở BACKEND 🚨 ===");
+      console.error(error);
+      return res.status(400).json({ success: false, message: error.message || "Dữ liệu không hợp lệ" });
   }
-
-  const cleanUsername = username.trim().toLowerCase();
-
-  const existingUser = await User.findOne({ username: cleanUsername });
-  if (existingUser) {
-    throw new ApiError(409, 'Tên đăng nhập hoặc số điện thoại này đã tồn tại!');
-  }
-
-  const passwordHash = await User.hashPassword(password);
-
-  const newCustomer = new Customer({
-    fullName: displayName, 
-    phone: cleanUsername
-  });
-  await newCustomer.save();
-
-  const newUser = new User({
-    username: cleanUsername,
-    passwordHash: passwordHash,
-    role: 'customer', 
-    displayName: displayName,
-    customer: newCustomer._id,
-    isActive: true,
-    tokenVersion: 0
-  });
-  await newUser.save();
-
-  res.status(201).json({
-    success: true,
-    message: 'Đăng ký thành công',
-    data: { username: newUser.username, displayName: newUser.displayName }
-  });
 }
 
 module.exports = { login, me, logout, register };

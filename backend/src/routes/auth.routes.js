@@ -17,10 +17,9 @@ const loginLimiter = rateLimit({
 });
 
 router.post('/login', loginLimiter, asyncHandler(authController.login));
-router.post('/register', asyncHandler(authController.register)); 
+router.post('/register', asyncHandler(authController.register));
 router.get('/me', authenticate, asyncHandler(authController.me));
 
-/* Logout: không yêu cầu token còn hạn — vẫn xóa cookie và redirect */
 router.get('/logout', asyncHandler(async (req, res, next) => {
   await resolveUserForLogout(req);
   return next();
