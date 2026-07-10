@@ -29,15 +29,19 @@ app.use(
           "https://jollibee.com.vn",
           "https://images.unsplash.com",
           "https://placehold.co",
-          "https://cdn-icons-png.flaticon.com"
+          "https://cdn-icons-png.flaticon.com",
         ],
         scriptSrc: ["'self'", "'unsafe-inline'"],
         scriptSrcAttr: ["'unsafe-inline'"],
         styleSrc: ["'self'", "'unsafe-inline'"],
-        connectSrc: ["'self'", "http://localhost:3000"]
-      }
-    }
-  })
+        connectSrc: [
+          "'self'",
+          "https://*.onrender.com",
+          "http://localhost:3000",
+        ],
+      },
+    },
+  }),
 );
 app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
 app.use(express.json({ limit: "200kb" }));
@@ -49,7 +53,7 @@ app.get("/health", (_req, res) => {
   res.json({
     success: true,
     service: "jollibee-admin-api",
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 });
 
@@ -58,28 +62,39 @@ app.get("/assets/logo.png", (_req, res) => res.sendFile(logoFile));
 app.use("/assets", express.static(publicAssetsDirectory));
 app.use(
   "/admin",
-  express.static(adminDirectory, { index: "index.html", extensions: ["html"] })
+  express.static(adminDirectory, { index: "index.html", extensions: ["html"] }),
 );
 app.use(
   "/banhang",
-  express.static(banhangDirectory, { index: "tao_don_hang.html", extensions: ["html"] })
+  express.static(banhangDirectory, {
+    index: "tao_don_hang.html",
+    extensions: ["html"],
+  }),
 );
 app.use(
   "/shipper",
-  express.static(shipperDirectory, { index: "shipper.html", extensions: ["html"] })
+  express.static(shipperDirectory, {
+    index: "shipper.html",
+    extensions: ["html"],
+  }),
 );
 app.use(
   "/khachhang",
-  express.static(khachhangDirectory, { index: "homepage.html", extensions: ["html"] })
+  express.static(khachhangDirectory, {
+    index: "homepage.html",
+    extensions: ["html"],
+  }),
 );
 app.use("/Menu_files", express.static(menuFilesDirectory));
 app.use(
   "/bep",
-  express.static(bepDirectory, { index: "kitchen.html", extensions: ["html"] })
+  express.static(bepDirectory, { index: "kitchen.html", extensions: ["html"] }),
 );
 
 app.get("/", (_req, res) => res.redirect("/khachhang/homepage.html"));
-app.get("/kitchen-login.html", (_req, res) => res.redirect("/bep/kitchen-login.html"));
+app.get("/kitchen-login.html", (_req, res) =>
+  res.redirect("/bep/kitchen-login.html"),
+);
 app.get(["/kitchen.html", "/bep/index.php"], (_req, res) => {
   res.redirect("/bep/kitchen.html");
 });
