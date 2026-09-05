@@ -1,6 +1,6 @@
-const Ingredient = require('../models/Ingredient');
-const InventoryTransaction = require('../models/InventoryTransaction');
-const Recipe = require('../models/Recipe');
+const ingredientRepository = require('../repositories/ingredient.repository');
+const inventoryTransactionRepository = require('../repositories/inventoryTransaction.repository');
+const recipeRepository = require('../repositories/recipe.repository');
 const ApiError = require('../utils/ApiError');
 
 function getIngredientId(recipeIngredient) {
@@ -84,20 +84,11 @@ async function loadRecipesForOrder(order, session) {
 
   if (productCodes.length === 0) return new Map();
 
-  let query = Recipe.find({
-    productCode: { $in: productCodes },
-    isActive: true,
-    $or: [
-      { orderTypes: order.orderType || 'dine_in' },
-      { orderTypes: { $size: 0 } }
-    ]
-  })
-    .populate('ingredients.ingredient')
-    .sort({ productCode: 1, version: -1, updatedAt: -1 });
-
-  if (session) query = query.session(session);
-
-  const recipes = await query;
+  const recipes = await recipeRepository.findActiveByProductCodes(
+    productCodes,
+    order.orderType,
+    session
+  );
   const recipesByProductCode = new Map();
   for (const recipe of recipes) {
     const productCode = normalizedProductCode(recipe.productCode);
@@ -127,18 +118,10 @@ async function deductIngredientsForOrder(order, userId, options = {}) {
   const deducted = [];
 
   for (const deduction of plan.deductions) {
-    const updatedIngredient = await Ingredient.findOneAndUpdate(
-      {
-        _id: deduction.ingredient,
-        isActive: true,
-        stockQuantity: { $gte: deduction.quantity }
-      },
-      { $inc: { stockQuantity: -deduction.quantity } },
-      { new: true, runValidators: true, session }
-    );
+    const updatedIngredient = await ingredientRepository.deductStock(deduction, session);
 
     if (!updatedIngredient) {
-      const currentIngredient = await Ingredient.findById(deduction.ingredient).session(session);
+      const currentIngredient = await ingredientRepository.findById(deduction.ingredient, session);
       if (!currentIngredient || !currentIngredient.isActive) {
         throw new ApiError(400, `Nguyên liệu ${deduction.ingredientName} không còn hoạt động trong kho.`);
       }
@@ -155,19 +138,17 @@ async function deductIngredientsForOrder(order, userId, options = {}) {
     const stockBefore = roundQuantity(updatedIngredient.stockQuantity + deduction.quantity);
     const stockAfter = roundQuantity(updatedIngredient.stockQuantity);
 
-    await InventoryTransaction.create([
-      {
-        ingredient: updatedIngredient._id,
-        type: 'sale',
-        quantityChange: -deduction.quantity,
-        stockBefore,
-        stockAfter,
-        referenceCode: order.orderCode,
-        order: order._id,
-        createdBy: userId,
-        note: `Trừ nguyên liệu theo công thức cho đơn ${order.orderCode}`
-      }
-    ], { session });
+    await inventoryTransactionRepository.create({
+      ingredient: updatedIngredient._id,
+      type: 'sale',
+      quantityChange: -deduction.quantity,
+      stockBefore,
+      stockAfter,
+      referenceCode: order.orderCode,
+      order: order._id,
+      createdBy: userId,
+      note: `Trừ nguyên liệu theo công thức cho đơn ${order.orderCode}`
+    }, session);
 
     deducted.push({
       ingredient: updatedIngredient._id,

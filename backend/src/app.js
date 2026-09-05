@@ -8,14 +8,16 @@ const apiRoutes = require("./routes");
 const { notFound, errorHandler } = require("./middleware/errorHandler");
 
 const app = express();
-const adminDirectory = path.resolve(__dirname, "../../admin");
-const shipperDirectory = path.resolve(__dirname, "../../shipper");
-const banhangDirectory = path.resolve(__dirname, "../../banhang");
-const khachhangDirectory = path.resolve(__dirname, "../../khachhang");
-const bepDirectory = path.resolve(__dirname, "../../bep");
-const publicAssetsDirectory = path.resolve(__dirname, "../../assets");
-const menuFilesDirectory = path.resolve(__dirname, "../../Menu_files");
-const logoFile = path.resolve(__dirname, "../../Menu_files/logo.png");
+const frontendDirectory = path.resolve(__dirname, "../../frontend");
+const adminDirectory = path.join(frontendDirectory, "admin");
+const shipperDirectory = path.join(frontendDirectory, "shipper");
+const banhangDirectory = path.join(frontendDirectory, "banhang");
+const customerDirectory = path.join(frontendDirectory, "khachhang");
+const kitchenDirectory = path.join(frontendDirectory, "bep");
+const publicAssetsDirectory = path.join(frontendDirectory, "assets");
+const publicImagesDirectory = path.join(publicAssetsDirectory, "images");
+const menuFilesDirectory = path.join(publicAssetsDirectory, "vendor", "menu-files");
+const logoFile = path.join(menuFilesDirectory, "logo.png");
 
 app.disable("x-powered-by");
 app.use(
@@ -60,6 +62,7 @@ app.get("/health", (_req, res) => {
 app.use("/api/v1", apiRoutes);
 app.get("/assets/logo.png", (_req, res) => res.sendFile(logoFile));
 app.use("/assets", express.static(publicAssetsDirectory));
+app.use("/images", express.static(publicImagesDirectory));
 app.use(
   "/admin",
   express.static(adminDirectory, { index: "index.html", extensions: ["html"] }),
@@ -80,7 +83,7 @@ app.use(
 );
 app.use(
   "/khachhang",
-  express.static(khachhangDirectory, {
+  express.static(customerDirectory, {
     index: "homepage.html",
     extensions: ["html"],
   }),
@@ -88,7 +91,10 @@ app.use(
 app.use("/Menu_files", express.static(menuFilesDirectory));
 app.use(
   "/bep",
-  express.static(bepDirectory, { index: "kitchen.html", extensions: ["html"] }),
+  express.static(kitchenDirectory, {
+    index: "kitchen.html",
+    extensions: ["html"],
+  }),
 );
 
 app.get("/", (_req, res) => res.redirect("/khachhang/homepage.html"));

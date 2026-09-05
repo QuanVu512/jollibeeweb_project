@@ -1,38 +1,44 @@
 # Jollibee Project
 
-Phiên bản này chuyển **riêng khu vực admin** từ PHP/MySQL sang REST API dùng Express.js và MongoDB. Các màn hình của khách hàng, bán hàng, bếp và giao hàng vẫn được giữ nguyên để các thành viên khác có thể tiếp tục làm và chuyển đổi dần.
+Dự án được tách thành hai phần hoạt động độc lập về trách nhiệm: giao diện tĩnh trong `frontend/` và REST API Express/MongoDB trong `backend/`. Bản PHP/MySQL cũ chỉ được lưu tại `legacy/php-app/` để đối chiếu, không thuộc luồng chạy hiện tại.
 
 ## Cấu trúc mới
 
 ```text
 jollibee_project/
-├── admin/                         # Frontend admin: HTML/CSS/JavaScript thuần
-│   ├── index.html                 # Quản lý tài khoản
-│   ├── staff.html                 # Quản lý hồ sơ nhân viên
-│   ├── report.html                # Thống kê và xuất Excel
-│   ├── login.html                 # Đăng nhập riêng cho admin
+├── frontend/                      # View/UI: HTML, CSS, JavaScript và tài nguyên tĩnh
+│   ├── admin/                     # Giao diện quản trị
+│   ├── banhang/                   # Giao diện bán hàng
+│   ├── bep/                       # Giao diện bếp
+│   ├── khachhang/                 # Giao diện khách hàng
+│   ├── shipper/                   # Giao diện giao hàng
 │   └── assets/
-│       ├── css/admin.css
-│       └── js/                    # Mỗi trang có một file xử lý riêng
-├── backend/                       # Web service Express.js
+│       ├── images/                # Hình ảnh dùng cục bộ
+│       ├── js/                    # JavaScript dùng chung
+│       └── vendor/menu-files/     # Tài nguyên bên thứ ba/bản lưu cũ
+├── backend/                       # REST API Express.js theo MVC
 │   ├── src/
-│   │   ├── config/                # Biến môi trường, kết nối MongoDB
-│   │   ├── constants/             # Vai trò và trạng thái dùng chung
-│   │   ├── controllers/           # Nhận request và trả response
+│   │   ├── config/                # Cấu hình môi trường và MongoDB
+│   │   ├── constants/             # Hằng số miền nghiệp vụ
+│   │   ├── controllers/           # Điều phối request/response
+│   │   ├── data/                  # Dữ liệu khởi tạo tĩnh
 │   │   ├── middleware/            # Xác thực, phân quyền, xử lý lỗi
-│   │   ├── models/                # MongoDB/Mongoose schemas
-│   │   ├── routes/                # REST API endpoints
-│   │   ├── scripts/               # Tạo admin, chuyển dữ liệu MySQL cũ
+│   │   ├── models/                # Model và Mongoose schema
+│   │   ├── repositories/          # Truy vấn và ghi dữ liệu qua Mongoose
+│   │   ├── routes/                # Khai báo URL và chuỗi middleware
+│   │   ├── services/              # Nghiệp vụ ứng dụng, độc lập HTTP/database
 │   │   ├── validators/            # Kiểm tra dữ liệu đầu vào
+│   │   ├── utils/                 # Tiện ích kỹ thuật dùng chung
+│   │   ├── scripts/               # Khởi tạo và chuyển đổi dữ liệu
 │   │   ├── app.js
 │   │   └── server.js
-│   ├── .env.example
+│   ├── test/                      # Kiểm thử backend
 │   └── package.json
-├── banhang/, bep/, giaohang/, ... # Phần PHP cũ của các thành viên khác
-└── admin/*.php                    # Bản admin PHP cũ, giữ để đối chiếu
+├── docs/                          # Tài liệu dự án và kiến trúc
+└── legacy/php-app/                # Bản PHP/MySQL cũ, không còn được phục vụ
 ```
 
-Khi chạy bằng Express, `/admin/` sẽ dùng `index.html`; các file PHP cũ không được Express thực thi.
+Express giữ nguyên các URL `/admin`, `/banhang`, `/bep`, `/khachhang`, `/shipper`, `/assets` và phục vụ nội dung tương ứng từ `frontend/`. Xem nguyên tắc phân lớp tại [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
 ## Chuẩn bị máy
 
@@ -118,8 +124,8 @@ Báo cáo nhận thêm `from=YYYY-MM-DD` và `to=YYYY-MM-DD`. `type` nhận `ord
 
 ## Quy ước làm việc nhóm
 
-- Frontend chỉ gọi API qua `admin/assets/js/api.js`; không đặt câu lệnh MongoDB trong JavaScript phía trình duyệt.
-- Mỗi nghiệp vụ backend đi theo luồng `route → middleware → controller → model`.
+- Frontend chỉ gọi API qua `frontend/admin/assets/js/api.js`; không đặt câu lệnh MongoDB trong JavaScript phía trình duyệt.
+- Mỗi nghiệp vụ backend đi theo luồng `route → middleware → controller → service → repository → model`.
 - Không commit file `backend/.env` hoặc mật khẩu thật.
 - Thành viên làm module khác có thể tạo route/model riêng mà không sửa controller admin.
 - Đơn hàng mới nên lưu tên và giá món tại thời điểm mua trong `orders.items[]`; báo cáo nhờ vậy không bị sai khi tên/giá sản phẩm thay đổi sau này.

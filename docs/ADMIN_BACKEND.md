@@ -120,10 +120,10 @@ Báo cáo chỉ tính đơn `completed` và chưa hoàn tiền:
 
 | Trang | JavaScript |
 |---|---|
-| Quản lý tài khoản | `admin/assets/js/accounts.js` |
-| Hồ sơ nhân viên | `admin/assets/js/staff.js` |
-| Báo cáo | `admin/assets/js/report.js` |
-| Thông báo khách hàng | `admin/assets/js/notifications.js` |
-| Hàm gọi API chung | `admin/assets/js/api.js` |
+| Quản lý tài khoản | `frontend/admin/assets/js/accounts.js` |
+| Hồ sơ nhân viên | `frontend/admin/assets/js/staff.js` |
+| Báo cáo | `frontend/admin/assets/js/report.js` |
+| Thông báo khách hàng | `frontend/admin/assets/js/notifications.js` |
+| Hàm gọi API chung | `frontend/admin/assets/js/api.js` |
 
-Các thành viên khác có thể sao chép cấu trúc route → validator → controller → model của phần admin, rồi thay model và quyền tương ứng với module của họ.
+Các thành viên khác có thể sao chép cấu trúc route → middleware/validator → controller → service → repository → model của phần admin, rồi thay model và quyền tương ứng với module của họ.
