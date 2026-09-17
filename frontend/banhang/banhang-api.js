@@ -166,7 +166,7 @@
     const payload = contentType.includes("application/json") ? await response.json() : null;
 
     if (!response.ok) {
-      if (response.status === 401) {
+      if (response.status === 401 && !path.includes("/verify-admin")) {
         location.replace("/admin/login.html");
       }
       const error = new Error(payload?.message || "Không thể kết nối với máy chủ.");

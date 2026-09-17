@@ -23,6 +23,13 @@ function findMany(filter, { sort, populate = null, lean = false } = {}) {
   return query;
 }
 
+function findOne(filter, { session = null, lean = false } = {}) {
+  let query = Order.findOne(filter);
+  if (session) query = query.session(session);
+  if (lean) query = query.lean();
+  return query;
+}
+
 function aggregate(pipeline) {
   return Order.aggregate(pipeline);
 }
@@ -31,4 +38,4 @@ function save(order, options = {}) {
   return order.save(options);
 }
 
-module.exports = { createDocument, findById, findByIdWithDetails, findMany, aggregate, save };
+module.exports = { createDocument, findById, findByIdWithDetails, findOne, findMany, aggregate, save };

@@ -57,6 +57,9 @@ const orderSchema = new mongoose.Schema(
       index: true
     },
     orderType: { type: String, enum: ['dine_in', 'pickup', 'delivery'], default: 'dine_in' },
+    tableNumber: { type: String, trim: true, default: '' },
+    isInvoicePrinted: { type: Boolean, default: false },
+    invoicePrintedAt: { type: Date, default: null },
     source: { type: String, enum: ['web', 'pos', 'phone', 'legacy'], default: 'web' },
     branchCode: { type: String, trim: true, uppercase: true, default: 'MAIN' },
     items: { type: [orderItemSchema], default: [] },

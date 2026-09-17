@@ -126,6 +126,25 @@ async function deductIngredientsForOrder(order, userId, options = {}) {
         throw new ApiError(400, `Nguyên liệu ${deduction.ingredientName} không còn hoạt động trong kho.`);
       }
 
+      let dishShortageMsg = '';
+      for (const item of order.items || []) {
+        const pCode = normalizedProductCode(item.productCode);
+        const recipe = recipesByProductCode.get(pCode);
+        if (!recipe) continue;
+        const reqIng = (recipe.ingredients || []).find(ri => getIngredientId(ri) === deduction.ingredient.toString());
+        if (reqIng) {
+          const yieldQty = Number(recipe.yieldQuantity) > 0 ? Number(recipe.yieldQuantity) : 1;
+          const perServing = Number(reqIng.quantityBase) / yieldQty;
+          const maxServings = perServing > 0 ? Math.floor(Math.max(0, currentIngredient.stockQuantity) / perServing) : 0;
+          dishShortageMsg = `Món "${item.name}" trong kho chỉ còn đủ làm ${maxServings} suất.`;
+          break;
+        }
+      }
+
+      if (dishShortageMsg) {
+        throw new ApiError(400, `Nguyên liệu không đủ! ${dishShortageMsg}`);
+      }
+
       const dishes = deduction.dishNames ? deduction.dishNames.join(' và ') : 'món ăn này';
       const stockLeft = formatQuantity(currentIngredient.stockQuantity, currentIngredient.baseUnit);
 
@@ -168,7 +187,153 @@ async function deductIngredientsForOrder(order, userId, options = {}) {
   };
 }
 
+async function restoreIngredientsForOrder(order, userId, options = {}) {
+  if (!order.inventoryDeductedAt) {
+    return { restored: [], alreadyRestored: true };
+  }
+
+  const session = options.session || null;
+  const recipesByProductCode = await loadRecipesForOrder(order, session);
+  const plan = calculateRecipeDeductions(order, recipesByProductCode);
+  const restored = [];
+
+  for (const item of plan.deductions) {
+    const updatedIngredient = await ingredientRepository.restoreStock(item, session);
+    if (!updatedIngredient) continue;
+
+    const stockBefore = roundQuantity(updatedIngredient.stockQuantity - item.quantity);
+    const stockAfter = roundQuantity(updatedIngredient.stockQuantity);
+
+    await inventoryTransactionRepository.create({
+      ingredient: updatedIngredient._id,
+      type: 'adjustment',
+      quantityChange: item.quantity,
+      stockBefore,
+      stockAfter,
+      referenceCode: order.orderCode,
+      order: order._id,
+      createdBy: userId,
+      note: options.note || `Hoàn kho nguyên liệu do hủy/sửa đơn ${order.orderCode}`
+    }, session);
+
+    restored.push({
+      ingredient: updatedIngredient._id,
+      ingredientCode: item.ingredientCode,
+      ingredientName: updatedIngredient.name,
+      baseUnit: updatedIngredient.baseUnit,
+      quantity: item.quantity,
+      stockBefore,
+      stockAfter
+    });
+  }
+
+  order.inventoryDeductedAt = null;
+  order.inventoryDeductedBy = null;
+
+  return {
+    restored,
+    alreadyRestored: false
+  };
+}
+
+async function calculateAvailablePortionsForProducts(productCodes = [], orderType = 'dine_in') {
+  const queryProductCodes = productCodes.map(normalizedProductCode).filter(Boolean);
+  const recipes = await recipeRepository.findActiveByProductCodes(
+    queryProductCodes,
+    orderType
+  );
+
+  const recipesByProductCode = new Map();
+  for (const recipe of recipes) {
+    const productCode = normalizedProductCode(recipe.productCode);
+    if (!recipesByProductCode.has(productCode)) {
+      recipesByProductCode.set(productCode, recipe);
+    }
+  }
+
+  const portionsMap = {};
+  for (const productCode of queryProductCodes) {
+    const recipe = recipesByProductCode.get(productCode);
+    if (!recipe || !recipe.ingredients || recipe.ingredients.length === 0) {
+      portionsMap[productCode] = null;
+      continue;
+    }
+
+    const yieldQuantity = Number(recipe.yieldQuantity) > 0 ? Number(recipe.yieldQuantity) : 1;
+    let minServings = Infinity;
+
+    for (const item of recipe.ingredients) {
+      const ingDoc = item.ingredient;
+      if (!ingDoc || !ingDoc.isActive) {
+        minServings = 0;
+        break;
+      }
+      const quantityBase = Number(item.quantityBase);
+      if (!Number.isFinite(quantityBase) || quantityBase <= 0) continue;
+
+      const perServing = quantityBase / yieldQuantity;
+      const stock = Math.max(0, Number(ingDoc.stockQuantity) || 0);
+      const servings = Math.floor(stock / perServing);
+
+      if (servings < minServings) {
+        minServings = servings;
+      }
+    }
+
+    portionsMap[productCode] = minServings === Infinity ? null : Math.max(0, minServings);
+  }
+
+  return portionsMap;
+}
+
+async function checkOrderStockSufficiency(order, session = null) {
+  const recipesByProductCode = await loadRecipesForOrder(order, session);
+  const plan = calculateRecipeDeductions(order, recipesByProductCode);
+
+  for (const deduction of plan.deductions) {
+    const currentIngredient = await ingredientRepository.findById(deduction.ingredient, session);
+    if (!currentIngredient || !currentIngredient.isActive) {
+      throw new ApiError(400, `Nguyên liệu ${deduction.ingredientName} không còn hoạt động trong kho.`);
+    }
+
+    if (currentIngredient.stockQuantity < deduction.quantity) {
+      let dishShortageMsg = '';
+      for (const item of order.items || []) {
+        const productCode = normalizedProductCode(item.productCode);
+        const recipe = recipesByProductCode.get(productCode);
+        if (!recipe) continue;
+
+        const recipeIngredient = (recipe.ingredients || []).find(
+          ri => getIngredientId(ri) === deduction.ingredient.toString()
+        );
+        if (recipeIngredient) {
+          const yieldQty = Number(recipe.yieldQuantity) > 0 ? Number(recipe.yieldQuantity) : 1;
+          const perServing = Number(recipeIngredient.quantityBase) / yieldQty;
+          const maxSuat = perServing > 0
+            ? Math.floor(Math.max(0, currentIngredient.stockQuantity) / perServing)
+            : 0;
+          dishShortageMsg = `Món "${item.name}" trong kho chỉ còn đủ làm ${maxSuat} suất.`;
+          break;
+        }
+      }
+
+      if (dishShortageMsg) {
+        throw new ApiError(400, `Nguyên liệu không đủ! ${dishShortageMsg}`);
+      } else {
+        const dishes = deduction.dishNames ? deduction.dishNames.join(' và ') : 'món ăn này';
+        throw new ApiError(
+          400,
+          `Nguyên liệu không đủ! Món ${dishes} không đủ nguyên liệu ${currentIngredient.name} trong kho.`
+        );
+      }
+    }
+  }
+}
+
 module.exports = {
   calculateRecipeDeductions,
-  deductIngredientsForOrder
+  deductIngredientsForOrder,
+  restoreIngredientsForOrder,
+  calculateAvailablePortionsForProducts,
+  checkOrderStockSufficiency
 };

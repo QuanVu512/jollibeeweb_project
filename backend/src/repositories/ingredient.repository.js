@@ -37,4 +37,14 @@ function deductStock(deduction, session) {
   );
 }
 
-module.exports = { findAll, create, findById, findByIds, save, remove, deductStock };
+function restoreStock(restoration, session) {
+  return Ingredient.findOneAndUpdate(
+    {
+      _id: restoration.ingredient
+    },
+    { $inc: { stockQuantity: restoration.quantity } },
+    { new: true, runValidators: true, session }
+  );
+}
+
+module.exports = { findAll, create, findById, findByIds, save, remove, deductStock, restoreStock };

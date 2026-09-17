@@ -28,25 +28,205 @@
         .nav-menu a { color: white; text-decoration: none; margin: 0 20px; font-weight: 700; text-transform: uppercase; }
         .nav-menu a.active { color: #f3a22f; }
         
-        .container { max-width: 900px; margin: 40px auto; padding: 0 20px; position: relative; z-index: 10; }
-        .order-card { background: #fff; border-radius: 15px; margin-bottom: 25px; padding: 25px; box-shadow: 0 10px 20px rgba(0,0,0,0.05); border-left: 6px solid #d8262f; }
-        .btn { padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 800; text-transform: uppercase; transition: 0.2s; }
+        .container { max-width: 1400px; margin: 30px auto; padding: 0 20px; position: relative; z-index: 10; }
+        .orders-grid {
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+        }
+        @media (max-width: 992px) {
+            .orders-grid {
+                flex-direction: column;
+            }
+        }
+        .order-column {
+            flex: 1;
+            min-width: 320px;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.05);
+        }
+        .order-column.col-unprinted {
+            border: 2px dashed #f3a22f;
+        }
+        .order-column.col-printed {
+            border: 2px dashed #28a745;
+        }
+        .column-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid rgba(0,0,0,0.06);
+        }
+        .column-title {
+            margin: 0;
+            font-size: 20px;
+            font-weight: 900;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .col-unprinted .column-title { color: #d8262f; }
+        .col-printed .column-title { color: #28a745; }
+
+        .column-count-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 900;
+        }
+        .col-unprinted .column-count-badge {
+            background: #ffebee;
+            color: #d8262f;
+            border: 1px solid #ffcdd2;
+        }
+        .col-printed .column-count-badge {
+            background: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #c8e6c9;
+        }
+        .empty-col-message {
+            text-align: center;
+            color: #888;
+            padding: 40px 15px;
+            font-size: 14px;
+            font-weight: 700;
+            background: #fff;
+            border-radius: 12px;
+            border: 1px dashed #ddd;
+        }
+        .order-card { background: #fff; border-radius: 14px; margin-bottom: 20px; padding: 20px; box-shadow: 0 4px 14px rgba(0,0,0,0.06); border-left: 6px solid #d8262f; }
+        .btn { padding: 10px 18px; border: none; border-radius: 8px; cursor: pointer; font-weight: 800; text-transform: uppercase; transition: 0.2s; font-size: 13px; }
         .btn-red { background: #d8262f; color: white; box-shadow: 0 4px 0 #a81c23; }
         .btn-red:hover { background-color: #b51c22; }
-        .btn-gray { background: #6e716e; color: white; box-shadow: 0 4px 0 #4a4d4a; margin-left: 8px; }
+        .btn-gray { background: #6e716e; color: white; box-shadow: 0 4px 0 #4a4d4a; }
         .btn-gray:hover { background-color: #555855; }
-        .btn-outline { background: white; border: 2px solid #d8262f; color: #d8262f; margin-right: 10px; }
+        .btn-outline { background: white; border: 2px solid #d8262f; color: #d8262f; }
         .btn-outline:hover { background-color: #ffefef; }
+        .btn-blue { background: #007bff; color: white; box-shadow: 0 4px 0 #0056b3; }
+        .btn-blue:hover { background-color: #0069d9; }
+        .btn-green { background: #28a745; color: white; box-shadow: 0 4px 0 #1e7e34; }
+        .btn-green:hover { background-color: #218838; }
+        
+        .tab-btn {
+            background: #fff;
+            border: 2px solid #d8262f;
+            color: #d8262f;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 800;
+            font-size: 15px;
+            transition: all 0.2s;
+        }
+        .tab-btn.active, .tab-btn:hover {
+            background: #d8262f;
+            color: white;
+        }
+
+        .badge-tag {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 800;
+            margin-right: 6px;
+        }
+        .badge-printed { background: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; }
+        .badge-unprinted { background: #fff3e0; color: #e65100; border: 1px solid #ffe0b2; }
+        .badge-table { background: #e3f2fd; color: #1565c0; border: 1px solid #bbdefb; }
+        .badge-status { background: #f5f5f5; color: #424242; border: 1px solid #e0e0e0; }
+
         .details { display: none; background: #fffaf5; padding: 20px; border-radius: 10px; border: 1px solid #ffe0e0; margin-top: 15px; }
         .details.show { display: block; }
         
         .details-table { width: 100%; border-collapse: collapse; }
         .details-table th { border-bottom: 2px solid #eee; padding: 8px 0; }
         .details-table td { border-bottom: 1px solid #eee; padding: 10px 0; }
+
+        /* Modals common */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.55);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-box {
+            background: #fff;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.25);
+            width: min(550px, 95vw);
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        /* Invoice styling */
+        .receipt-card {
+            background: #fff;
+            width: 380px;
+            max-width: 95vw;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.25);
+            position: relative;
+            max-height: 90vh;
+            overflow-y: auto;
+            color: #222;
+        }
+        .receipt-header { text-align: center; border-bottom: 2px dashed #bbb; padding-bottom: 12px; margin-bottom: 12px; }
+        .receipt-header img { height: 45px; }
+        .receipt-header h3 { margin: 6px 0 2px 0; color: #d8262f; font-size: 18px; }
+        .receipt-header p { margin: 2px 0; font-size: 12px; color: #555; }
+        .receipt-info { font-size: 13px; line-height: 1.5; border-bottom: 1px dashed #ccc; padding-bottom: 8px; margin-bottom: 10px; }
+        .receipt-items { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .receipt-items th { text-align: left; border-bottom: 1px solid #333; padding: 4px 0; font-size: 12px; }
+        .receipt-items td { padding: 6px 0; border-bottom: 1px dashed #eee; }
+        .receipt-total { border-top: 2px dashed #bbb; margin-top: 12px; padding-top: 8px; font-size: 13px; }
+        .receipt-total .row { display: flex; justify-content: space-between; margin: 4px 0; }
+        .receipt-total .grand-total { font-weight: 900; font-size: 17px; color: #d8262f; border-top: 1px solid #ddd; padding-top: 6px; margin-top: 4px; }
+        .receipt-footer { text-align: center; margin-top: 15px; font-size: 12px; color: #666; border-top: 1px dashed #bbb; padding-top: 10px; }
+        .receipt-actions { display: flex; gap: 10px; margin-top: 16px; }
+        .receipt-btn { flex: 1; padding: 10px; border: none; border-radius: 6px; font-weight: 800; cursor: pointer; }
+        .receipt-btn-print { background: #d8262f; color: #fff; }
+        .receipt-btn-print:hover { background: #b51c22; }
+        .receipt-btn-close { background: #eee; color: #333; }
+        .receipt-btn-close:hover { background: #ddd; }
+
+        @media print {
+            body * { visibility: hidden !important; }
+            #invoice-modal, #invoice-modal * { visibility: visible !important; }
+            #invoice-modal {
+                display: block !important;
+                position: absolute !important;
+                top: 0 !important; left: 0 !important; width: 100% !important; height: auto !important;
+                background: none !important;
+                padding: 0 !important;
+            }
+            .receipt-card {
+                width: 100% !important;
+                box-shadow: none !important;
+                border-radius: 0 !important;
+                padding: 0 !important;
+                max-height: none !important;
+                overflow: visible !important;
+            }
+            .receipt-actions { display: none !important; }
+        }
     </style>
-    <script src="/assets/js/role-guard.js" defer></script>
-    <script src="/banhang/banhang-api.js" defer></script>
-    <script src="/banhang/quan_ly_don_hang.js" defer></script>
+    <script src="/assets/js/role-guard.js?v=20260917" defer></script>
+    <script src="/banhang/banhang-api.js?v=20260917" defer></script>
+    <script src="/banhang/quan_ly_don_hang.js?v=20260917_2" defer></script>
 </head>
 <body data-required-role="cashier, admin">
 <header>
@@ -64,12 +244,179 @@
 <div class="nav-menu">
     <a href="tao_don_hang.html">Tạo đơn tại quầy</a>
     <a href="quan_ly_don_hang.html" class="active">Xác nhận đơn hàng</a>
-    <a href="bep_che_bien.html">Bếp chế biến</a>
+    <a href="bep_che_bien.html">Điều phối đơn</a>
 </div>
 <div class="container">
-    <h2 style="text-align: center; color: #d8262f; font-weight: 900; text-transform: uppercase; margin-bottom: 30px;">ĐƠN HÀNG CHỜ XÁC NHẬN</h2>
-    <div id="orders-container">
-        <p style="text-align: center; color: #888;">Đang tải danh sách đơn hàng...</p>
+    <h2 id="page-title" style="text-align: center; color: #d8262f; font-weight: 900; text-transform: uppercase; margin-bottom: 25px;">ĐƠN HÀNG CHỜ XÁC NHẬN</h2>
+
+    <div class="orders-grid">
+        <!-- Cột 1: Chưa in hóa đơn -->
+        <div class="order-column col-unprinted">
+            <div class="column-header">
+                <h3 class="column-title">⏳ Chưa in hoá đơn</h3>
+                <span class="column-count-badge" id="unprinted-count">0 đơn</span>
+            </div>
+            <div id="unprinted-orders-list">
+                <p style="text-align: center; color: #888; padding: 25px 0;">Đang tải danh sách...</p>
+            </div>
+        </div>
+
+        <!-- Cột 2: Đã in hóa đơn -->
+        <div class="order-column col-printed">
+            <div class="column-header">
+                <h3 class="column-title">📄 Đã in hoá đơn</h3>
+                <span class="column-count-badge" id="printed-count">0 đơn</span>
+            </div>
+            <div id="printed-orders-list">
+                <p style="text-align: center; color: #888; padding: 25px 0;">Đang tải danh sách...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Chi tiết đơn & In Hóa Đơn (Receipt) -->
+<div id="invoice-modal" class="modal-overlay">
+    <div class="receipt-card">
+        <div class="receipt-header">
+            <img src="https://jollibee.com.vn/static/version1775488343/frontend/Jollibee/default/vi_VN/images/logo.png" alt="Jollibee">
+            <h3>JOLLIBEE VIỆT NAM</h3>
+            <p>Cửa hàng Jollibee - Long Biên</p>
+            <p>Đ/c: Số 27 Cổ Linh, Long Biên, Hà Nội</p>
+            <p style="margin-top: 5px; font-weight: 900; font-size: 14px; text-transform: uppercase;" id="receipt-modal-title">CHI TIẾT ĐƠN & HÓA ĐƠN</p>
+        </div>
+        <div class="receipt-info" id="receipt-info">
+            <!-- Rendered by JS -->
+        </div>
+        <table class="receipt-items">
+            <thead>
+                <tr>
+                    <th align="left">Món ăn</th>
+                    <th align="center" style="width: 35px;">SL</th>
+                    <th align="right">Đ.Giá</th>
+                    <th align="right">T.Tiền</th>
+                </tr>
+            </thead>
+            <tbody id="receipt-items-body">
+                <!-- Rendered by JS -->
+            </tbody>
+        </table>
+        <div class="receipt-total" id="receipt-total-section">
+            <!-- Rendered by JS -->
+        </div>
+        <div class="receipt-footer">
+            <p style="margin: 4px 0; font-weight: bold;">Cảm ơn Quý khách & Hẹn gặp lại!</p>
+            <p style="margin: 2px 0;">Hotline phản hồi: 1900-1533</p>
+            <p style="margin: 2px 0; font-family: monospace; font-size: 11px;">*** JOLLIBEE FAST FOOD ***</p>
+        </div>
+        <div class="receipt-actions">
+            <button type="button" class="receipt-btn receipt-btn-print" id="btn-print-receipt">🖨️ In hóa đơn</button>
+            <button type="button" class="receipt-btn receipt-btn-close" id="btn-close-receipt">Đóng</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Sửa Đơn Hàng (Edit Order) -->
+<div id="edit-order-modal" class="modal-overlay">
+    <div class="modal-box" style="width: min(650px, 95vw);">
+        <h3 style="color: #d8262f; margin-top: 0; border-bottom: 2px solid #ffefef; padding-bottom: 10px;">
+            ✏️ Chỉnh sửa đơn hàng <span id="edit-order-code"></span>
+        </h3>
+        <div id="edit-order-status-warn" style="display: none; background: #fff3cd; color: #856404; padding: 10px; border-radius: 6px; margin-bottom: 12px; font-size: 13px;"></div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 15px;">
+            <div>
+                <label style="font-size: 13px; font-weight: bold;">Số bàn:</label>
+                <input type="text" id="edit-table-number" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 6px; margin-top: 4px;">
+            </div>
+            <div>
+                <label style="font-size: 13px; font-weight: bold;">Tên khách hàng:</label>
+                <input type="text" id="edit-customer-name" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 6px; margin-top: 4px;">
+            </div>
+        </div>
+
+        <p style="font-weight: bold; margin: 10px 0 5px 0;">Danh sách món ăn:</p>
+        <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+            <thead>
+                <tr style="border-bottom: 2px solid #eee; background: #fafafa;">
+                    <th align="left" style="padding: 8px;">Món</th>
+                    <th align="center" style="padding: 8px; width: 110px;">Số lượng</th>
+                    <th align="right" style="padding: 8px;">Đơn giá</th>
+                    <th align="right" style="padding: 8px;">Thành tiền</th>
+                    <th align="center" style="padding: 8px; width: 40px;">Xóa</th>
+                </tr>
+            </thead>
+            <tbody id="edit-items-body">
+                <!-- Rendered by JS -->
+            </tbody>
+        </table>
+
+        <!-- Thêm món mới vào đơn -->
+        <div style="margin-top: 15px; padding: 12px; background: #fdf5e6; border-radius: 8px; border: 1px dashed #f3a22f;">
+            <p style="margin: 0 0 8px 0; font-weight: bold; font-size: 13px; color: #d8262f;">➕ Thêm món vào đơn:</p>
+            <div style="display: flex; gap: 10px;">
+                <select id="edit-add-product-select" style="flex: 2; padding: 8px; border-radius: 6px; border: 1px solid #ddd;">
+                    <option value="">-- Chọn món để thêm --</option>
+                </select>
+                <input type="number" id="edit-add-product-qty" value="1" min="1" style="width: 60px; padding: 8px; text-align: center; border-radius: 6px; border: 1px solid #ddd;">
+                <button type="button" id="btn-add-item-to-edit" style="background: #28a745; color: white; border: none; border-radius: 6px; padding: 8px 16px; font-weight: bold; cursor: pointer;">Thêm</button>
+            </div>
+        </div>
+
+        <div style="margin-top: 12px;">
+            <label style="font-size: 13px; font-weight: bold;">Ghi chú đơn hàng:</label>
+            <input type="text" id="edit-notes" placeholder="Ghi chú thêm (vd: không cay, nhiều tương...)" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 6px; margin-top: 4px;">
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px; padding-top: 10px; border-top: 2px solid #eee;">
+            <span style="font-size: 15px; font-weight: bold;">TỔNG TIỀN MỚI:</span>
+            <span id="edit-calculated-total" style="font-size: 20px; font-weight: 900; color: #d8262f;">0đ</span>
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-top: 18px; justify-content: flex-end;">
+            <button type="button" id="btn-cancel-edit-order" style="padding: 10px 20px; border: none; border-radius: 6px; background: #eee; cursor: pointer; font-weight: bold;">Hủy bỏ</button>
+            <button type="button" id="btn-save-edit-order" style="padding: 10px 20px; border: none; border-radius: 6px; background: #d8262f; color: white; cursor: pointer; font-weight: 900;">Lưu thay đổi & Cập nhật</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Hủy Đơn Hàng (Cancel Order) -->
+<div id="cancel-order-modal" class="modal-overlay">
+    <div class="modal-box" style="width: min(450px, 95vw);">
+        <h3 style="color: #d8262f; margin-top: 0;">❌ Hủy đơn hàng <span id="cancel-order-code"></span></h3>
+        <p style="font-size: 14px; color: #555;">Vui lòng nhập hoặc chọn lý do hủy đơn. Nguyên liệu đã dùng sẽ được tự động hoàn lại vào kho bếp.</p>
+        
+        <label style="font-size: 13px; font-weight: bold;">Lý do hủy đơn:</label>
+        <select id="cancel-reason-select" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #ddd; margin: 8px 0;">
+            <option value="Khách đổi ý hủy món">Khách đổi ý hủy món</option>
+            <option value="Khách rời bàn / Không nhận hàng">Khách rời bàn / Không nhận hàng</option>
+            <option value="Nhân viên nhập sai món / sai bàn">Nhân viên nhập sai món / sai bàn</option>
+            <option value="Trùng đơn hàng">Trùng đơn hàng</option>
+            <option value="Bếp hết nguyên liệu đột xuất">Bếp hết nguyên liệu đột xuất</option>
+            <option value="other">Lý do khác...</option>
+        </select>
+        <textarea id="cancel-reason-custom" placeholder="Nhập lý do cụ thể..." style="width: 100%; height: 70px; padding: 8px; border-radius: 6px; border: 1px solid #ddd; display: none; margin-bottom: 10px;"></textarea>
+
+        <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 15px;">
+            <button type="button" id="btn-close-cancel-modal" style="padding: 10px 18px; border: none; border-radius: 6px; background: #eee; cursor: pointer; font-weight: bold;">Đóng</button>
+            <button type="button" id="btn-confirm-cancel-order" style="padding: 10px 18px; border: none; border-radius: 6px; background: #d8262f; color: white; cursor: pointer; font-weight: 900;">Xác nhận hủy đơn</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Xác thực Quản trị viên (Admin Auth) -->
+<div id="admin-auth-modal" class="modal-overlay">
+    <div class="modal-box" style="width: min(420px, 95vw); border-top: 6px solid #d8262f;">
+        <h3 style="color: #d8262f; margin-top: 0;">🛡️ Yêu cầu xác thực Quản trị viên</h3>
+        <p style="font-size: 13px; color: #444; line-height: 1.5;">
+            Đơn hàng này <b>đã xuất hóa đơn tài chính</b>. Theo quy định tại sơ đồ hệ thống, thao tác Sửa hoặc Hủy đơn đã in hóa đơn cần có sự phê duyệt của <b>Quản trị viên (Admin)</b>.
+        </p>
+        <div id="admin-auth-error" style="display: none; background: #fff0f1; color: #d8262f; border: 1px solid #ffccd0; border-radius: 6px; padding: 10px; margin-bottom: 12px; font-size: 13px; font-weight: bold;"></div>
+        <label style="font-size: 13px; font-weight: bold;">Mật khẩu Quản trị viên:</label>
+        <input type="password" id="admin-auth-password" placeholder="Nhập mật khẩu Admin..." style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #ddd; margin: 8px 0 15px 0;">
+        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+            <button type="button" id="btn-close-admin-auth" style="padding: 10px 16px; border: none; border-radius: 6px; background: #eee; cursor: pointer; font-weight: bold;">Hủy bỏ</button>
+            <button type="button" id="btn-confirm-admin-auth" style="padding: 10px 18px; border: none; border-radius: 6px; background: #d8262f; color: white; cursor: pointer; font-weight: 900;">Xác nhận quyền</button>
+        </div>
     </div>
 </div>
 </body>
