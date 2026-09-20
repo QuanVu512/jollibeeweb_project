@@ -1,0 +1,411 @@
+define([
+    'jquery',
+    'Magento_Customer/js/model/authentication-popup',
+    'Magento_Customer/js/customer-data',
+    'Magento_Ui/js/modal/alert',
+    'Magento_Ui/js/modal/confirm',
+    'underscore',
+    'jquery-ui-modules/widget',
+    'mage/decorate',
+    'mage/collapsible',
+    'mage/cookies',
+    'jquery-ui-modules/effect-fade'
+], function ($, authenticationPopup, customerData, alert, confirm, _) {
+    'use strict';
+
+    return function (target) {
+
+        var localStorage = JSON.parse(window.localStorage.getItem('mage-cache-storage'));
+
+        return $.widget('mage.sidebar', $.mage.sidebar, {
+            options: {
+                isRecursive: true,
+                iframeConfigure: '#iframe-configure-item',
+                cartForm: '#product_addtocart_form',
+                cartButtonId: '#product-updatecart-button',
+                minicart: {
+                    maxItemsVisible: 3
+                }
+            },
+
+            /**
+             * @Override Checking cart amount on init
+             * Create sidebar.
+             * @private
+             */
+            _create: function () {
+                this._initContent();
+
+                // Start overriding
+                this._canCheckout();
+                // End override
+            },
+
+            /**
+             * @Override Checking cart amount on update
+             * Update sidebar block.
+             */
+            update: function () {
+                $(this.options.targetElement).trigger('contentUpdated');
+                this._calcHeight();
+
+                // Start overriding
+                this._canCheckout();
+                // End override
+            },
+
+            /**
+             * @Override checking cart total
+             * @private
+             */
+            _initContent: function () {
+                var self = this,
+                    events = {};
+
+                this.element.decorate('list', this.options.isRecursive);
+
+                /**
+                 * @param {jQuery.Event} event
+                 */
+                events['click ' + this.options.button.close] = function (event) {
+                    event.stopPropagation();
+                    $(self.options.targetElement).dropdownDialog('close');
+                };
+
+                events['click ' + this.options.button.checkout] = $.proxy(function () {
+                    var cart = customerData.get('cart'),
+                        customer = customerData.get('customer'),
+                        element = $(this.options.button.checkout);
+
+                    if (!customer().firstname && cart().isGuestCheckoutAllowed === false) {
+                        // set URL for redirect on successful login/registration. It's postprocessed on backend.
+                        $.cookie('login_redirect', this.options.url.checkout);
+
+                        if (this.options.url.isRedirectRequired) {
+                            element.prop('disabled', true);
+                            location.href = this.options.url.loginUrl;
+                        } else {
+                            authenticationPopup.showModal();
+                        }
+
+                        return false;
+                    }
+                    element.prop('disabled', true);
+
+                    // Check invalid area items to remove
+                    var items = (cart() && cart().items) || [];
+                    items.forEach(function (it) {
+                        if (!it.is_valid_area) {
+                            self._removeItem($('[data-cart-item="' + it.item_id + '"]'));
+                        }
+                    });
+
+                    // Start overriding
+                    if (this._isCheckoutValid()) {
+                        location.href = this.options.url.checkout;
+                    }
+                    // End override
+                }, this);
+
+                //Event click Edit item
+                events['click #mini-cart a.action.edit'] = function (event) {
+                    event.preventDefault();
+
+                    $(self.options.targetElement).dropdownDialog('close');
+                    self._updateItem(event);
+                };
+
+                /**
+                 * @param {jQuery.Event} event
+                 */
+                events['click ' + this.options.button.remove] = function (event) {
+                    event.stopPropagation();
+                    confirm({
+                        content: self.options.confirmMessage,
+                        actions: {
+                            /** @inheritdoc */
+                            confirm: function () {
+                                self._removeItem($(event.currentTarget));
+                            },
+
+                            /** @inheritdoc */
+                            always: function (e) {
+                                e.stopImmediatePropagation();
+                            }
+                        }
+                    });
+                };
+
+                /**
+                 * @param {jQuery.Event} event
+                 */
+                events['keyup ' + this.options.item.qty] = function (event) {
+                    event.stopPropagation();
+                    self._updateItemQty($(event.currentTarget));
+                };
+
+                /**
+                 * @param {jQuery.Event} event
+                 */
+                events['change ' + this.options.item.qty] = function (event) {
+                    event.stopPropagation();
+                    self._updateItemQty($(event.currentTarget));
+                };
+
+                /**
+                 * @param {jQuery.Event} event
+                 */
+                events['click :button.action-qty-minus'] = function (event) {
+                    self._changeQty($(event.target), '-1', 'minus');
+                };
+
+                /**
+                 * @param {jQuery.Event} event
+                 */
+                events['click :button.action-qty-plus'] = function (event) {
+                    self._changeQty($(event.target), '1', 'plus');
+                };
+
+                /**
+                 * @param {jQuery.Event} event
+                 */
+                events['click ' + this.options.item.button] = function (event) {
+                    event.stopPropagation();
+                    self._updateItemQty($(event.currentTarget));
+                };
+
+                /**
+                 * @param {jQuery.Event} event
+                 */
+                events['focusout ' + this.options.item.qty] = function (event) {
+                    self._validateQty($(event.currentTarget));
+                };
+
+                this._on(this.element, events);
+                this._calcHeight();
+            },
+
+            _changeQty: function (elem, value, type) {
+                var itemId = elem.data('cart-item'),
+                    elmQty = $('#cart-item-' + itemId + '-qty');
+                if (type === 'minus' && elmQty.val() <= 1) {
+                    elmQty.val(1);
+                } else {
+                    elmQty.val(parseInt(elmQty.val()) + parseInt(value));
+                }
+
+                elmQty.trigger('change');
+            },
+
+            _updateItem: function (event) {
+                var self = this;
+                $('#configure-container').append(this._createIframe(event.currentTarget.href))
+                    .trigger('processStart')
+                    .modal({
+                        title: '',
+                        modalClass: 'modal-popup modal-product-options',
+                        overlayClass: 'modals-overlay modals-overlay-product-options',
+                        closed: function () {
+                            // on close
+                        },
+                        buttons: []
+                    });
+                $('#configure-container').modal('openModal');
+
+                // event when iframe loaded
+                $(self.options.iframeConfigure).on("load", function () {
+                    $('#configure-container').trigger('processStop');
+                    $(self.options.iframeConfigure).trigger('processStop');
+                    var doc = this.contentWindow.document,
+                        contents = $(doc).contents();
+
+                    // handler form options submit
+                    contents.find(self.options.cartForm).submit(function (e) {
+                        e.preventDefault();
+
+                        if (contents.find(self.options.cartForm).validation() && contents.find(self.options.cartForm).valid()) {
+                            contents.find(self.options.cartButtonId).prop('disabled', true);
+
+                            self._observeItemUpdater($(this));
+                        }
+                    });
+                });
+
+                $(self.options.iframeConfigure).on("error", function () {
+                    $('#configure-container').trigger('processStop');
+                    $(self.options.iframeConfigure).trigger('processStop');
+                });
+
+                $('#configure-container').on('modalclosed', function () {
+                    $(self.options.iframeConfigure).off('load error').remove();
+                });
+            },
+
+            _observeItemUpdater: function (form) {
+                var self = this,
+                    formData = new FormData(form[0]);
+
+                $.ajax({
+                    url: form.attr('action'),
+                    data: formData,
+                    type: 'post',
+                    dataType: 'json',
+                    cache: false,
+                    contentType: false,
+                    processData: false,
+
+                    /** @inheritdoc */
+                    beforeSend: function () {
+                        $(self.options.iframeConfigure).trigger('processStart');
+                    },
+
+                    /** @inheritdoc */
+                    success: function (res) {
+                        if (res.isShowPopup) {
+                            $('#configure-container').modal('closeModal');
+                            $('.block-minicart').dropdownDialog('open');
+                            self._reloadSummaryCheckout();
+                        }
+                    },
+                    /** @inheritdoc */
+                    error: function (res) {
+
+                    },
+
+                    /** @inheritdoc */
+                    complete: function (res) {
+                        $(self.options.iframeConfigure).trigger('processStop');
+                        if (res.state() === 'rejected') {
+                            location.reload();
+                        }
+                    }
+                });
+            },
+
+            _createIframe: function (source) {
+                return $('<iframe />', {
+                    id: 'iframe-configure-item',
+                    src: source,
+                    style: 'width: 100%; border: 0; height: ' + ($(window).height() - 250) + 'px'
+                });
+            },
+
+            /**
+             * Enabling/disabling mini cart checkout button
+             * @returns {boolean}
+             */
+            _canCheckout: function () {
+                if (!this._isCheckoutValid()) {
+                    $('#top-cart-btn-checkout').prop('disabled', true);
+                    $('.order-amount-notice').slideDown()
+                } else {
+                    $('#top-cart-btn-checkout').prop('disabled', false);
+                    $('.order-amount-notice').slideUp()
+                }
+            },
+
+            /**
+             * Checking cart subtotal
+             * @returns {boolean}
+             * @private
+             */
+            _isCheckoutValid: function () {
+                return customerData.get('cart')().subtotalAmount >= parseFloat(window.minimumOrderAmount);
+            },
+            /**
+             * Update content after item remove
+             *
+             * @param {Object} elem
+             * @private
+             */
+            _removeItemAfter: function (elem) {
+                var productData = this._getProductById(Number(elem.data('cart-item')));
+                var drinkAddon = [];
+                var foodAddon = [];
+                productData.options.forEach(function(productData) {
+                    if (productData.product_category_type == 'drink') {
+                        drinkAddon.push(productData.selection_name_product);
+                    } else {
+                        foodAddon.push(productData.selection_name_product);
+                    }
+                });
+                smartech('dispatch', 'Remove from Cart', {
+                    'id': productData.product_id,
+                    'sku': productData.product_sku,
+                    'name': productData.product_name,
+                    'price': parseInt(productData.product_price_value),
+                    'price_number': parseInt(productData.product_price_value),
+                    'type': productData.product_type,
+                    'image_link': productData.product_image.src,
+                    'quantity': productData.qty,
+                    'subcategory': productData.category.toString(),
+                    'url': productData.product_url,
+                    'drink_addon': drinkAddon.toString(),
+                    'food_addon':  foodAddon.toString()
+                });
+
+                if (!_.isUndefined(productData)) {
+                    $(document).trigger('ajax:removeFromCart', {
+                        productIds: [productData['product_id']],
+                        productInfo: [
+                            {
+                                'id': productData['product_id']
+                            }
+                        ]
+                    });
+
+                    this._reloadSummaryCheckout();
+
+                    if (window.location.href.indexOf(this.shoppingCartUrl) === 0) {
+                        window.location.reload();
+                    }
+                }
+            },
+            /**
+             * Update content after update qty
+             *
+             * @param {HTMLElement} elem
+             */
+            _updateItemQtyAfter: function (elem) {
+                var productData = this._getProductById(Number(elem.data('cart-item')));
+
+                if (!_.isUndefined(productData)) {
+                    $(document).trigger('ajax:updateCartItemQty');
+
+                    if (window.location.href === this.shoppingCartUrl) {
+                        window.location.reload(false);
+                    }
+
+                    this._reloadSummaryCheckout();
+                }
+                this._hideItemButton(elem);
+            },
+            _reloadSummaryCheckout: function () {
+                if (window.location.pathname.indexOf('checkout/') > -1) {
+                    require([
+                        "Magento_Checkout/js/action/get-totals"
+                    ], function (getTotalsAction) {
+                        var deferred = $.Deferred();
+                        getTotalsAction([], deferred);
+                        deferred.done(() => {
+                            require(["deliveryAreaValidate"], function (deliveryAreaValidate) {
+                                deliveryAreaValidate.processSelectedAddress();
+                            });
+                        });
+                    });
+                }
+            },
+
+            /**
+         * @param {HTMLElement} elem
+         * @private
+         */
+        _removeItem: function (elem) {
+            var itemId = elem.data('cart-item');
+            this._ajax(this.options.url.remove, {
+                'item_id': itemId
+            }, elem, this._removeItemAfter);
+        },
+        });
+    }
+});

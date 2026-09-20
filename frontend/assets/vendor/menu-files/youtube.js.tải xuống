@@ -1,0 +1,37 @@
+/**
+ * @package     Plumrocket_CookieConsent
+ * @copyright   Copyright (c) 2022 Plumrocket Inc. (https://plumrocket.com)
+ * @license     https://plumrocket.com/license   End-user License Agreement
+ */
+
+define([
+    'jquery',
+    'prCookieConsentApi'
+], function ($, prCookieConsentApi) {
+    'use strict';
+
+    /**
+     * @param {{
+     * categoryKey: string
+     * }} config
+     */
+    return function (config) {
+        function changeNoCookieDomain()
+        {
+            var youtubeNoCookieIframes = $('iframe').filter(function () {
+                return this.src.indexOf('youtube-nocookie.com') !== -1;
+            });
+
+            youtubeNoCookieIframes.each(function (index, iframe) {
+                iframe.src = iframe.src.replace('youtube-nocookie.com', 'youtube.com');
+            });
+        }
+
+        prCookieConsentApi.userScript.execute(
+            function () {
+                changeNoCookieDomain(config);
+            },
+            config.categoryKey
+        );
+    }
+});

@@ -1,0 +1,707 @@
+define([
+    'jquery',
+    'ko',
+    'uiComponent',
+    'mage/url',
+    'Magento_Customer/js/customer-data',
+    'Magento_Ui/js/modal/modal',
+    'googleMapPlaceLibrary'
+], function ($, ko, Component, urlBuilder, customerData) {
+    'use strict';
+
+    const PROVINCE_COOKIE = 'csp';
+    const DISTRICT_COOKIE = 'csd';
+
+    return Component.extend({
+        defaults: {
+            template: 'Magenest_StorePickup/delivery-switcher'
+        },
+
+        initialize: function (config) {
+            this._super();
+            this.mode = ko.observable('homeshipping_homeshipping');
+            this.lang = ko.observable('');
+            this.ready = ko.observable(false);
+            this.restaurant = ko.observable(null);
+            this.customerAddress = ko.observable(null);
+            this.restaurantName = ko.observable(null);
+            this.restaurantAddress = ko.observable(null);
+            this.storeListHtml = ko.observable('');
+            this.MODE_SHIPPING = 'homeshipping_homeshipping';
+            this.MODE_PICKUP = 'storepickup_storepickup';
+            this.i18n = $.mage.__;
+            this.modalInited = false;
+            this.geocoder = null;
+            this.nearbyUrl = 'getstore/locator/getstore';
+            this.savePickAddressUrl = 'getstore/locator/savepickaddress';
+            this.country = 'vn';
+            this.isCheckoutPage = typeof window.checkoutConfig !== 'undefined';
+            this.cspCookies = $.mage.cookies.get('csp');
+            this.csdCookies = $.mage.cookies.get('csd');
+            this.cartItemsCount = ko.observable('');
+            this.formKey = $.mage.cookies.get('form_key');
+            this.lat = ko.observable('');
+            this.long = ko.observable('');
+            let cartData = customerData.get('cart');
+            cartData.subscribe(function (updatedCart) {
+                this.cartItemsCount(updatedCart.summary_count);
+            }.bind(this));
+
+            if (!ko.bindingHandlers.googlePlace) {
+                ko.bindingHandlers.googlePlace = {
+                    init: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
+                        const self = bindingContext.$data;
+                        if (!window.google || !google.maps || !google.maps.places) {
+                            $(window).on('load', function () { self.initGoogleMaps(); });
+                            return;
+                        }
+                        $(element).on('keydown keypress', function(e){
+                            if (e.key === 'Enter' || e.keyCode === 13) {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                e.stopImmediatePropagation();
+                                return false;
+                            }
+                        });
+
+                        $(element).on('input', function () {
+                            const $this = $(this);
+                            const value = $this.val();
+                            let autocomplete = $this.data('autocompleteInstance');
+                            if (value.length >= 4) {
+                                if (!autocomplete) {
+                                    $('.pac-container').removeClass('force-hide');
+                                    autocomplete = self.bindAutocomplete(this, function (addr, lat, lng, rawAddress, addressFill) {
+                                        self.openMapEmbed(addr, lat, lng, rawAddress, addressFill);
+                                    });
+                                    $this.data('autocompleteInstance', autocomplete);
+                                } else {
+                                    $('.pac-container').removeClass('force-hide');
+                                }
+                            } else {
+                                $('.pac-container').addClass('force-hide');
+                            }
+                        });
+                    }
+                };
+            }
+
+            if ( !this.isCheckoutPage ) {
+                this.initData();
+            }
+            return this;
+        },
+
+        initData: function () {
+            var self = this,
+                formKey = self.formKey;
+            return $.ajax({
+                url: urlBuilder.build('getstore/locator/config'),
+                type: 'GET',
+                dataType: 'json',
+                data: {
+                    'form_key': formKey
+                },
+                success: function (data) {
+                    self.mode(data.mode || 'homeshipping_homeshipping');
+                    self.lang(data.lang || 'en');
+                    self.restaurant(data.restaurant || null);
+                    self.restaurantName(data.restaurantName || null);
+                    self.customerAddress(data.customerAddress || null);
+                    self.restaurantAddress(data.restaurantAddress || null);
+                    // self.formKey(data.formKey || '');
+                    self.cartItemsCount(data.cartItemsCount);
+                    window.mnMode = self.mode();
+                    self.initGoogleMaps();
+                    self.ready(true);
+                    customerData.set('customerAddress', {address: self.customerAddress()});
+                }
+            });
+        },
+
+        ensureModal: function () {
+            if (this.modalInited) return;
+            var self = this;
+            $('#mn-address-modal').modal({
+                type: 'popup',
+                modalClass: 'style-address-modal mn-address-modal',
+                overlayClass: 'modals-overlay mn-address-overlay modals-overlay-show modals-overlay-select-address',
+                responsive: false,
+                clickableOverlay: true,
+                showLoader: true,
+                title: $.mage.__('Selected address'),
+                buttons: [{
+                    text: $.mage.__('Close'),
+                    class: 'action primary',
+                    click: function () {
+                        this.closeModal();
+                        self._openFullAddressPopup();
+                    }
+                }]
+            }).on('modalclosed', function () {
+                $('.modals-overlay-select-address').remove();
+            });
+            this.modalInited = true;
+        },
+
+        renderStores: function (data, isProductClickAddToCart = false, rawAddress = null, addressFill = null) {
+            var self = this;
+            var html = '';
+            if (data && data.items && data.items.length) {
+                html = '<div class="mn-store-list">';
+                html += data.items
+                    .filter(function (s) {
+                        return s.status != 0;
+                    }).map(function (s) {
+                    var selectedClass = (String(s.store_id || s.id) === self.restaurant()) ? ' mn-selected' : '';
+                    var hours = '';
+                    if (s.weekday_opening_hours && s.weekend_opening_hours && s.weekday_opening_hours === s.weekend_opening_hours) {
+                        hours = '<div class="mn-store-hours">' + s.weekday_opening_hours + '</div>';
+                    } else {
+                        var openingHours = data.is_weekend ? s.weekend_opening_hours : s.weekday_opening_hours;
+                        hours = '<div class="mn-store-hours">' + openingHours + '</div>';
+                    }
+                    var statusHtml = '';
+                    if (s.status == 1) {
+                        statusHtml = '<div class="mn-store-status mn-store-status--open">' + $.mage.__('Open') + '</div>';
+                    } else if (s.status == 2) {
+                        statusHtml = '<div class="mn-store-status mn-store-status--close">' + $.mage.__('Closed') + '</div>';
+                    }
+                    return '<div class="mn-store-item test' + selectedClass + (s.status == 2 ? ' mn-store-item--close-background' : '') + '" data-id="' + (s.store_id || s.id) + '" data-distance="' + s.distance + '" data-status="' + s.status + '">' +
+                        '<div class="mn-store-distance">' + (s.distance ? Number(s.distance).toFixed(2) : '') + ' km' +
+                        '<div class="desktop-hide">' + statusHtml + '</div>' +
+                        '</div>' +
+                        '<div class="mn-store-info">' +
+                            '<div class="mn-store-name">' + (s.name || '') + '</div>' +
+                            '<div class="mn-store-addr">' + (s.address || '') + '</div>' +
+                            '<div class="mn-store-phone">' + (s.telephone || s.phone || '') + '</div>' +
+                            hours +
+                        '</div>' +
+                        '<div class="mobile-hide">' + statusHtml + '</div>' +
+                        '</div>';
+                }).join('');
+                html += '</div>';
+                $('.mn-stores-head').removeClass('mn-stores-empty');
+            } else {
+                html = '<div class="mn-store-empty">' + $.mage.__("We couldn't find a Jollibee store at this location.") + '<br/>' + $.mage.__('Please provide more details or try another location.') + '</div>';
+                $('.mn-stores-head').addClass('mn-stores-empty');
+            }
+            if (isProductClickAddToCart && (!this.cspCookies || !this.csdCookies) ||
+                isProductClickAddToCart && (data.items && data.items.length === 0) ||
+                isProductClickAddToCart && (!rawAddress?.trim() || !addressFill?.trim())) {
+                html = '';
+            }
+            this.storeListHtml(html);
+        },
+
+        fetchNearby: function (lat, lng, rawAddress = null, addressFill = null, isProductClickAddToCart = false) {
+            var self = this,
+                requestFetch = {
+                    lat: lat,
+                    lng: lng,
+                    limit: 10,
+                    form_key: self.formKey
+                };
+            // if ( rawAddress ) {
+            //     requestFetch.rawAddress = rawAddress;
+            // }
+            $.ajax({
+                url: urlBuilder.build(self.nearbyUrl),
+                type: 'POST',
+                dataType: 'json',
+                showLoader: true,
+                data: requestFetch,
+                success: function (res) {
+                    self.renderStores(res, isProductClickAddToCart, rawAddress, addressFill);
+                    self._fillAddressToPopup(addressFill);
+                },
+                error: function () {
+                    self.renderStores({ items: [] }, isProductClickAddToCart = false, rawAddress, addressFill);
+                    self._fillAddressToPopup(addressFill);
+                }
+            });
+        },
+
+        openMapEmbed: function (address, lat, lng, rawAddress = null, addressFill = null, isProductClickAddToCart = false) {
+            var self = this;
+            self.ensureModal();
+            $('#mn-google-address-modal').val(address || $('#mn-google-address').val() || '');
+            var encoded = encodeURIComponent(address || $('#mn-google-address').val() || '');
+            self.setMode(self.mode());
+            if (isProductClickAddToCart && (!this.cspCookies || !this.csdCookies) ||
+                isProductClickAddToCart && (!address?.trim() || !rawAddress?.trim() || !addressFill?.trim())) {
+                $('.notification-add-to-cart').show();
+                $('.mn-stores-head').addClass('mn-stores-empty');
+            } else {
+                $('.notification-add-to-cart').hide();
+                $('.mn-stores-head').removeClass('mn-stores-empty');
+            }
+            if (!$('.mn-address-modal.modal-popup').hasClass('_show')) $('#mn-address-modal').modal('openModal');
+            if (lat && lng) {
+                self.lat = lat;
+                self.long = lng;
+                self.fetchNearby(lat, lng, rawAddress, addressFill, isProductClickAddToCart);
+            } else if (address) {
+                self.geocoder.geocode({ address: address }, function (res, status) {
+                    if (status === 'OK' && res[0] && res[0].geometry && res[0].geometry.location) {
+                        var loc = res[0].geometry.location,
+                            p = res[0];
+                        // Reset popup from
+                        var addr = p && p.formatted_address ? p.formatted_address : address;
+                        $('#full-address-popup form').trigger('reset');
+                        $('#full-address-popup form').validate().resetForm();
+                        $('#full-address-popup input').prop('readonly', false);
+                        let rawAddress = {},
+                            streetNumber = '',
+                            route = '',
+                            addressFill = {
+                                "full_address" : addr
+                            },
+                            mappingPopup = {
+                                "street_number": "popup_street_1",
+                                "route": "popup_route",
+                                "neighborhood": "popup_neighborhood",
+                                "locality": "popup_city",
+                                "administrative_area_level_2": "popup_city",
+                                "administrative_area_level_1": "popup_region",
+                                "country": "popup_country",
+                                "full_address": "full_address"
+                            },
+                            formatted = res[0].formatted_address.split(','),
+                            comps = res[0].address_components.map(c => c.long_name),
+                            rawNeighborhood = formatted.filter(part =>
+                                !comps.some(c => part.trim().startsWith(c))
+                            );
+                        if (!p.address_components) {
+                            p.address_components = [];
+                        }
+                        for (let i = p.address_components.length - 1; i >= 0; i--) {
+                            let addressTypes = p.address_components[i].types,
+                                addressType = p.address_components[i].types[0],
+                                long_name = p.address_components[i].long_name,
+                                short_name = p.address_components[i].short_name;
+
+                            if ( addressTypes.includes('street_number')) {
+                                streetNumber = long_name;
+                            }
+
+                            if ( addressTypes.includes('route')) {
+                                route = long_name;
+                            }
+
+                            if ( addressTypes.includes('administrative_area_level_1')) {
+                                rawAddress['administrative_area_level_1'] = short_name;
+                            }
+
+                            if ( addressTypes.includes('neighborhood')) {
+                                rawAddress['neighborhood'] = short_name;
+                            }
+
+                            if ( addressTypes.includes('administrative_area_level_2')) {
+                                rawAddress['administrative_area_level_2'] = short_name;
+                            }
+
+                            if (mappingPopup[addressType] && long_name) {
+                                addressFill[mappingPopup[addressType]] = long_name;
+                            }
+                        }
+
+                        if (streetNumber) {
+                            rawAddress['street_number'] = streetNumber;
+                        }
+
+                        if (route) {
+                            rawAddress['route'] = route;
+                        }
+
+                        if (streetNumber || route) {
+                            rawAddress['street_route'] = [streetNumber, route].filter(Boolean).join(' ');
+                        }
+
+                        if ( rawNeighborhood.length > 0 ) {
+                            rawAddress['neighborhood'] = rawNeighborhood.join(', ').trim();
+                            addressFill.popup_neighborhood = rawNeighborhood.join(', ').trim();
+                        }
+
+                        self.lat = loc.lat();
+                        self.long = loc.lng();
+                        self.fetchNearby(loc.lat(), loc.lng(), rawAddress, addressFill, isProductClickAddToCart);
+                    } else {
+                        self.renderStores({ items: [] }, isProductClickAddToCart, rawAddress, addressFill);
+                    }
+                });
+            }
+        },
+
+        bindAutocomplete: function (el, onPick) {
+            if (!el) return null;
+            var inst = new google.maps.places.Autocomplete(el);
+            inst.setComponentRestrictions({
+                country: 'VN'
+            });
+
+            inst.addListener('place_changed', function () {
+                var p = inst.getPlace();
+                var addr = p && p.formatted_address ? p.formatted_address : (el.value || '');
+                var lat = p && p.geometry && p.geometry.location ? p.geometry.location.lat() : null;
+                var lng = p && p.geometry && p.geometry.location ? p.geometry.location.lng() : null;
+                // Reset popup from
+                $('#full-address-popup form').trigger('reset');
+                $('#full-address-popup form').validate().resetForm();
+                $('#full-address-popup input').prop('readonly', false);
+                let rawAddress = {},
+                    streetNumber = '',
+                    route = '',
+                    addressFill = {
+                        "full_address" : addr
+                    },
+                    addressType = ['popup_neighborhood','popup_city','popup_region'],
+                    classString = ['<span class="extended-address">','<span class="locality">','<span class="region">'],
+                    mappingPopup = {
+                        "street_number": "popup_street_1",
+                        "route": "popup_route",
+                        "neighborhood": "popup_neighborhood",
+                        "locality": "popup_city",
+                        "administrative_area_level_2": "popup_city",
+                        "administrative_area_level_1": "popup_region",
+                        "country": "popup_country",
+                        "full_address": "full_address"
+                    },
+                    placeTrue = p.adr_address;
+
+                if (!p.address_components) {
+                    p.address_components = [];
+                }
+
+                for (let i = p.address_components.length - 1; i >= 0; i--) {
+                    let addressTypes = p.address_components[i].types,
+                        addressType = p.address_components[i].types[0],
+                        long_name = p.address_components[i].long_name,
+                        short_name = p.address_components[i].short_name;
+
+                    if ( addressTypes.includes('street_number')) {
+                        streetNumber = long_name;
+                    }
+
+                    if ( addressTypes.includes('route')) {
+                        route = long_name;
+                    }
+
+                    if ( addressTypes.includes('administrative_area_level_1')) {
+                        rawAddress['administrative_area_level_1'] = short_name;
+                    }
+
+                    if ( addressTypes.includes('administrative_area_level_2')) {
+                        rawAddress['administrative_area_level_2'] = short_name;
+                    }
+
+                    if (mappingPopup[addressType] && long_name) {
+                        addressFill[mappingPopup[addressType]] = long_name;
+                    }
+                }
+
+                if (streetNumber) {
+                    rawAddress['street_number'] = streetNumber;
+                }
+
+                if (route) {
+                    rawAddress['route'] = route;
+                }
+
+                if (streetNumber || route) {
+                    rawAddress['street_route'] = [streetNumber, route].filter(Boolean).join(' ');
+                }
+
+                for (let i = addressType.length; i >= 0; i--) {
+                    let addressOption = '';
+                    if (placeTrue && placeTrue.indexOf(classString[i]) >= 0) {
+                        let startCut = placeTrue.indexOf(classString[i]) + classString[i].length,
+                            endCut = 0;
+                        addressOption = placeTrue.slice(startCut);
+                        endCut = addressOption.indexOf("</span>");
+                        addressOption = addressOption.slice(0, endCut);
+                    }
+
+                    if (addressOption) {
+                        if ( addressType[i] === 'popup_neighborhood' ) {
+                            rawAddress['neighborhood'] = addressOption;
+                        }
+                        addressFill[addressType[i]] = addressOption;
+                    }
+                }
+
+                if (addr) onPick(addr, lat, lng, rawAddress, addressFill);
+            });
+            return inst;
+        },
+
+        initGoogleMaps: function () {
+            var self = this;
+            if (!window.google || !google.maps || !google.maps.places) {
+                $(window).on('load', function () { self.initGoogleMaps(); });
+                return;
+            }
+            self.geocoder = new google.maps.Geocoder();
+            const $inputModal = $('#mn-google-address-modal');
+            $inputModal.on('input', function () {
+                const $this = $(this);
+                const value = $this.val();
+                let autocomplete = $this.data('autocompleteInstance');
+                if (value.length >= 4) {
+                    if (!autocomplete) {
+                        $('.pac-container').removeClass('force-hide');
+                        autocomplete = self.bindAutocomplete(this, function (addr, lat, lng, rawAddress, addressFill) {
+                            self.openMapEmbed(addr, lat, lng, rawAddress, addressFill);
+                        });
+                        $this.data('autocompleteInstance', autocomplete);
+                    } else {
+                        $('.pac-container').removeClass('force-hide');
+                    }
+                } else {
+                    $('.pac-container').addClass('force-hide');
+                }
+            });
+            $(document).off('click.mnStoreItem').on('click.mnStoreItem', '.mn-store-item', function () {
+                var id = $(this).data('id'),
+                    mode = $('.mn-tab.mn-active').data('mode'),
+                    storeDistance = $(this).data('distance'),
+                    storeStatus = $(this).data('status');
+                if ( storeStatus == 2 ) {
+                    return;
+                }
+                $('#full-address-popup').find('#store_id').val(id);
+                $('#full-address-popup').find('#shipping_method').val(mode);
+                $('#full-address-popup').find('#store_distance').val(storeDistance);
+                $('.mn-store-item').removeClass('mn-selected');
+                $(this).addClass('mn-selected');
+                $('#mn-address-modal').modal('closeModal')
+                self._openFullAddressPopup();
+            });
+            this.setMode(this.mode());
+        },
+
+        setMode: function (newMode) {
+            this.mode(newMode);
+            window.mnMode = newMode;
+            var placeholder = newMode === this.MODE_PICKUP ? $.mage.__('Enter the address/store for pickup') : $.mage.__('Enter delivery address');
+            $('#mn-google-address, #mn-google-address-modal').attr('placeholder', placeholder);
+            $('.mn-tabs .mn-tab, .mn-tabs-modal .mn-tab').removeClass('mn-active');
+            $('.mn-tabs .mn-tab[data-mode="' + newMode + '"], .mn-tabs-modal .mn-tab[data-mode="' + newMode + '"]').addClass('mn-active');
+            if (!$('#mn-pickup-style').length) $('head').append('<style id="mn-pickup-style">.mn-pickup-mode .mn-store-phone{display:none!important}</style>');
+            $('body').toggleClass('mn-pickup-mode', newMode === this.MODE_PICKUP);
+        },
+
+        submitMainForm: function () {
+            var isProductClickAddToCart = $('#is-product-click').val() || '';
+            isProductClickAddToCart = isProductClickAddToCart === '1';
+            if ( isProductClickAddToCart ) {
+                this.openMapEmbed(' ', '', '', null, null, isProductClickAddToCart);
+                $('#is-product-click').val('');
+            } else {
+                $('#mn-google-address').focus();
+            }
+
+            return false;
+        },
+
+        submitModalForm: function () {
+            $('#mn-google-address-modal').focus();
+            return false;
+        },
+
+        ensureConfirmModal: function () {
+            if (this.confirmModalInited) return;
+            var self = this;
+            $('#mn-confirm-modal').modal({
+                type: 'popup',
+                modalClass: 'mn-confirm-modal style-address-modal',
+                overlayClass: 'modals-overlay mn-address-overlay modals-overlay-show modals-overlay-confirm',
+                responsive: false,
+                clickableOverlay: false,
+                title: $.mage.__('NOTIFICATION'),
+                buttons: []
+            }).on('modalclosed', function () {
+                $('.modals-overlay-confirm').remove();
+            });
+            $(document)
+                .off('click.mnConfirmYes')
+                .on('click.mnConfirmYes', '.mn-confirm-yes', function (e) {
+                    e.preventDefault();
+                    $('#mn-confirm-modal').modal('closeModal');
+                    self.setMode(self.mode());
+                    if (self.customerAddress()) self.openMapEmbed(self.customerAddress());
+                });
+            $(document)
+                .off('click.mnConfirmNo')
+                .on('click.mnConfirmNo', '.mn-confirm-no', function (e) {
+                    e.preventDefault();
+                    $('#mn-confirm-modal').modal('closeModal');
+                });
+            this.confirmModalInited = true;
+        },
+
+        openEditModal: function () {
+            var self = this;
+            $(document.body, window.parent.document).trigger('processStart');
+            self.initData().done(function () {
+                $(document.body, window.parent.document).trigger('processStop');
+                if (self.cartItemsCount()) {
+                    self.ensureConfirmModal();
+                    $('#mn-confirm-modal').modal('openModal');
+                } else {
+                    self.setMode(self.mode());
+                    if (self.customerAddress()) {
+                        self.openMapEmbed(self.customerAddress());
+                    }
+                }
+            });
+        },
+
+        openNewAddressModal: function (newAddress) {
+            var self = this;
+            self.initData().done(function () {
+                self.openMapEmbed(self.customerAddress());
+            });
+            sessionStorage.setItem('mage-checkout-action', 'change-address');
+        },
+
+        /**
+         * Fill Address to Popup
+         */
+        _fillAddressToPopup: function ( addressFill ) {
+            const keys = ['popup_street_1', 'popup_route', 'popup_neighborhood', 'popup_city', 'popup_region', 'full_address'];
+            addressFill = addressFill || {};
+            if (addressFill['popup_city'] === addressFill['popup_region']) {
+                addressFill['popup_city'] = '';
+            }
+            keys.forEach(function (k) {
+                const $el = $('#' + k);
+                const v = addressFill[k] == null ? '' : addressFill[k];
+                $el.val(v).trigger('change');
+                $el.prop('readonly', !(k === 'popup_street_1' || v === ''));
+            });
+        },
+
+        /**
+         * Open full address popup
+         */
+        _openFullAddressPopup: function () {
+            let self = this,
+                options = {
+                    type: 'popup',
+                    modalClass: 'style-address-modal mm-confirm-address-modal',
+                    overlayClass: 'modals-overlay mn-address-overlay modals-overlay-show',
+                    responsive: false,
+                    title: $.mage.__('Confirm address'),
+                    clickableOverlay: false
+                };
+            $('#full-address-popup')
+                .modal(options)
+                .on('modalclosed', function () {
+                    self._confirmAddress();
+                })
+                .modal('openModal');
+
+            $('#full-address-popup button').on('click', function () {
+                self._confirmAddress();
+            })
+        },
+
+        /**
+         * Confirm full address
+         */
+        _confirmAddress: function () {
+            let self = this,
+                formData = $('#full-address-popup form').serializeArray();
+            formData.push(
+                {
+                    name: 'form_key',
+                    value: self.formKey
+                },
+                {
+                    name: 'lat',
+                    value: self.lat
+                },
+                {
+                    name: 'long',
+                    value: self.long
+                }
+            );
+
+            if (formData.length && $('#full-address-popup form').validation('isValid') ) {
+                $.ajax({
+                    url: urlBuilder.build(self.savePickAddressUrl),
+                    type: 'POST',
+                    dataType: 'json',
+                    data: formData,
+                    beforeSend: function () {
+                        $(document.body, window.parent.document).trigger('processStart');
+                    },
+                    success: function (response) {
+                        // $.mage.cookies.set(PROVINCE_COOKIE, response.province_id, {lifetime: 2628000, path: '/'});
+                        // $.mage.cookies.set(DISTRICT_COOKIE, response.district_id, {lifetime: 2628000, path: '/'});
+                        if ( self.isCheckoutPage ) {
+                            sessionStorage.setItem('mage-checkout-active-step', 'shipping');
+                            sessionStorage.setItem('mage-checkout-action', 'change-address');
+                        }
+                        window.location.reload();
+                    },
+                    error: function () {
+                        $.mage.cookies.set(PROVINCE_COOKIE, 0, {lifetime: 2628000, path: '/'});
+                        $.mage.cookies.set(DISTRICT_COOKIE, 0, {lifetime: 2628000, path: '/'});
+                    }
+                });
+            }
+        },
+
+        detectLocation: function () {
+            var self = this;
+            if (!navigator.geolocation) return;
+            navigator.geolocation.getCurrentPosition(function (pos) {
+                var lat = pos.coords.latitude, lng = pos.coords.longitude;
+                self.geocoder.geocode({ location: { lat: lat, lng: lng } }, function (res, status) {
+                    var addr = '', rawAddress = {}, streetNumber = '', route = '', addressFill = {};
+                    if (status === 'OK' && res[0]) {
+                        var p = res[0];
+                        addr = p.formatted_address || '';
+                        addressFill = { full_address: addr };
+                        for (let i = p.address_components.length - 1; i >= 0; i--) {
+                            let types = p.address_components[i].types,
+                                type = types[0],
+                                long_name = p.address_components[i].long_name,
+                                short_name = p.address_components[i].short_name;
+                            if (types.includes('street_number')) streetNumber = long_name;
+                            if (types.includes('route')) route = long_name;
+                            if (types.includes('administrative_area_level_1')) rawAddress['administrative_area_level_1'] = short_name;
+                            if (types.includes('administrative_area_level_2')) rawAddress['administrative_area_level_2'] = short_name;
+                            if (type === 'street_number') addressFill['popup_street_1'] = long_name;
+                            if (type === 'route') addressFill['popup_route'] = long_name;
+                            if (type === 'neighborhood') addressFill['popup_neighborhood'] = long_name;
+                            if (type === 'locality' || type === 'administrative_area_level_2') addressFill['popup_city'] = long_name;
+                            if (type === 'administrative_area_level_1') addressFill['popup_region'] = long_name;
+                            if (type === 'country') addressFill['popup_country'] = long_name;
+                        }
+                        if (!addressFill['popup_neighborhood']) {
+                            let formatted = p.formatted_address.split(','),
+                                comps = p.address_components.map(c => c.long_name),
+                                rawNeighborhood = formatted.filter(part =>
+                                    !comps.some(c => part.trim().startsWith(c))
+                                );
+                            addressFill['popup_neighborhood'] = rawNeighborhood.join(', ').trim();
+                        }
+                        if (streetNumber) rawAddress['street_number'] = streetNumber;
+                        if (route) rawAddress['route'] = route;
+                        if (streetNumber || route) rawAddress['street_route'] = [streetNumber, route].filter(Boolean).join(' ');
+                        self.openMapEmbed(addr, lat, lng, rawAddress, addressFill);
+                    } else {
+                        self.openMapEmbed('', lat, lng, null, null);
+                    }
+                });
+            }, function () {}, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
+        },
+
+        clearAddressField: function (selector) {
+            $(selector).val('').focus().trigger('input').trigger('change');
+        }
+    });
+});

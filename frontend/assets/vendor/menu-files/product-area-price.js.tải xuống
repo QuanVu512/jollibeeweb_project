@@ -1,0 +1,21 @@
+define([
+    'jquery',
+    'uiComponent',
+    'Levinci_ProductAreaPrice/js/model/area-price-processor'
+], function ($, Component, areaPriceProcessor) {
+    'use strict';
+
+    return Component.extend({
+        initialize: function () {
+            this._super();
+            let self = this;
+
+            // Use the sectionData passed from the template
+            var sectionData = this.sectionData;
+
+            if (sectionData && sectionData.area_price !== undefined) {
+                areaPriceProcessor.catalogDisplayProductAreaPrice(sectionData.area_price, self.pointRatio);
+            }
+        },
+    });
+});

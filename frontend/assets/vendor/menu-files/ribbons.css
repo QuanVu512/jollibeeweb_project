@@ -1,0 +1,75 @@
+.corner-ribbon {
+    background: #ee4433;
+    color: #f0f0f0;
+    font-size: 10px;
+    left: -45px;
+    letter-spacing: 1px;
+    line-height: 25px;
+    position: absolute;
+    text-align: center;
+    top: 35px;
+    width: 200px;
+    z-index: 9999999;
+    transform: rotate(-45deg);
+}
+.corner-ribbon.sticky {
+    position: fixed;
+}
+.corner-ribbon.shadow {
+    box-shadow: 0 0 3px rgba(0, 0, 0, 0.3);
+}
+.corner-ribbon.top-left {
+    top: 35px;
+    left: -45px;
+    transform: rotate(-45deg);
+}
+.corner-ribbon.top-right {
+    top: 35px;
+    left: auto;
+    right: -45px;
+    transform: rotate(45deg);
+}
+.corner-ribbon.bottom-left {
+    top: auto;
+    left: -45px;
+    bottom: 10px;
+    transform: rotate(45deg);
+}
+.corner-ribbon.bottom-right {
+    top: auto;
+    left: auto;
+    bottom: 10px;
+    right: -45px;
+    transform: rotate(-45deg);
+}
+.corner-ribbon.white {
+    background: #f0f0f0;
+    color: #555555;
+}
+.corner-ribbon.black {
+    background: #333333;
+}
+.corner-ribbon.grey {
+    background: #999999;
+}
+.corner-ribbon.blue {
+    background: #3399dd;
+}
+.corner-ribbon.green {
+    background: #22cc77;
+}
+.corner-ribbon.turquoise {
+    background: #11bb99;
+}
+.corner-ribbon.purple {
+    background: #9955bb;
+}
+.corner-ribbon.red {
+    background: #ee4433;
+}
+.corner-ribbon.orange {
+    background: #ee8822;
+}
+.corner-ribbon.yellow {
+    background: #eecc00;
+}

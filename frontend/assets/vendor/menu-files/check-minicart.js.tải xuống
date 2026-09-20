@@ -1,0 +1,12 @@
+require([
+    'jquery',
+    'mage/cookies'], function ($) {
+        $( document ).ready(function() {
+            if($.cookie('minicart') == "active") {
+                setTimeout(function() { 
+                    $('[data-block="minicart"] .minicart-content-trigger').trigger('click');
+                }, 3000);
+                $.cookie('minicart', "");
+            }
+        });
+});

@@ -1,0 +1,20 @@
+define([
+    'jquery',
+    'domReady!'
+], function ($) {
+    'use strict';
+    var miniCart, mainContent;
+
+    miniCart = $('[data-block=\'minicart\']');
+    mainContent = $('#maincontent');
+    $(window).on('scroll', function() {
+        var scrollHeight = $(document).height();
+        var footerlHeight = $('.page-footer').height() + $('.copyright').height();
+        var scrollPosition = $(window).height() + $(window).scrollTop();
+        if ((scrollHeight - scrollPosition) <= footerlHeight) {
+            miniCart.css('position','absolute');
+        }else {
+            miniCart.css('position','fixed');
+        }
+    });
+});

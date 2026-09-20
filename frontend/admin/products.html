@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Quản lý sản phẩm</title>
+  <link rel="icon" href="/assets/logo.png">
+  <link rel="stylesheet" href="/admin/assets/css/admin.css">
+  <script src="/assets/js/role-guard.js" defer></script>
+  <script src="/admin/assets/js/api.js" defer></script>
+  <script src="/admin/assets/js/common.js" defer></script>
+  <script src="/admin/assets/js/products.js" defer></script>
+</head>
+<body data-required-role="admin">
+  <aside class="sidebar">
+    <div class="sidebar-brand">JOLLIBEE ADMIN</div>
+    <nav class="sidebar-nav" aria-label="Điều hướng quản trị">
+      <a href="/admin/">Quản lý tài khoản</a>
+      <a href="/admin/staff.html">Hồ sơ nhân viên</a>
+      <a class="active" href="/admin/products.html">Quản lý sản phẩm</a>
+      <a href="/admin/report.html">Báo cáo thống kê</a>
+    </nav>
+  </aside>
+
+  <div class="page-shell">
+    <header class="topbar">
+      <img src="/assets/logo.png" alt="Jollibee">
+      <div class="topbar-user">
+        <span>Chào, <span class="user-name" data-user-name>Admin</span></span>
+        <button class="btn btn-danger" type="button" data-logout>Đăng xuất</button>
+      </div>
+    </header>
+
+    <main class="content product-content">
+      <div class="page-heading">
+        <h1>Quản lý sản phẩm</h1>
+        <p>Tạo sản phẩm, khai báo định lượng nguyên liệu và quản lý trạng thái bán.</p>
+      </div>
+
+      <div class="product-layout">
+        <section class="card product-form-card">
+          <h2 id="product-form-title" class="card-title">Tạo sản phẩm</h2>
+          <form id="product-form" novalidate>
+            <input id="product-id" name="id" type="hidden">
+            <div class="product-form-grid">
+              <div class="form-group">
+                <label for="product-name">Tên sản phẩm</label>
+                <input id="product-name" name="name" maxlength="70" required placeholder="Nhập tên sản phẩm">
+              </div>
+              <div class="form-group">
+                <label for="product-price">Giá bán (VND)</label>
+                <input id="product-price" name="price" type="number" min="1" step="1" inputmode="numeric" required placeholder="2xxxxx">
+              </div>
+              <div class="form-group">
+                <label for="product-category">Danh mục</label>
+                <select id="product-category" name="categoryId" required>
+                  <option value="">-- Chọn danh mục --</option>
+                </select>
+              </div>
+              <div id="product-status-group" class="form-group" hidden>
+                <label for="product-status">Trạng thái</label>
+                <select id="product-status" name="isActive">
+                  <option value="true">Đang hoạt động</option>
+                  <option value="false">Ngừng hoạt động</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="recipe-heading">
+              <div>
+                <h3>Tiêu hao nguyên liệu</h3>
+                <p>Các dòng trùng nguyên liệu sẽ được quy đổi về đơn vị kho và cộng lại.</p>
+              </div>
+              <button id="add-ingredient" class="btn btn-secondary" type="button">+ Nguyên liệu</button>
+            </div>
+            <div id="recipe-rows" class="recipe-rows"></div>
+            <div id="recipe-error" class="field-error" hidden></div>
+
+            <div class="actions">
+              <button id="product-submit" class="btn btn-primary" type="submit">Tạo sản phẩm</button>
+              <button id="product-cancel" class="btn btn-secondary" type="button" hidden>Hủy chỉnh sửa</button>
+            </div>
+          </form>
+        </section>
+
+        <section class="card product-list-card">
+          <div class="table-tools product-tools">
+            <h2 class="card-title table-title">Danh sách sản phẩm</h2>
+            <span id="product-count" class="field-note">0 sản phẩm</span>
+          </div>
+          <div class="product-filters" aria-label="Bộ lọc sản phẩm">
+            <div class="form-group">
+              <label for="category-filter">Danh mục</label>
+              <select id="category-filter">
+                <option value="all">Tất cả danh mục</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="status-filter">Trạng thái</label>
+              <select id="status-filter">
+                <option value="all">Tất cả trạng thái</option>
+                <option value="active">Đang hoạt động</option>
+                <option value="inactive">Ngừng hoạt động</option>
+              </select>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Mã</th>
+                  <th>Tên sản phẩm</th>
+                  <th>Danh mục</th>
+                  <th>Giá bán</th>
+                  <th>Trạng thái</th>
+                  <th>Hành động</th>
+                </tr>
+              </thead>
+              <tbody id="product-table-body">
+                <tr><td class="empty-cell" colspan="6">Đang tải dữ liệu...</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div id="product-pagination" class="pagination" hidden>
+            <button id="previous-page" class="btn btn-secondary" type="button">Trang trước</button>
+            <span id="page-label">Trang 1 / 1</span>
+            <button id="next-page" class="btn btn-secondary" type="button">Trang sau</button>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

@@ -1,0 +1,302 @@
+/**
+ * @package     Plumrocket_CookieConsent
+ * @copyright   Copyright (c) 2020 Plumrocket Inc. (https://plumrocket.com)
+ * @license     https://plumrocket.com/license   End-user License Agreement
+ */
+
+define([
+    'underscore',
+    'ko',
+    'jquery',
+    'uiComponent',
+    'prCookieConsentApi',
+    'uiRegistry',
+    'Magento_Ui/js/modal/modal',
+    'text!Plumrocket_CookieConsent/template/settings/modal/modal-slide.html',
+    'text!Plumrocket_CookieConsent/template/settings/modal/modal-popup.html',
+    'mage/translate'
+], function (_, ko, $, Component, prCookieConsentApi, uiRegistry, modal, modalSlideTpl, modalPopupTpl) {
+    'use strict';
+
+    var DISPLAY_STYLE_ACCORDION_POPUP = 'accordions_popup';
+
+    return Component.extend({
+        acceptButtonLabel: '',
+
+        /**
+         * Contains selected categories to confirm
+         */
+        selectedCategories: [],
+
+        initialize: function (config) {
+            this._super();
+            this.createModal = _.once(this.createModal);
+            this.isDetailView = ko.observable(false);
+            this.currentCategory = ko.observable('');
+
+            _.each(this.categories, function (category) {
+                if (prCookieConsentApi.isAllowedCategory(category.key) || this.isPreChecked(category.key)) {
+                    this.selectedCategories.push(category.key);
+                }
+                category.categoryVisible = ko.observable(false);
+                category.detailVisible = ko.observable(true);
+            }.bind(this));
+
+            this.initOpenCookieSettingsLinks('pr-open-cookie-settings');
+            prCookieConsentApi.consent.addCallback(this.reset.bind(this));
+        },
+
+        reset: function () {
+            this.isDetailView(false)
+            var categories = [];
+            _.each(this.categories, function (category) {
+                categories.push(category.key);
+                category.categoryVisible(false);
+                category.detailVisible(true);
+            }.bind(this));
+
+            _.each(
+                document.getElementById('pr-cookie-setting-bar').querySelectorAll('input[type="checkbox"]'),
+                function (checkbox) {
+                    var categoryKey = checkbox.name;
+                    if (! categories.includes(categoryKey)) {
+                        return;
+                    }
+                    var shouldBeChecked = prCookieConsentApi.isAllowedCategory(categoryKey)
+                        || this.isPreChecked(categoryKey);
+                    if (Boolean(shouldBeChecked) !== Boolean(checkbox.checked)) {
+                        checkbox.checked = ! checkbox.checked;
+                    }
+                }.bind(this)
+            )
+        },
+
+        isAllowed: function (categoryKey) {
+            return prCookieConsentApi.isAllowedCategory(categoryKey) || this.isPreChecked(categoryKey);
+        },
+
+        isPreChecked: function (categoryKey) {
+            return ! prCookieConsentApi.isOptIn() && this.getCategoryByKey(categoryKey).is_pre_checked;
+        },
+
+        /**
+         * Save Choices
+         */
+        confirmChosen: function () {
+            prCookieConsentApi.consent.set(this.selectedCategories);
+            this.closeNotice();
+            this.getModal().closeModal();
+        },
+
+        /**
+         * Toggle is allowed category in local variable, to save chooses - use "this.confirmChosen"
+         *
+         * @param uiClass
+         * @param {jQuery.Event} jQueryEvent
+         */
+        toggleSelectedCategory: function (uiClass, jQueryEvent) {
+            /** @type {HTMLInputElement} input */
+            var input = jQueryEvent.target;
+            var categoryKey = input.name;
+            if (input.checked) {
+                if (! this.selectedCategories.includes(categoryKey)) {
+                    this.selectedCategories.push(categoryKey);
+                }
+            } else {
+                this.selectedCategories = _.without(this.selectedCategories, categoryKey);
+            }
+        },
+
+        createModal: function () {
+            var options = {
+                buttons: [],
+            };
+
+            switch (this.displayStyle) {
+                case DISPLAY_STYLE_ACCORDION_POPUP:
+                    options = _.extendOwn(options, {
+                        popupTpl: modalPopupTpl,
+                        type: 'popup',
+                        modalClass: 'pr-cookie-details-modal',
+                        canClose: false
+                    });
+                    break;
+
+                default:
+                    options = _.extendOwn(options, {
+                        slideTpl: modalSlideTpl,
+                        type: 'slide',
+                        modalClass: 'pr-cookie-left-bar'
+                    });
+            }
+
+            this.modal = modal(options, document.getElementById('pr-cookie-setting-bar'));
+
+            this.addChangingStyleOnHover($('#pr-cookie-setting-bar .action.confirm'), this.confirmButtonConfig);
+            this.addChangingStyleOnHover($('#pr-cookie-setting-bar .action.allow'), this.acceptButtonConfig);
+            this.addChangingStyleOnHover($('#pr-cookie-setting-bar .action.decline'), this.declineButtonConfig);
+        },
+
+        getModal: function () {
+            this.createModal();
+            return this.modal;
+        },
+
+        closeNotice: function () {
+            uiRegistry.get('pr-cookie-notice').getModal().closeModal();
+        },
+
+        /**
+         * @param $button
+         * @param {{type, text_color, text_color_on_hover, background_color, background_color_on_hover}} config
+         */
+        addChangingStyleOnHover: function ($button, config) {
+            $button.on({
+                mouseenter: function () {
+                    $(this).css({
+                        'background-color': null !== config.background_color_on_hover ? config.background_color_on_hover : '',
+                        'border-color': null !== config.background_color_on_hover ? config.background_color_on_hover : '',
+                        'color': null !== config.text_color_on_hover ? config.text_color_on_hover : ''
+                    })
+                },
+                mouseleave: function () {
+                    $(this).css({
+                        'background-color': null !== config.background_color ? config.background_color : '',
+                        'border-color': null !== config.background_color ? config.background_color : '',
+                        'color': null !== config.text_color ? config.text_color : ''
+                    });
+                }
+            });
+        },
+
+        allowAll: function () {
+            prCookieConsentApi.consent.allowAllCategories();
+            this.closeNotice();
+            this.getModal().closeModal();
+        },
+
+        declineAll: function () {
+            prCookieConsentApi.consent.declineAll();
+            this.closeNotice();
+            this.getModal().closeModal();
+        },
+
+        showCookieDetails: function (uiClass, jQueryEvent) {
+            this.currentCategory(jQueryEvent.target.dataset.categoryKey);
+            this.isDetailView(true);
+        },
+
+        hideCookieDetails: function () {
+            this.isDetailView(false);
+        },
+
+        /**
+         * Get category by key
+         *
+         * @param {string} categoryKey
+         * @return {{}}
+         */
+        getCategoryByKey: function (categoryKey) {
+            return _.find(this.categories, function (category) {
+                return category.key === categoryKey;
+            });
+        },
+
+        /**
+         * Get category name by key
+         *
+         * @param {string} categoryKey
+         * @return {string}
+         */
+        getCategoryNameByKey: function (categoryKey) {
+            var category = this.getCategoryByKey(categoryKey);
+            return category ? category.name : categoryKey;
+        },
+
+        /**
+         * @param {string} categoryKey
+         * @return {[]}
+         */
+        getGroupedCookies: function (categoryKey) {
+            var firstPartyCookies = [];
+            var thirdPartyCookies = [];
+
+            var result = [];
+
+            this.cookies.forEach(function (cookie) {
+                if (cookie.category_key === categoryKey) {
+                    if (cookie.type === 'first') {
+                        firstPartyCookies.push(cookie);
+                    } else {
+                        thirdPartyCookies.push(cookie);
+                    }
+                }
+            });
+
+            if (firstPartyCookies.length > 0) {
+                result.push(
+                    {
+                        name: $.mage.__('First party'),
+                        cookies: firstPartyCookies,
+                        checkThirdParty: thirdPartyCookies.length > 0
+                    }
+                );
+            }
+
+            var groupdThirdPartyCookies = thirdPartyCookies.reduce(function (cookiesByDomain, cookie) {
+                if (!cookiesByDomain[cookie.domain]) {
+                    cookiesByDomain[cookie.domain] = [];
+                }
+                cookiesByDomain[cookie.domain].push(cookie);
+                return cookiesByDomain;
+            }, {});
+
+            _.each(groupdThirdPartyCookies, function (cookiesWithSameDomain) {
+                result.push({
+                    name: cookiesWithSameDomain[0].domainLabel,
+                    cookies: cookiesWithSameDomain,
+                    checkThirdParty: thirdPartyCookies.length > 0
+                });
+            });
+
+            return result;
+        },
+
+        /**
+         * @param {string} categoryKey
+         * @return {boolean}
+         */
+        isCategoryHasCookie: function (categoryKey) {
+            return _.some(this.cookies, function (cookie) {
+                return cookie.category_key === categoryKey;
+            });
+        },
+
+        closeModal: function () {
+            this.getModal().closeModal();
+        },
+
+        /**
+         * Add event listener to show this component (Settings Panel)
+         *
+         * We have added this logic to component to avoid separate js file loading
+         *
+         * @param openSettingsClass
+         */
+        initOpenCookieSettingsLinks(openSettingsClass) {
+            $('body').on('click', function (event) {
+                if (event.target.classList.contains(openSettingsClass)) {
+                    this.getModal().openModal();
+                }
+            }.bind(this));
+        },
+
+        toggleAccordion: function () {
+            this.categoryVisible(!this.categoryVisible())
+        },
+
+        toggleAccordionCookieDetails: function (data) {
+            this.detailVisible(!this.detailVisible());
+        },
+    });
+});

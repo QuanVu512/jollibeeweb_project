@@ -1,0 +1,34 @@
+{
+  "name": "jollibee-admin-api",
+  "version": "1.0.0",
+  "private": true,
+  "description": "REST API cho khu vực quản trị Jollibee",
+  "main": "src/server.js",
+  "scripts": {
+    "test": "node --test",
+    "dev": "node --watch src/server.js",
+    "start": "node src/server.js",
+    "seed:admin": "node src/scripts/seedAdmin.js",
+    "seed:recipes": "node src/scripts/seedInventoryRecipes.js",
+    "sync:recipe-units": "node src/scripts/syncRecipeUnits.js",
+    "init:database": "node src/scripts/initDatabase.js",
+    "migrate:mysql": "node src/scripts/migrateFromMySql.js"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "exceljs": "^4.4.0",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.5.2",
+    "helmet": "^8.2.0",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.7.2",
+    "morgan": "^1.11.0",
+    "mysql2": "^3.22.5"
+  }
+}

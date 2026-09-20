@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Tạo đơn tại quầy</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="icon" href="/assets/logo.png">
+    <style>
+        * { font-family: 'Nunito', 'Segoe UI', -apple-system, sans-serif; box-sizing: border-box; }
+        input, select, textarea, button { font-family: 'Nunito', 'Segoe UI', -apple-system, sans-serif; }
+        .emoji { font-family: "Segoe UI Emoji", "Segoe UI Symbol", "Apple Color Emoji", "Noto Color Emoji", sans-serif; margin-right: 4px; }
+        body { background-color: #fdf5e6; background-image: url('data:image/svg+xml;utf8,<svg width="150" height="150" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><text x="10" y="40" font-size="20" opacity="0.04">🍗</text><text x="70" y="80" font-size="20" opacity="0.04">🌶️</text></svg>'); margin: 0; padding: 0; }
+        header { background-color: #fff; padding: 15px; text-align: center; border-bottom: 4px solid #d8262f; display: flex; justify-content: center; align-items: center; position: relative; }
+        header img { height: 75px; }
+        .user-menu { position: absolute; right: 30px; display: inline-block; }
+        .avatar-btn { background: #fff; border: 2px solid #d8262f; border-radius: 50px; padding: 5px 15px; cursor: pointer; display: flex; align-items: center; gap: 10px; font-weight: 700; color: #d8262f; }
+        .avatar-btn img { width: 35px; height: 35px; border-radius: 50%; }
+        .dropdown-content { display: none; position: absolute; right: 0; background-color: white; min-width: 200px; box-shadow: 0px 8px 16px rgba(0,0,0,0.2); border-radius: 8px; overflow: hidden; border: 1px solid #eee; z-index: 100; }
+        .dropdown-content a { color: #2b2b2b; padding: 12px 16px; text-decoration: none; display: block; font-size: 14px; text-align: left; border-bottom: 1px solid #eee; }
+        .dropdown-content a:hover { background-color: #fdf5e6; color: #d8262f; }
+        .user-menu:hover .dropdown-content { display: block; }
+        
+        .nav-menu { background-color: #2b2b2b; padding: 12px; text-align: center; }
+        .nav-menu a { color: white; text-decoration: none; margin: 0 20px; font-weight: 700; text-transform: uppercase; }
+        .nav-menu a.active { color: #f3a22f; }
+        
+        .main-container { display: flex; max-width: 1200px; margin: 30px auto; gap: 20px; padding: 0 20px; }
+        .menu-side { flex: 2; display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; align-content: start; }
+        .food-card { background: #fff; padding: 20px; border-radius: 12px; text-align: center; border: 1px solid #eee; box-shadow: 0 4px 8px rgba(0,0,0,0.05); display: flex; flex-direction: column; justify-content: space-between; }
+        .btn-add { background: #d8262f; color: white; border: none; padding: 10px 20px; border-radius: 20px; cursor: pointer; font-weight: 900; margin-top: 10px; width: 100%; transition: background-color 0.2s; }
+        .btn-add:hover { background-color: #b51c22; }
+        
+        .cart-side { flex: 1; background: #fff; padding: 25px; border-radius: 15px; border: 2px solid #ffefef; box-shadow: 0 10px 20px rgba(0,0,0,0.05); height: fit-content; }
+        .btn-order { background: #28a745; color: white; width: 100%; padding: 15px; border: none; border-radius: 8px; font-weight: 900; cursor: pointer; margin-top: 20px; box-shadow: 0 4px 0 #1e7e34; font-size: 16px; text-transform: uppercase; }
+        .btn-order:hover { background-color: #218838; }
+        .btn-order:disabled { background-color: #6c757d; box-shadow: 0 4px 0 #495057; cursor: not-allowed; }
+        
+        .cart-table { width: 100%; border-collapse: collapse; }
+        .cart-table td { padding: 10px 0; border-bottom: 1px solid #eee; }
+        .qty-input { width: 50px; padding: 5px; text-align: center; border-radius: 4px; border: 1px solid #ddd; }
+        .btn-remove { background: none; border: none; color: #d8262f; cursor: pointer; font-size: 16px; font-weight: bold; }
+
+        /* Invoice Modal & Print Styling */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.55);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+        }
+        .modal-overlay.active { display: flex; }
+        .receipt-card {
+            background: #fff;
+            width: 380px;
+            max-width: 95vw;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.25);
+            position: relative;
+            max-height: 90vh;
+            overflow-y: auto;
+            color: #222;
+        }
+        .receipt-header { text-align: center; border-bottom: 2px dashed #bbb; padding-bottom: 12px; margin-bottom: 12px; }
+        .receipt-header img { height: 45px; }
+        .receipt-header h3 { margin: 6px 0 2px 0; color: #d8262f; font-size: 18px; }
+        .receipt-header p { margin: 2px 0; font-size: 12px; color: #555; }
+        .receipt-info { font-size: 13px; line-height: 1.5; border-bottom: 1px dashed #ccc; padding-bottom: 8px; margin-bottom: 10px; }
+        .receipt-items { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .receipt-items th { text-align: left; border-bottom: 1px solid #333; padding: 4px 0; font-size: 12px; }
+        .receipt-items td { padding: 6px 0; border-bottom: 1px dashed #eee; }
+        .receipt-total { border-top: 2px dashed #bbb; margin-top: 12px; padding-top: 8px; font-size: 13px; }
+        .receipt-total .row { display: flex; justify-content: space-between; margin: 4px 0; }
+        .receipt-total .grand-total { font-weight: 900; font-size: 17px; color: #d8262f; border-top: 1px solid #ddd; padding-top: 6px; margin-top: 4px; }
+        .receipt-footer { text-align: center; margin-top: 15px; font-size: 12px; color: #666; border-top: 1px dashed #bbb; padding-top: 10px; }
+        .receipt-actions { display: flex; gap: 10px; margin-top: 16px; }
+        .receipt-btn { flex: 1; padding: 10px; border: none; border-radius: 6px; font-weight: 800; cursor: pointer; }
+        .receipt-btn-print { background: #d8262f; color: #fff; }
+        .receipt-btn-print:hover { background: #b51c22; }
+        .receipt-btn-close { background: #eee; color: #333; }
+        .receipt-btn-close:hover { background: #ddd; }
+
+        @media print {
+            body * { visibility: hidden !important; }
+            #invoice-modal, #invoice-modal * { visibility: visible !important; }
+            #invoice-modal {
+                display: block !important;
+                position: absolute !important;
+                top: 0 !important; left: 0 !important; width: 100% !important; height: auto !important;
+                background: none !important;
+                padding: 0 !important;
+            }
+            .receipt-card {
+                width: 100% !important;
+                box-shadow: none !important;
+                border-radius: 0 !important;
+                padding: 0 !important;
+                max-height: none !important;
+                overflow: visible !important;
+            }
+            .receipt-actions { display: none !important; }
+        }
+    </style>
+    <script src="/assets/js/role-guard.js" defer></script>
+    <script src="/assets/js/admin-return.js" defer></script>
+    <script src="/banhang/banhang-api.js" defer></script>
+    <script src="/banhang/tao_don_hang.js" defer></script>
+</head>
+<body data-required-role="cashier, admin">
+<header>
+    <img src="https://jollibee.com.vn/static/version1775488343/frontend/Jollibee/default/vi_VN/images/logo.png" alt="Jollibee Logo">
+    <div class="user-menu">
+        <div class="avatar-btn">
+            <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="User">
+            <span id="staff-name">Nhân viên</span>
+        </div>
+        <div class="dropdown-content">
+            <a href="#" id="btn-logout" style="color: #d8262f; border-bottom: none;"><span class="emoji">🚪</span> Đăng xuất</a>
+        </div>
+    </div>
+</header>
+<div class="nav-menu">
+    <a href="tao_don_hang.html" class="active">Tạo đơn tại quầy</a>
+    <a href="quan_ly_don_hang.html">Xác nhận đơn hàng</a>
+    <a href="bep_che_bien.html">Điều phối đơn</a>
+</div>
+<div class="main-container">
+    <div class="menu-side" id="menu-container">
+        <!-- Dish cards will load here via JavaScript -->
+        <p style="text-align: center; grid-column: 1/-1; color: #888;">Đang tải danh sách món ăn...</p>
+    </div>
+    <div class="cart-side">
+        <h3 style="color: #d8262f; margin-top: 0;"><span class="emoji">🛒</span> Giỏ hàng quầy</h3>
+        <table class="cart-table">
+            <tbody id="cart-items">
+                <!-- Cart items will render here -->
+                <tr>
+                    <td colspan="3" align="center" style="color: #888; padding: 20px 0;">Giỏ hàng trống</td>
+                </tr>
+            </tbody>
+        </table>
+        <h2 style="text-align: right; color: #d8262f; margin: 20px 0;" id="cart-total">0đ</h2>
+        
+        <form id="order-form">
+            <p style="margin: 0 0 6px 0;"><b>Số bàn: <span style="color: #d8262f;">*</span></b></p>
+            <input type="number" id="table-number" name="table_number" min="0" step="1" placeholder="Nhập số bàn (bắt buộc, số không âm)..." style="width:100%; padding:10px; border-radius: 5px; border: 1px solid #ddd; margin-bottom: 6px; font-weight: bold; font-size: 15px;" required>
+            <div id="table-warning" style="display: none; color: #d8262f; font-weight: bold; font-size: 13px; margin-bottom: 12px; background: #ffebee; padding: 8px 12px; border-radius: 6px; border: 1px solid #ffcdd2;"></div>
+
+            <p><b>Tên khách hàng (Tùy chọn):</b></p>
+            <input type="text" id="customer-name" placeholder="Tên khách hàng (nếu có)" style="width:100%; padding:10px; border-radius: 5px; border: 1px solid #ddd; margin-bottom: 12px;">
+
+            <p><b>Phương thức thanh toán: <span style="color: #d8262f;">*</span></b></p>
+            <select id="payment-method" style="width:100%; padding:10px; margin-bottom:12px; border-radius: 5px; border: 1px solid #ddd; font-weight: bold; font-size: 14px;">
+                <option value="cash">💵 Tiền mặt</option>
+                <option value="qr">📱 Quét mã QR</option>
+                <option value="card">💳 Thẻ ngân hàng (POS)</option>
+            </select>
+
+            <p><b>Ghi chú:</b></p>
+            <input type="text" id="order-notes" placeholder="Ghi chú món ăn (VD: ít đá, không cay...)" style="width:100%; padding:10px; border-radius: 5px; border: 1px solid #ddd; margin-bottom: 18px;">
+
+            <button type="submit" id="btn-submit-order" class="btn-order" disabled>ĐẶT MÓN</button>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Hóa đơn thanh toán (Thermal Receipt) -->
+<div id="invoice-modal" class="modal-overlay">
+    <div class="receipt-card">
+        <div class="receipt-header">
+            <img src="https://jollibee.com.vn/static/version1775488343/frontend/Jollibee/default/vi_VN/images/logo.png" alt="Jollibee">
+            <h3>JOLLIBEE VIỆT NAM</h3>
+            <p>Cửa hàng Jollibee - Long Biên</p>
+            <p>Đ/c: Số 27 Cổ Linh, Long Biên, Hà Nội</p>
+            <p style="margin-top: 5px; font-weight: 900; font-size: 14px; text-transform: uppercase;">PHIẾU THANH TOÁN</p>
+        </div>
+        <div class="receipt-info" id="receipt-info">
+            <!-- Rendered by JS -->
+        </div>
+        <table class="receipt-items">
+            <thead>
+                <tr>
+                    <th align="left">Món ăn</th>
+                    <th align="center" style="width: 35px;">SL</th>
+                    <th align="right">Đ.Giá</th>
+                    <th align="right">T.Tiền</th>
+                </tr>
+            </thead>
+            <tbody id="receipt-items-body">
+                <!-- Rendered by JS -->
+            </tbody>
+        </table>
+        <div class="receipt-total" id="receipt-total-section">
+            <!-- Rendered by JS -->
+        </div>
+        <div class="receipt-footer">
+            <p style="margin: 4px 0; font-weight: bold;">Cảm ơn Quý khách & Hẹn gặp lại!</p>
+            <p style="margin: 2px 0;">Hotline phản hồi: 1900-1533</p>
+            <p style="margin: 2px 0; font-family: monospace; font-size: 11px;">*** JOLLIBEE FAST FOOD ***</p>
+        </div>
+        <div class="receipt-actions">
+            <button class="receipt-btn receipt-btn-print" id="btn-print-receipt">🖨️ In hóa đơn</button>
+            <button class="receipt-btn receipt-btn-close" id="btn-close-receipt">Đóng</button>
+        </div>
+    </div>
+</div>
+</body>
+</html>
