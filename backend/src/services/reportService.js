@@ -111,6 +111,82 @@ function styleTotalRow(row) {
   row.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF1F3F5' } };
 }
 
+const ORDER_STATUS_LABELS = Object.freeze({
+  [ORDER_STATUS.PENDING]: 'Chờ xử lý',
+  [ORDER_STATUS.PREPARING]: 'Đang chuẩn bị',
+  [ORDER_STATUS.READY_FOR_DELIVERY]: 'Sẵn sàng giao',
+  [ORDER_STATUS.DELIVERING]: 'Đang giao',
+  [ORDER_STATUS.COMPLETED]: 'Hoàn thành',
+  [ORDER_STATUS.CANCELLED]: 'Đã hủy',
+  [ORDER_STATUS.FAILED]: 'Thất bại'
+});
+
+function orderTypeFilterValue(order) {
+  if (order.orderType !== 'dine_in') return order.orderType || '';
+  const deliveryTable = /^bàn\s+/i.test(String(order.deliveryAddress || ''))
+    ? order.deliveryAddress
+    : '';
+  const rawTable = String(order.tableNumber || deliveryTable)
+    .replace(/^bàn\s*/i, '')
+    .trim();
+  return `dinein(${rawTable || 'chưa xác định'})`;
+}
+
+function detailedOrderColumns() {
+  return [
+    { header: 'Mã đơn', key: 'orderCode' },
+    { header: 'Thời gian đặt', key: 'orderedAt' },
+    { header: 'Trạng thái đơn', key: 'orderStatus' },
+    { header: 'Loại đơn', key: 'orderType' },
+    { header: 'Mã khách hàng', key: 'customerCode' },
+    { header: 'Tên khách hàng', key: 'customerName' },
+    { header: 'Số điện thoại', key: 'customerPhone' },
+    { header: 'Email', key: 'customerEmail' },
+    { header: 'Địa chỉ giao', key: 'deliveryAddress' },
+    { header: 'Tên sản phẩm', key: 'itemName' },
+    { header: 'Số lượng', key: 'itemQuantity' },
+    { header: 'Đơn giá (VNĐ)', key: 'itemUnitPrice' },
+    { header: 'Phí giao hàng (VNĐ)', key: 'shippingFee' },
+    { header: 'Tổng thanh toán (VNĐ)', key: 'total' }
+  ];
+}
+
+function detailedOrderRow(order, item) {
+  const customer = order.customer && typeof order.customer === 'object' ? order.customer : null;
+  return {
+    orderCode: order.orderCode,
+    orderedAt: order.orderedAt,
+    orderStatus: ORDER_STATUS_LABELS[order.status] || order.status || '',
+    orderType: orderTypeFilterValue(order),
+    customerCode: customer?.customerCode || '',
+    customerName: customer?.fullName || order.customerName || 'Khách lẻ',
+    customerPhone: customer?.phone || order.customerPhone || '',
+    customerEmail: customer?.email || '',
+    deliveryAddress: order.deliveryAddress || '',
+    itemName: item?.name || '',
+    itemQuantity: item?.quantity ?? '',
+    itemUnitPrice: item?.unitPrice ?? '',
+    shippingFee: order.shippingFee,
+    total: order.total
+  };
+}
+
+async function exportDetailedOrders(worksheet, filter) {
+  worksheet.columns = detailedOrderColumns();
+  const orders = await orderRepository.findManyForDetailedReport(filter);
+
+  for (const order of orders) {
+    const items = order.items?.length ? order.items : [null];
+    items.forEach((item) => worksheet.addRow(detailedOrderRow(order, item)));
+  }
+
+  worksheet.getColumn('orderedAt').numFmt = 'dd/mm/yyyy hh:mm';
+  for (const key of ['itemUnitPrice', 'shippingFee', 'total']) {
+    worksheet.getColumn(key).numFmt = '#,##0';
+  }
+  worksheet.getColumn('deliveryAddress').alignment = { vertical: 'top', wrapText: true };
+}
+
 async function exportReport(query) {
   const type = query.type || 'orders';
   if (!['orders', 'revenue', 'items'].includes(type)) {
@@ -121,9 +197,11 @@ async function exportReport(query) {
   const workbook = new ExcelJS.Workbook();
   workbook.creator = 'Jollibee Admin';
   workbook.created = new Date();
-  const worksheet = workbook.addWorksheet('Bao cao');
+  const worksheet = workbook.addWorksheet(type === 'orders' ? 'Danh sach don hang' : 'Bao cao');
 
-  if (type === 'items') {
+  if (type === 'orders') {
+    await exportDetailedOrders(worksheet, filter);
+  } else if (type === 'items') {
     worksheet.columns = [
       { header: 'Tên món ăn', key: 'name' },
       { header: 'Tổng số lượng bán', key: 'quantity' },
@@ -163,27 +241,21 @@ async function exportReport(query) {
     worksheet.getColumn('cost').numFmt = '#,##0';
     worksheet.getColumn('grossProfit').numFmt = '#,##0';
   } else {
-    worksheet.columns = type === 'revenue'
-      ? [
-          { header: 'Mã đơn', key: 'orderCode' },
-          { header: 'Khách hàng', key: 'customerName' },
-          { header: 'Ngày đặt', key: 'orderedAt' },
-          { header: 'Doanh thu (VNĐ)', key: 'total' }
-        ]
-      : [
-          { header: 'Mã đơn', key: 'orderCode' },
-          { header: 'Khách hàng', key: 'customerName' },
-          { header: 'Ngày đặt', key: 'orderedAt' },
-          { header: 'Địa chỉ giao', key: 'deliveryAddress' }
-        ];
+    worksheet.columns = [
+      { header: 'Mã đơn', key: 'orderCode' },
+      { header: 'Khách hàng', key: 'customerName' },
+      { header: 'Ngày đặt', key: 'orderedAt' },
+      { header: 'Doanh thu (VNĐ)', key: 'total' }
+    ];
     const orders = await orderRepository.findMany(filter, { sort: { orderedAt: -1 }, lean: true });
     orders.forEach((order) => worksheet.addRow(order));
-    const totalRow = type === 'revenue'
-      ? worksheet.addRow({ orderCode: 'TỔNG DOANH THU', total: orders.reduce((sum, order) => sum + order.total, 0) })
-      : worksheet.addRow({ orderCode: 'TỔNG SỐ ĐƠN', deliveryAddress: `${orders.length} đơn` });
+    const totalRow = worksheet.addRow({
+      orderCode: 'TỔNG DOANH THU',
+      total: orders.reduce((sum, order) => sum + order.total, 0)
+    });
     styleTotalRow(totalRow);
     worksheet.getColumn('orderedAt').numFmt = 'dd/mm/yyyy hh:mm';
-    if (type === 'revenue') worksheet.getColumn('total').numFmt = '#,##0';
+    worksheet.getColumn('total').numFmt = '#,##0';
   }
 
   styleWorksheet(worksheet);

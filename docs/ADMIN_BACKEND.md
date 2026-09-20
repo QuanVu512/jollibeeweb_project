@@ -130,6 +130,9 @@ Báo cáo chỉ tính đơn `completed` và chưa hoàn tiền:
 - Lợi nhuận gộp: doanh thu trừ giá vốn.
 - Món bán chạy: cộng `items.quantity` theo món.
 - Có thể lọc theo `from=YYYY-MM-DD` và `to=YYYY-MM-DD`.
+- Báo cáo `orders` xuất một sheet duy nhất, mỗi dòng tương ứng một món trong đơn và lặp lại dữ liệu đơn/khách để hỗ trợ lọc.
+- Sheet đơn hàng chỉ gồm thông tin thiết yếu: mã và trạng thái đơn, loại đơn, thông tin liên hệ khách hàng, địa chỉ giao, chi tiết món, phí giao hàng và tổng thanh toán.
+- Đơn tại bàn có thêm giá trị lọc dạng `dinein(<số bàn>)`; đơn thiếu số bàn dùng `dinein(chưa xác định)`.
 
 ## Logic thông báo khách hàng
 
