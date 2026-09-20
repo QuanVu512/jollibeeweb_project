@@ -20,6 +20,18 @@ function findById(id, session) {
   return Employee.findById(id).session(session);
 }
 
+function existsByPhone(phone, excludeId, session) {
+  const query = { phone };
+  if (excludeId) query._id = { $ne: excludeId };
+  return Employee.exists(query).session(session);
+}
+
+function existsByEmail(email, excludeId, session) {
+  const query = { email };
+  if (excludeId) query._id = { $ne: excludeId };
+  return Employee.exists(query).session(session);
+}
+
 async function create(payload, session) {
   const [employee] = await Employee.create([payload], { session });
   return employee;
@@ -42,6 +54,8 @@ module.exports = {
   count,
   findByIdWithAccount,
   findById,
+  existsByPhone,
+  existsByEmail,
   create,
   save,
   populateAccount,

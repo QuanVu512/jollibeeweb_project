@@ -2,8 +2,22 @@ document.addEventListener('DOMContentLoaded', async () => {
   const form = document.querySelector('#account-form');
   const submitButton = document.querySelector('#account-submit');
   const employeeSelect = document.querySelector('#employee-id');
+  const searchInput = document.querySelector('#account-search');
+  const roleFilter = document.querySelector('#account-role-filter');
+  const countLabel = document.querySelector('#account-count');
   const tableBody = document.querySelector('#account-table-body');
-  const { roleLabels, showToast, initAdminPage } = window.AdminCommon;
+  const {
+    roleLabels,
+    showToast,
+    clearFieldErrors,
+    showFieldError,
+    applyFieldErrors,
+    bindFieldErrorClearing,
+    initAdminPage
+  } = window.AdminCommon;
+  const usernamePattern = /^(?=.*[A-Za-z])[A-Za-z0-9]{6,30}$/;
+  const passwordPattern = /^[\x21-\x7E]{8,30}$/;
+  let searchTimer;
 
   function cell(text) {
     const element = document.createElement('td');
@@ -22,7 +36,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  function renderAccounts(accounts) {
+  function renderAccounts(accounts, total) {
+    countLabel.textContent = `${total} tài khoản`;
     tableBody.replaceChildren();
     if (accounts.length === 0) {
       const row = document.createElement('tr');
@@ -80,13 +95,68 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  async function refresh() {
-    const [accountPayload, employeePayload] = await Promise.all([
-      window.AdminApi.request('/accounts'),
-      window.AdminApi.request('/employees?withoutAccount=true&limit=100')
-    ]);
-    renderAccounts(accountPayload.data.items);
+  async function loadAccounts() {
+    const query = new URLSearchParams({ limit: '100' });
+    if (searchInput.value.trim()) query.set('search', searchInput.value.trim());
+    if (roleFilter.value !== 'all') query.set('role', roleFilter.value);
+    const payload = await window.AdminApi.request(`/accounts?${query}`);
+    renderAccounts(payload.data.items, payload.data.pagination.total);
+  }
+
+  async function loadAvailableEmployees() {
+    const employeePayload = await window.AdminApi.request('/employees?withoutAccount=true&limit=100');
     renderEmployees(employeePayload.data.items);
+  }
+
+  async function refresh() {
+    await Promise.all([loadAccounts(), loadAvailableEmployees()]);
+  }
+
+  function validateForm() {
+    clearFieldErrors(form);
+    let valid = true;
+    const username = form.elements.username.value.trim();
+    const password = form.elements.password.value;
+
+    if (!form.elements.employeeId.value) {
+      showFieldError(form.elements.employeeId, 'Chọn nhân viên cần cấp tài khoản.');
+      valid = false;
+    }
+    if (!username) {
+      showFieldError(form.elements.username, 'Nhập tên đăng nhập.');
+      valid = false;
+    } else if (username.length < 6) {
+      showFieldError(form.elements.username, 'Tên đăng nhập phải có ít nhất 6 ký tự.');
+      valid = false;
+    } else if (username.length > 30) {
+      showFieldError(form.elements.username, 'Tên đăng nhập không được vượt quá 30 ký tự.');
+      valid = false;
+    } else if (!/^[A-Za-z0-9]+$/.test(username)) {
+      showFieldError(form.elements.username, 'Tên đăng nhập chỉ được gồm chữ không dấu và số.');
+      valid = false;
+    } else if (!usernamePattern.test(username)) {
+      showFieldError(form.elements.username, 'Tên đăng nhập phải có ít nhất một chữ cái.');
+      valid = false;
+    }
+    if (!password) {
+      showFieldError(form.elements.password, 'Nhập mật khẩu.');
+      valid = false;
+    } else if (password.length < 8) {
+      showFieldError(form.elements.password, 'Mật khẩu phải có ít nhất 8 ký tự.');
+      valid = false;
+    } else if (password.length > 30) {
+      showFieldError(form.elements.password, 'Mật khẩu không được vượt quá 30 ký tự.');
+      valid = false;
+    } else if (!passwordPattern.test(password)) {
+      showFieldError(form.elements.password, 'Mật khẩu không được chứa dấu tiếng Việt hoặc khoảng trắng.');
+      valid = false;
+    }
+    if (!form.elements.role.value) {
+      showFieldError(form.elements.role, 'Chọn vai trò cho tài khoản.');
+      valid = false;
+    }
+    form.querySelector('.is-invalid')?.focus();
+    return valid;
   }
 
   async function updateStatus(account) {
@@ -98,7 +168,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         body: JSON.stringify({ isActive: !account.isActive })
       });
       showToast(`Đã ${action} tài khoản.`);
-      await refresh();
+      await loadAccounts();
     } catch (error) {
       showToast(error.message, 'error');
     }
@@ -117,6 +187,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
+    if (!validateForm()) return;
     submitButton.disabled = true;
     submitButton.textContent = 'Đang lưu...';
     const data = new FormData(form);
@@ -129,11 +200,22 @@ document.addEventListener('DOMContentLoaded', async () => {
       showToast('Đã cấp tài khoản cho nhân viên.');
       await refresh();
     } catch (error) {
-      showToast(error.message, 'error');
+      const hasFieldError = applyFieldErrors(form, error.details);
+      if (hasFieldError) form.querySelector('.is-invalid')?.focus();
+      else showToast(error.message, 'error');
     } finally {
       submitButton.disabled = false;
       submitButton.textContent = 'Cấp tài khoản';
     }
+  });
+
+  bindFieldErrorClearing(form);
+  searchInput.addEventListener('input', () => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => loadAccounts().catch((error) => showToast(error.message, 'error')), 300);
+  });
+  roleFilter.addEventListener('change', () => {
+    loadAccounts().catch((error) => showToast(error.message, 'error'));
   });
 
   try {

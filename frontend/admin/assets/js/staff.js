@@ -4,11 +4,36 @@ document.addEventListener('DOMContentLoaded', async () => {
   const submitButton = document.querySelector('#staff-submit');
   const cancelButton = document.querySelector('#staff-cancel');
   const searchInput = document.querySelector('#staff-search');
+  const genderFilter = document.querySelector('#staff-gender-filter');
+  const birthDateInput = document.querySelector('#birth-date');
   const countLabel = document.querySelector('#staff-count');
   const tableBody = document.querySelector('#staff-table-body');
-  const { showToast, formatDate, initAdminPage } = window.AdminCommon;
+  const {
+    showToast,
+    formatDate,
+    clearFieldErrors,
+    showFieldError,
+    applyFieldErrors,
+    bindFieldErrorClearing,
+    initAdminPage
+  } = window.AdminCommon;
+  const employeeNamePattern = /^[\p{L}\p{M}]+(?: +[\p{L}\p{M}]+)*$/u;
+  const phonePattern = /^0(?:3|5|7|8|9)\d{8}$/;
+  const emailPattern = /^[A-Z0-9_%+-]+(?:\.[A-Z0-9_%+-]+)*@(gmail\.com|outlook\.com|hotmail\.com|yahoo\.com|icloud\.com)$/i;
   let employeesById = new Map();
   let searchTimer;
+
+  function dateInputValue(date) {
+    return [
+      date.getFullYear(),
+      String(date.getMonth() + 1).padStart(2, '0'),
+      String(date.getDate()).padStart(2, '0')
+    ].join('-');
+  }
+
+  const maximumBirthDate = new Date();
+  maximumBirthDate.setFullYear(maximumBirthDate.getFullYear() - 16);
+  birthDateInput.max = dateInputValue(maximumBirthDate);
 
   function cell(text) {
     const element = document.createElement('td');
@@ -18,6 +43,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   function resetForm() {
     form.reset();
+    clearFieldErrors(form);
     form.elements.id.value = '';
     formTitle.textContent = 'Thêm nhân viên';
     submitButton.textContent = 'Lưu hồ sơ';
@@ -25,6 +51,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function startEdit(employee) {
+    clearFieldErrors(form);
     form.elements.id.value = employee._id;
     form.elements.fullName.value = employee.fullName || '';
     form.elements.gender.value = employee.gender || '';
@@ -89,8 +116,66 @@ document.addEventListener('DOMContentLoaded', async () => {
   async function loadEmployees() {
     const query = new URLSearchParams({ limit: '100' });
     if (searchInput.value.trim()) query.set('search', searchInput.value.trim());
+    if (genderFilter.value !== 'all') query.set('gender', genderFilter.value);
     const payload = await window.AdminApi.request(`/employees?${query}`);
     renderEmployees(payload.data.items, payload.data.pagination.total);
+  }
+
+  function validateForm() {
+    clearFieldErrors(form);
+    let valid = true;
+    const fullName = form.elements.fullName.value.trim();
+    const phone = form.elements.phone.value.trim();
+    const email = form.elements.email.value.trim();
+    const hometown = form.elements.hometown.value.trim();
+
+    if (!fullName) {
+      showFieldError(form.elements.fullName, 'Nhập họ và tên.');
+      valid = false;
+    } else if (fullName.length > 70) {
+      showFieldError(form.elements.fullName, 'Họ và tên không được vượt quá 70 ký tự.');
+      valid = false;
+    } else if (!employeeNamePattern.test(fullName)) {
+      showFieldError(form.elements.fullName, 'Họ và tên chỉ được gồm chữ và khoảng trắng.');
+      valid = false;
+    }
+    if (!form.elements.gender.value) {
+      showFieldError(form.elements.gender, 'Chọn giới tính.');
+      valid = false;
+    }
+    if (!form.elements.birthDate.value) {
+      showFieldError(form.elements.birthDate, 'Chọn ngày sinh.');
+      valid = false;
+    } else if (form.elements.birthDate.value > birthDateInput.max) {
+      showFieldError(form.elements.birthDate, 'Nhân viên phải từ đủ 16 tuổi.');
+      valid = false;
+    }
+    if (!phone) {
+      showFieldError(form.elements.phone, 'Nhập số điện thoại.');
+      valid = false;
+    } else if (!phonePattern.test(phone)) {
+      showFieldError(form.elements.phone, 'Số điện thoại phải gồm 10 chữ số và bắt đầu bằng 03, 05, 07, 08 hoặc 09.');
+      valid = false;
+    }
+    if (!email) {
+      showFieldError(form.elements.email, 'Nhập email.');
+      valid = false;
+    } else if (email.length > 70) {
+      showFieldError(form.elements.email, 'Email không được vượt quá 70 ký tự.');
+      valid = false;
+    } else if (!emailPattern.test(email)) {
+      showFieldError(form.elements.email, 'Email phải đúng định dạng và sử dụng tên miền gmail.com, outlook.com, hotmail.com, yahoo.com hoặc icloud.com.');
+      valid = false;
+    }
+    if (!hometown) {
+      showFieldError(form.elements.hometown, 'Nhập quê quán.');
+      valid = false;
+    } else if (hometown.length > 30) {
+      showFieldError(form.elements.hometown, 'Quê quán không được vượt quá 30 ký tự.');
+      valid = false;
+    }
+    form.querySelector('.is-invalid')?.focus();
+    return valid;
   }
 
   async function deleteEmployee(employee) {
@@ -108,9 +193,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
+    if (!validateForm()) return;
     const data = Object.fromEntries(new FormData(form).entries());
     const id = data.id;
     delete data.id;
+    for (const key of ['fullName', 'phone', 'email', 'hometown']) data[key] = data[key].trim();
     submitButton.disabled = true;
     try {
       await window.AdminApi.request(id ? `/employees/${id}` : '/employees', {
@@ -121,16 +208,22 @@ document.addEventListener('DOMContentLoaded', async () => {
       resetForm();
       await loadEmployees();
     } catch (error) {
-      showToast(error.message, 'error');
+      const hasFieldError = applyFieldErrors(form, error.details);
+      if (hasFieldError) form.querySelector('.is-invalid')?.focus();
+      else showToast(error.message, 'error');
     } finally {
       submitButton.disabled = false;
     }
   });
 
+  bindFieldErrorClearing(form);
   cancelButton.addEventListener('click', resetForm);
   searchInput.addEventListener('input', () => {
     clearTimeout(searchTimer);
     searchTimer = setTimeout(() => loadEmployees().catch((error) => showToast(error.message, 'error')), 300);
+  });
+  genderFilter.addEventListener('change', () => {
+    loadEmployees().catch((error) => showToast(error.message, 'error'));
   });
 
   try {

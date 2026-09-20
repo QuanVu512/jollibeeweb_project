@@ -40,16 +40,16 @@
       <div class="grid-two">
         <section class="card">
           <h2 id="staff-form-title" class="card-title">Thêm nhân viên</h2>
-          <form id="staff-form">
+          <form id="staff-form" novalidate>
             <input id="staff-id" name="id" type="hidden">
             <div class="form-group">
               <label for="full-name">Họ và tên</label>
-              <input id="full-name" name="fullName" maxlength="120" required placeholder="Nhập họ tên nhân viên">
+              <input id="full-name" name="fullName" maxlength="70" required placeholder="Nguyễn Văn A">
             </div>
             <div class="form-row">
               <div class="form-group">
                 <label for="gender">Giới tính</label>
-                <select id="gender" name="gender">
+                <select id="gender" name="gender" required>
                   <option value="">-- Chọn --</option>
                   <option value="Nam">Nam</option>
                   <option value="Nữ">Nữ</option>
@@ -58,22 +58,22 @@
               </div>
               <div class="form-group">
                 <label for="birth-date">Ngày sinh</label>
-                <input id="birth-date" name="birthDate" type="date">
+                <input id="birth-date" name="birthDate" type="date" required>
               </div>
             </div>
             <div class="form-row">
               <div class="form-group">
                 <label for="phone">Số điện thoại</label>
-                <input id="phone" name="phone" maxlength="20" inputmode="tel">
+                <input id="phone" name="phone" maxlength="10" inputmode="numeric" pattern="0(3|5|7|8|9)[0-9]{8}" required placeholder="036xxxxxxx">
               </div>
               <div class="form-group">
                 <label for="email">Email</label>
-                <input id="email" name="email" type="email" maxlength="160">
+                <input id="email" name="email" type="email" maxlength="70" required placeholder="example@gmail.com">
               </div>
             </div>
             <div class="form-group">
               <label for="hometown">Quê quán</label>
-              <input id="hometown" name="hometown" maxlength="200">
+              <input id="hometown" name="hometown" maxlength="30" required placeholder="Quê quán">
             </div>
             <div class="actions">
               <button id="staff-submit" class="btn btn-primary" type="submit">Lưu hồ sơ</button>
@@ -85,7 +85,15 @@
         <section class="card">
           <h2 class="card-title">Danh sách nhân viên</h2>
           <div class="table-tools">
-            <input id="staff-search" class="search-input" type="search" placeholder="Tìm theo mã, tên, SĐT, email...">
+            <div class="list-filter-controls">
+              <input id="staff-search" class="search-input" type="search" placeholder="Tìm theo mã, tên, SĐT, email...">
+              <select id="staff-gender-filter" aria-label="Lọc theo giới tính">
+                <option value="all">Tất cả giới tính</option>
+                <option value="Nam">Nam</option>
+                <option value="Nữ">Nữ</option>
+                <option value="Khác">Khác</option>
+              </select>
+            </div>
             <span id="staff-count"></span>
           </div>
           <div class="table-wrap">

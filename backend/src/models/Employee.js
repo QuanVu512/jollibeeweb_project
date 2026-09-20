@@ -4,16 +4,16 @@ const Counter = require('./Counter');
 const employeeSchema = new mongoose.Schema(
   {
     employeeCode: { type: String, unique: true, uppercase: true, trim: true },
-    fullName: { type: String, required: true, trim: true, maxlength: 120 },
-    phone: { type: String, trim: true, maxlength: 20, default: '' },
-    birthDate: { type: Date, default: null },
+    fullName: { type: String, required: true, trim: true, maxlength: 70 },
+    phone: { type: String, required: true, trim: true, maxlength: 10 },
+    birthDate: { type: Date, required: true },
     gender: {
       type: String,
-      enum: ['Nam', 'Nữ', 'Khác', ''],
-      default: ''
+      required: true,
+      enum: ['Nam', 'Nữ', 'Khác']
     },
-    email: { type: String, trim: true, lowercase: true, maxlength: 160, default: '' },
-    hometown: { type: String, trim: true, maxlength: 200, default: '' },
+    email: { type: String, required: true, trim: true, lowercase: true, maxlength: 70 },
+    hometown: { type: String, required: true, trim: true, maxlength: 30 },
     hireDate: { type: Date, default: Date.now },
     terminationDate: { type: Date, default: null },
     isActive: { type: Boolean, default: true },
@@ -28,6 +28,14 @@ const employeeSchema = new mongoose.Schema(
 );
 
 employeeSchema.index({ isActive: 1, hireDate: -1 });
+employeeSchema.index(
+  { phone: 1 },
+  { unique: true, partialFilterExpression: { phone: { $type: 'string', $gt: '' } } }
+);
+employeeSchema.index(
+  { email: 1 },
+  { unique: true, partialFilterExpression: { email: { $type: 'string', $gt: '' } } }
+);
 
 employeeSchema.pre('validate', async function assignEmployeeCode() {
   if (this.employeeCode) return;

@@ -26,6 +26,13 @@ async function listEmployees(query) {
     });
   }
 
+  if (query.gender && query.gender !== 'all') {
+    if (!['Nam', 'Nữ', 'Khác'].includes(query.gender)) {
+      throw new ApiError(400, 'Bộ lọc giới tính không hợp lệ.');
+    }
+    filters.push({ gender: query.gender });
+  }
+
   if (query.withoutAccount === 'true') {
     filters.push({ $or: [{ account: { $exists: false } }, { account: null }] });
   }
@@ -39,6 +46,21 @@ async function listEmployees(query) {
   return { items, pagination: paginationResult(page, limit, total) };
 }
 
+async function ensureUniqueContact(payload, excludeId, session) {
+  const [phoneExists, emailExists] = await Promise.all([
+    payload.phone ? employeeRepository.existsByPhone(payload.phone, excludeId, session) : false,
+    payload.email ? employeeRepository.existsByEmail(payload.email, excludeId, session) : false
+  ]);
+  if (phoneExists) {
+    const message = 'Số điện thoại này đã được sử dụng.';
+    throw new ApiError(409, message, { phone: message });
+  }
+  if (emailExists) {
+    const message = 'Email này đã được sử dụng.';
+    throw new ApiError(409, message, { email: message });
+  }
+}
+
 async function getEmployee(id) {
   if (!databaseRepository.isValidObjectId(id)) throw new ApiError(400, 'Mã nhân viên không hợp lệ.');
   const employee = await employeeRepository.findByIdWithAccount(id);
@@ -50,6 +72,7 @@ async function createEmployee(body, context) {
   const payload = validateEmployeePayload(body);
   let employee;
   await databaseRepository.transaction(async (session) => {
+    await ensureUniqueContact(payload, null, session);
     employee = await employeeRepository.create(payload, session);
     await recordAudit(context, {
       action: 'employee.create',
@@ -74,6 +97,7 @@ async function updateEmployee(id, currentUserId, body, context) {
     if (payload.isActive === false && employee.account?.toString() === currentUserId.toString()) {
       throw new ApiError(400, 'Bạn không thể tự cho nghỉ việc hồ sơ của chính mình.');
     }
+    await ensureUniqueContact(payload, employee._id, session);
     const before = employee.toObject();
 
     employee.set(payload);

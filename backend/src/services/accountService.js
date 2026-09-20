@@ -47,12 +47,24 @@ async function createAccount(body, context) {
   let account;
   await databaseRepository.transaction(async (session) => {
     const employee = await employeeRepository.findById(employeeId, session);
-    if (!employee) throw new ApiError(404, 'Không tìm thấy nhân viên.');
-    if (!employee.isActive) throw new ApiError(409, 'Không thể cấp tài khoản cho nhân viên đã nghỉ việc.');
-    if (employee.account) throw new ApiError(409, 'Nhân viên này đã có tài khoản.');
+    if (!employee) {
+      const message = 'Không tìm thấy nhân viên.';
+      throw new ApiError(404, message, { employeeId: message });
+    }
+    if (!employee.isActive) {
+      const message = 'Không thể cấp tài khoản cho nhân viên đã nghỉ việc.';
+      throw new ApiError(409, message, { employeeId: message });
+    }
+    if (employee.account) {
+      const message = 'Nhân viên này đã có tài khoản.';
+      throw new ApiError(409, message, { employeeId: message });
+    }
 
     const existingAccount = await userRepository.existsByUsername(username, session);
-    if (existingAccount) throw new ApiError(409, 'Tên đăng nhập đã tồn tại.');
+    if (existingAccount) {
+      const message = 'Tên đăng nhập đã tồn tại.';
+      throw new ApiError(409, message, { username: message });
+    }
 
     account = await userRepository.create({
       username,

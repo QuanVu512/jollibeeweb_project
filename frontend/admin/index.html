@@ -67,7 +67,7 @@
       <div class="grid-two">
         <section class="card">
           <h2 class="card-title">Cấp tài khoản</h2>
-          <form id="account-form">
+          <form id="account-form" novalidate>
             <div class="form-group">
               <label for="employee-id">Nhân viên chưa có tài khoản</label>
               <select id="employee-id" name="employeeId" required>
@@ -76,11 +76,11 @@
             </div>
             <div class="form-group">
               <label for="username">Tên đăng nhập</label>
-              <input id="username" name="username" minlength="3" maxlength="50" pattern="[A-Za-z0-9._-]+" required placeholder="Ví dụ: nguyenvana">
+              <input id="username" name="username" minlength="6" maxlength="30" pattern="(?=.*[A-Za-z])[A-Za-z0-9]{6,30}" required placeholder="Tên tài khoản từ 6 - 30 ký tự">
             </div>
             <div class="form-group">
               <label for="password">Mật khẩu</label>
-              <input id="password" name="password" type="password" minlength="8" autocomplete="new-password" required placeholder="Tối thiểu 8 ký tự">
+              <input id="password" name="password" type="password" minlength="8" maxlength="30" autocomplete="new-password" required placeholder="Mật khẩu từ 8 - 30 ký tự">
             </div>
             <div class="form-group">
               <label for="role">Vai trò</label>
@@ -97,6 +97,19 @@
 
         <section class="card">
           <h2 class="card-title">Tài khoản hệ thống</h2>
+          <div class="table-tools">
+            <div class="list-filter-controls">
+              <input id="account-search" class="search-input" type="search" placeholder="Tìm theo tài khoản hoặc tên nhân viên...">
+              <select id="account-role-filter" aria-label="Lọc theo vai trò">
+                <option value="all">Tất cả vai trò</option>
+                <option value="admin">Quản trị viên</option>
+                <option value="cashier">Thu ngân</option>
+                <option value="kitchen">Nhân viên bếp</option>
+                <option value="shipper">Nhân viên giao hàng</option>
+              </select>
+            </div>
+            <span id="account-count" class="field-note">0 tài khoản</span>
+          </div>
           <div class="table-wrap">
             <table>
               <thead>
