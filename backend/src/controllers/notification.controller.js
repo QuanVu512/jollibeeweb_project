@@ -1,3 +1,4 @@
+// API thông báo được giữ lại cho tương lai nhưng hiện chưa được giao diện quản trị sử dụng.
 const notificationService = require('../services/notificationService');
 const auditContext = require('../utils/auditContext');
 

@@ -1,3 +1,4 @@
+// API thông báo được giữ lại cho tương lai nhưng hiện chưa được giao diện quản trị sử dụng.
 const notificationRepository = require('../repositories/notification.repository');
 const customerRepository = require('../repositories/customer.repository');
 const { pagination, paginationResult } = require('../utils/adminQuery');

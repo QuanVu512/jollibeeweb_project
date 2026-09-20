@@ -1,3 +1,4 @@
+// API thông báo được giữ lại cho tương lai nhưng hiện chưa được giao diện quản trị sử dụng.
 const Notification = require('../models/Notification');
 
 function findMany(filter, { skip, limit }) {

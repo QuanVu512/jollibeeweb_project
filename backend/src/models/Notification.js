@@ -1,3 +1,4 @@
+// API thông báo được giữ lại cho tương lai nhưng hiện chưa được giao diện quản trị sử dụng.
 const mongoose = require('mongoose');
 
 const AUDIENCES = ['all_customers', 'active_customers'];

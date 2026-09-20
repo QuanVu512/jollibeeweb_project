@@ -172,7 +172,7 @@ Tất cả API sử dụng tiền tố `/api/v1`.
 | `/auth` | Đăng ký, đăng nhập, đăng xuất và phiên người dùng |
 | `/admin` | Nghiệp vụ tổng hợp dành cho quản trị viên |
 | `/employees`, `/accounts` | Nhân viên và tài khoản |
-| `/reports`, `/notifications` | Báo cáo và thông báo |
+| `/reports`, `/notifications` | Báo cáo và API thông báo dự phòng (chưa có giao diện admin) |
 | `/banhang` | Nghiệp vụ thu ngân |
 | `/kitchen` | Chế biến, kho và yêu cầu nguyên liệu |
 | `/shipper` | Nghiệp vụ giao hàng |
