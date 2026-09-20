@@ -1,11 +1,13 @@
 # Backend phần Admin
 
-Phần này chuyển đúng ba chức năng trong thư mục `admin` PHP cũ sang Express.js:
+Phần này mô tả các chức năng quản trị đã chuyển sang Express.js:
 
 1. Quản lý hồ sơ nhân viên.
 2. Quản lý tài khoản và phân vai trò nhân viên.
 3. Báo cáo thống kê và xuất Excel.
-4. Gửi thông báo cho khách hàng.
+4. Quản lý sản phẩm và công thức tiêu hao nguyên liệu.
+
+API thông báo vẫn được giữ lại cho nhu cầu tương lai nhưng hiện không còn menu, trang hoặc route giao diện quản trị sử dụng chức năng này.
 
 Không triển khai nghiệp vụ đặt hàng, thu ngân, bếp, kho hoặc shipper trong router admin.
 
@@ -43,7 +45,11 @@ MongoDB Atlas
 | Route thông báo khách hàng | `backend/src/routes/notification.routes.js` |
 | Logic gửi thông báo khách hàng | `backend/src/controllers/notification.controller.js` |
 | Model thông báo khách hàng | `backend/src/models/Notification.js` |
-| Kiểm tra dữ liệu đầu vào | `backend/src/validators/adminValidators.js` |
+| Route quản lý sản phẩm | `backend/src/routes/adminProduct.routes.js` |
+| Điều phối quản lý sản phẩm | `backend/src/controllers/adminProduct.controller.js` |
+| Nghiệp vụ quản lý sản phẩm | `backend/src/services/adminProductService.js` |
+| Model sản phẩm/công thức | `backend/src/models/Product.js`, `backend/src/models/Recipe.js` |
+| Kiểm tra dữ liệu đầu vào | `backend/src/validators/adminValidators.js`, `backend/src/validators/productValidators.js` |
 | Ghi lịch sử thao tác admin | `backend/src/services/auditService.js` |
 | Xử lý lỗi chung | `backend/src/middleware/errorHandler.js` |
 
@@ -69,6 +75,21 @@ Tiền tố: `/api/v1/admin`
 | `GET` | `/reports/export` | Xuất Excel `orders`, `revenue` hoặc `items` |
 | `GET` | `/notifications` | Danh sách thông báo đã gửi cho khách hàng |
 | `POST` | `/notifications` | Lưu thông báo admin gửi cho khách hàng |
+| `GET` | `/products` | Danh sách sản phẩm, lọc theo danh mục và trạng thái |
+| `GET` | `/products/options` | Danh mục và nguyên liệu dùng trong form sản phẩm |
+| `GET` | `/products/:id` | Chi tiết sản phẩm và công thức |
+| `POST` | `/products` | Tạo sản phẩm và công thức nguyên liệu |
+| `PATCH` | `/products/:id` | Cập nhật sản phẩm, công thức và trạng thái |
+| `DELETE` | `/products/:id` | Ngừng hoạt động sản phẩm, không xóa lịch sử |
+
+## Logic sản phẩm
+
+- Mã sản phẩm được sinh tự động theo bộ đếm `MON`; người dùng không nhập hoặc sửa mã.
+- Tên, giá nguyên VND lớn hơn 0, danh mục và ít nhất một nguyên liệu là bắt buộc.
+- Mỗi nguyên liệu có số lượng thập phân dương và đơn vị lấy từ `baseUnit`/`packaging` của nguyên liệu.
+- Các dòng trùng nguyên liệu được quy đổi về đơn vị cơ sở, cộng lại và lưu vào `recipes.ingredients[].quantityBase`.
+- Danh sách hiển thị 10 sản phẩm mỗi trang, lọc theo một danh mục và trạng thái.
+- Thao tác xóa chỉ đặt sản phẩm và công thức liên quan thành ngừng hoạt động; có thể kích hoạt lại trong form sửa.
 
 Frontend hiện tại vẫn có thể dùng các đường dẫn cũ `/api/v1/employees`, `/api/v1/accounts`, `/api/v1/reports` và `/api/v1/notifications`.
 
@@ -123,7 +144,7 @@ Báo cáo chỉ tính đơn `completed` và chưa hoàn tiền:
 | Quản lý tài khoản | `frontend/admin/assets/js/accounts.js` |
 | Hồ sơ nhân viên | `frontend/admin/assets/js/staff.js` |
 | Báo cáo | `frontend/admin/assets/js/report.js` |
-| Thông báo khách hàng | `frontend/admin/assets/js/notifications.js` |
+| Quản lý sản phẩm | `frontend/admin/assets/js/products.js` |
 | Hàm gọi API chung | `frontend/admin/assets/js/api.js` |
 
 Các thành viên khác có thể sao chép cấu trúc route → middleware/validator → controller → service → repository → model của phần admin, rồi thay model và quyền tương ứng với module của họ.

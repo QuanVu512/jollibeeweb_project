@@ -21,4 +21,29 @@ function findActiveByProductCodes(productCodes, orderType, session) {
   return query;
 }
 
-module.exports = { findActiveByProductCodes };
+function findByProductCode(productCode, session = null) {
+  const query = Recipe.findOne({ productCode: String(productCode || '').toUpperCase() });
+  return session ? query.session(session) : query;
+}
+
+function findByProductCodeWithIngredients(productCode) {
+  return Recipe.findOne({ productCode: String(productCode || '').toUpperCase() })
+    .populate('ingredients.ingredient', 'code name baseUnit packaging isActive');
+}
+
+function save(recipe, options = {}) {
+  return recipe.save(options);
+}
+
+async function create(payload, session) {
+  const [recipe] = await Recipe.create([payload], { session });
+  return recipe;
+}
+
+module.exports = {
+  findActiveByProductCodes,
+  findByProductCode,
+  findByProductCodeWithIngredients,
+  save,
+  create
+};

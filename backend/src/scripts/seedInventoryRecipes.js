@@ -70,6 +70,8 @@ async function seedInventoryRecipes() {
       return {
         ingredient: ingredient._id,
         ingredientCode: item.ingredientCode,
+        quantity: item.quantity ?? item.quantityBase,
+        unit: item.unit || ingredient.baseUnit,
         quantityBase: item.quantityBase,
         note: item.note || ''
       };

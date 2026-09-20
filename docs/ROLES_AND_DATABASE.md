@@ -4,7 +4,7 @@
 
 | Key mới | Quyền cũ | Vai trò | Nghiệp vụ chính |
 |---|---|---|---|
-| `admin` | `Admin` | Quản trị viên | Nhân viên, tài khoản, báo cáo |
+| `admin` | `Admin` | Quản trị viên | Nhân viên, tài khoản, sản phẩm, báo cáo |
 | `cashier` | `ThuNgan` | Thu ngân | Đơn tại quầy, duyệt/hủy đơn online |
 | `kitchen` | `Bep` | Nhân viên bếp | Chế biến, thực đơn, tồn kho |
 | `shipper` | `Shipper` | Nhân viên giao hàng | Nhận và cập nhật đơn giao |
@@ -20,8 +20,8 @@ Như vậy, **không thiếu vai trò bắt buộc so với ý tưởng hiện t
 | `users` | Tất cả | Tài khoản, mật khẩu bcrypt, vai trò |
 | `employees` | Admin và nhân viên | Hồ sơ nhân viên, liên kết tài khoản |
 | `customers` | Khách hàng, thu ngân | Hồ sơ, địa chỉ, điểm tích lũy |
-| `categories` | Khách hàng, bếp | 8 danh mục thực đơn chuẩn hóa |
-| `products` | Khách hàng, thu ngân, bếp | Món ăn, giá, tồn kho, trạng thái bán |
+| `categories` | Admin, khách hàng, bếp | 8 danh mục thực đơn chuẩn hóa |
+| `products` | Admin, khách hàng, thu ngân, bếp | Món ăn, giá, tồn kho, trạng thái bán |
 | `carts` | Khách hàng | Giỏ hàng đang lưu |
 | `orders` | Tất cả | Đơn, món, thanh toán, người xử lý, lịch sử trạng thái |
 | `inventorytransactions` | Bếp, admin | Lịch sử nhập/xuất/điều chỉnh kho |

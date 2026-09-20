@@ -10,7 +10,7 @@ Dự án sử dụng frontend HTML/CSS/JavaScript thuần và REST API xây dự
 
 | Phân hệ | Chức năng |
 |---|---|
-| Quản trị viên | Quản lý nhân viên, tài khoản, thông báo và báo cáo doanh thu |
+| Quản trị viên | Quản lý nhân viên, tài khoản, sản phẩm và báo cáo doanh thu |
 | Thu ngân | Tạo đơn tại quầy, tiếp nhận và xử lý đơn hàng |
 | Bếp | Theo dõi món cần chế biến, quản lý nguyên liệu và yêu cầu nhập hàng |
 | Giao hàng | Nhận đơn, cập nhật tiến trình và kết quả giao hàng |
@@ -178,6 +178,8 @@ Tất cả API sử dụng tiền tố `/api/v1`.
 | `/shipper` | Nghiệp vụ giao hàng |
 | `/products`, `/orders`, `/customer` | Sản phẩm, đơn hàng và khách hàng |
 
+Module quản lý sản phẩm của quản trị viên sử dụng `/api/v1/admin/products`; mã sản phẩm được sinh tự động và công thức nguyên liệu được quy đổi về đơn vị tồn kho cơ sở.
+
 Các endpoint được bảo vệ sẽ kiểm tra JWT và vai trò trước khi chuyển request tới controller.
 
 ## Các lệnh npm
@@ -192,6 +194,7 @@ Chạy các lệnh sau trong thư mục `backend/`:
 | `npm run init:database` | Khởi tạo collection, index, vai trò và dữ liệu nền |
 | `npm run seed:admin` | Tạo hoặc đặt lại tài khoản quản trị |
 | `npm run seed:recipes` | Khởi tạo công thức và dữ liệu kho |
+| `npm run sync:recipe-units` | Đồng bộ các đơn vị nghiệp vụ và công thức liên quan, không thay đổi tồn kho |
 | `npm run migrate:mysql` | Chuyển dữ liệu cần thiết từ MySQL cũ sang MongoDB |
 
 ## Tài liệu kỹ thuật

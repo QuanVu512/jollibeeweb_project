@@ -17,6 +17,19 @@ function findByIds(ids) {
   return Ingredient.find({ _id: { $in: ids } }).select('_id code name');
 }
 
+function findActiveForProductManagement() {
+  return Ingredient.find({ isActive: true })
+    .select('_id code name baseUnit packaging isActive')
+    .sort({ name: 1 })
+    .lean();
+}
+
+function findActiveByIds(ids, session = null) {
+  const query = Ingredient.find({ _id: { $in: ids }, isActive: true })
+    .select('_id code name baseUnit packaging isActive');
+  return session ? query.session(session) : query;
+}
+
 function save(ingredient, options = {}) {
   return ingredient.save(options);
 }
@@ -47,4 +60,15 @@ function restoreStock(restoration, session) {
   );
 }
 
-module.exports = { findAll, create, findById, findByIds, save, remove, deductStock, restoreStock };
+module.exports = {
+  findAll,
+  create,
+  findById,
+  findByIds,
+  findActiveForProductManagement,
+  findActiveByIds,
+  save,
+  remove,
+  deductStock,
+  restoreStock
+};

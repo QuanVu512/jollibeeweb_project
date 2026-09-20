@@ -25,7 +25,8 @@ const INGREDIENT_DEFINITIONS = Object.freeze([
     supplierName: 'nhà cung cấp gia vị M',
     baseUnit: 'bag',
     packaging: [
-      { unit: 'bag', label: 'Túi lớn', baseQuantity: 1, note: 'Một túi lớn tương đương 50 muỗng.' }
+      { unit: 'bag', label: 'Túi lớn', baseQuantity: 1, note: 'Một túi lớn tương đương 50 muỗng.' },
+      { unit: 'spoon', label: 'Muỗng', baseQuantity: 1 / 50, note: 'Một muỗng bằng 1/50 bag muối.' }
     ]
   },
   {
@@ -35,7 +36,8 @@ const INGREDIENT_DEFINITIONS = Object.freeze([
     baseUnit: 'pack',
     packaging: [
       { unit: 'pack', label: 'Túi nilon chứa đồ nhỏ', baseQuantity: 1, note: 'Một pack tương đương 20 muỗng lớn.' },
-      { unit: 'case', label: 'Thùng', baseQuantity: 8, note: 'Một thùng có 8 pack.' }
+      { unit: 'case', label: 'Thùng', baseQuantity: 8, note: 'Một thùng có 8 pack.' },
+      { unit: 'tbsp', label: 'Muỗng lớn', baseQuantity: 1 / 20, note: 'Một muỗng lớn bằng 1/20 pack sốt mì.' }
     ]
   },
   {
@@ -62,7 +64,8 @@ const INGREDIENT_DEFINITIONS = Object.freeze([
     supplierName: 'nhà vườn rau củ R',
     baseUnit: 'gram',
     packaging: [
-      { unit: 'bag', label: 'Túi lớn', baseQuantity: 1000, note: 'Một túi lớn 1000 gram khoảng 20 phần, mỗi phần khoảng 50 gram.' }
+      { unit: 'bag', label: 'Túi lớn', baseQuantity: 1000, note: 'Một túi lớn 1000 gram khoảng 20 miếng.' },
+      { unit: 'pcs', label: 'Miếng', baseQuantity: 50, note: 'Một miếng xà lách bằng 50 gram.' }
     ]
   },
   {
@@ -82,8 +85,8 @@ const INGREDIENT_DEFINITIONS = Object.freeze([
     baseUnit: 'pack',
     packaging: [
       { unit: 'pack', label: 'Túi nilon chứa đồ nhỏ', baseQuantity: 1, note: 'Đơn vị tồn kho cơ sở là pack.' },
-      { unit: 'case', label: 'Thùng', baseQuantity: 10, note: 'Một thùng có 10 pack gà miếng.' },
-      { unit: 'pcs', label: 'Cái', baseQuantity: 1 / 8, note: 'Một pack có 8 miếng gà.' }
+      { unit: 'case', label: 'Thùng', baseQuantity: 10, note: 'Một thùng có 10 pack, tương đương 80 miếng gà.' },
+      { unit: 'pcs', label: 'Miếng', baseQuantity: 1 / 8, note: 'Một miếng bằng 1/8 pack và 1/80 case.' }
     ]
   },
   {
@@ -104,7 +107,7 @@ const INGREDIENT_DEFINITIONS = Object.freeze([
     packaging: [
       { unit: 'pack', label: 'Túi nilon chứa đồ nhỏ', baseQuantity: 1, note: 'Đơn vị tồn kho cơ sở là pack.' },
       { unit: 'case', label: 'Thùng', baseQuantity: 6, note: 'Một thùng có 6 pack bánh xoài đào.' },
-      { unit: 'pcs', label: 'Cái', baseQuantity: 1 / 8, note: 'Một pack có 8 cái bánh.' }
+      { unit: 'pcs', label: 'Cái', baseQuantity: 1 / 8, note: 'Một cái bằng 1/8 pack bánh xoài đào.' }
     ]
   },
   {
@@ -113,7 +116,9 @@ const INGREDIENT_DEFINITIONS = Object.freeze([
     supplierName: 'nhà cung cấp gạo G',
     baseUnit: 'kg',
     packaging: [
-      { unit: 'bag', label: 'Túi lớn', baseQuantity: 20, note: 'Một túi lớn gạo có 20 kg.' }
+      { unit: 'bag', label: 'Túi lớn', baseQuantity: 20, note: 'Một túi lớn gạo có 20 kg.' },
+      { unit: 'gram', label: 'Gram', baseQuantity: 0.001, note: 'Một gram bằng 0.001 kg.' },
+      { unit: 'serving', label: 'Suất cơm', baseQuantity: 0.1, note: 'Một suất cơm dùng 100 gram, tương đương 0.1 kg gạo.' }
     ]
   },
   {
@@ -152,7 +157,8 @@ const INGREDIENT_DEFINITIONS = Object.freeze([
     supplierName: 'nhà cung cấp nước giải khát P',
     baseUnit: 'case',
     packaging: [
-      { unit: 'case', label: 'Thùng', baseQuantity: 1, note: 'Đơn vị tồn kho cơ sở là case/thùng.' }
+      { unit: 'case', label: 'Thùng', baseQuantity: 1, note: 'Một thùng tương đương 50 cốc Pepsi.' },
+      { unit: 'cup', label: 'Cốc', baseQuantity: 1 / 50, note: 'Một cốc bằng 1/50 case Pepsi.' }
     ]
   }
 ]);
@@ -182,7 +188,7 @@ const RECIPE_DEFINITIONS = Object.freeze([
     productCode: 'MON0001',
     name: 'Gà Giòn Vui Vẻ (1 Miếng)',
     ingredients: [
-      { ingredientCode: 'GA_MIENG', quantityBase: 1 / 8, note: 'Hao trừ 1/8 pack gà miếng cho 1 miếng gà.' },
+      { ingredientCode: 'GA_MIENG', quantity: 1, unit: 'pcs', quantityBase: 1 / 8, note: 'Hao trừ 1 miếng gà, tương đương 1/8 pack.' },
       { ingredientCode: 'BOT_CHIEN_GA', quantityBase: 1 / 15, note: 'Hao trừ 1/15 pack bột chiên gà cho 1 miếng gà.' }
     ],
     note: 'Một miếng gà dùng 1/8 pack gà miếng và 1/15 pack bột chiên.'
@@ -192,7 +198,7 @@ const RECIPE_DEFINITIONS = Object.freeze([
     productCode: 'MON0002',
     name: 'Gà Giòn Vui Vẻ (2 Miếng)',
     ingredients: [
-      { ingredientCode: 'GA_MIENG', quantityBase: 2 / 8, note: 'Hao trừ 2/8 pack gà miếng cho 2 miếng gà.' },
+      { ingredientCode: 'GA_MIENG', quantity: 2, unit: 'pcs', quantityBase: 2 / 8, note: 'Hao trừ 2 miếng gà, tương đương 2/8 pack.' },
       { ingredientCode: 'BOT_CHIEN_GA', quantityBase: 2 / 15, note: 'Hao trừ 2/15 pack bột chiên gà cho 2 miếng gà.' }
     ],
     note: 'Công thức gà giòn nhân theo số miếng.'
@@ -202,7 +208,7 @@ const RECIPE_DEFINITIONS = Object.freeze([
     productCode: 'MON0003',
     name: 'Gà Giòn Vui Vẻ (3 Miếng)',
     ingredients: [
-      { ingredientCode: 'GA_MIENG', quantityBase: 3 / 8, note: 'Hao trừ 3/8 pack gà miếng cho 3 miếng gà.' },
+      { ingredientCode: 'GA_MIENG', quantity: 3, unit: 'pcs', quantityBase: 3 / 8, note: 'Hao trừ 3 miếng gà, tương đương 3/8 pack.' },
       { ingredientCode: 'BOT_CHIEN_GA', quantityBase: 3 / 15, note: 'Hao trừ 3/15 pack bột chiên gà cho 3 miếng gà.' }
     ],
     note: 'Công thức gà giòn nhân theo số miếng.'
@@ -212,7 +218,7 @@ const RECIPE_DEFINITIONS = Object.freeze([
     productCode: 'MON0004',
     name: 'Gà Sốt Cay (1 Miếng)',
     ingredients: [
-      { ingredientCode: 'GA_MIENG', quantityBase: 1 / 8, note: 'Hao trừ 1/8 pack gà miếng cho 1 miếng gà.' },
+      { ingredientCode: 'GA_MIENG', quantity: 1, unit: 'pcs', quantityBase: 1 / 8, note: 'Hao trừ 1 miếng gà, tương đương 1/8 pack.' },
       { ingredientCode: 'BOT_CHIEN_GA', quantityBase: 1 / 15, note: 'Hao trừ 1/15 pack bột chiên gà cho 1 miếng gà.' },
       { ingredientCode: 'SOT_CAY', quantityBase: 1 / 30, note: 'Hao trừ 1/30 pack sốt cay cho 1 miếng gà sốt cay.' }
     ],
@@ -223,7 +229,7 @@ const RECIPE_DEFINITIONS = Object.freeze([
     productCode: 'MON0005',
     name: 'Gà Sốt Cay (2 Miếng)',
     ingredients: [
-      { ingredientCode: 'GA_MIENG', quantityBase: 2 / 8, note: 'Hao trừ 2/8 pack gà miếng cho 2 miếng gà.' },
+      { ingredientCode: 'GA_MIENG', quantity: 2, unit: 'pcs', quantityBase: 2 / 8, note: 'Hao trừ 2 miếng gà, tương đương 2/8 pack.' },
       { ingredientCode: 'BOT_CHIEN_GA', quantityBase: 2 / 15, note: 'Hao trừ 2/15 pack bột chiên gà cho 2 miếng gà.' },
       { ingredientCode: 'SOT_CAY', quantityBase: 2 / 30, note: 'Hao trừ 2/30 pack sốt cay cho 2 miếng gà sốt cay.' }
     ],
@@ -235,8 +241,8 @@ const RECIPE_DEFINITIONS = Object.freeze([
     name: 'Mỳ Ý Jolly',
     ingredients: [
       { ingredientCode: 'MI', quantityBase: 1 / 3, note: 'Hao trừ 1/3 pack mì cho 1 phần.' },
-      { ingredientCode: 'MUOI', quantityBase: 1 / 50, note: 'Hao trừ 1/50 bag muối, tương đương 1 muỗng.' },
-      { ingredientCode: 'SOT_MI', quantityBase: 1 / 20, note: 'Hao trừ 1/20 pack sốt mì, tương đương 1 muỗng lớn.' },
+      { ingredientCode: 'MUOI', quantity: 1, unit: 'spoon', quantityBase: 1 / 50, note: 'Hao trừ 1 muỗng, tương đương 1/50 bag muối.' },
+      { ingredientCode: 'SOT_MI', quantity: 1, unit: 'tbsp', quantityBase: 1 / 20, note: 'Hao trừ 1 muỗng lớn, tương đương 1/20 pack sốt mì.' },
       { ingredientCode: 'PHO_MAI_BAO', quantityBase: 75, note: 'Hao trừ 75 gram phô mai bào.' }
     ],
     note: 'Một phần mỳ dùng 1/3 pack mì, 1/50 bag muối, 1/20 pack sốt và 75 gram phô mai.'
@@ -247,10 +253,10 @@ const RECIPE_DEFINITIONS = Object.freeze([
     name: 'Mỳ Ý Jolly với Gà Giòn',
     ingredients: [
       { ingredientCode: 'MI', quantityBase: 1 / 3, note: 'Hao trừ 1/3 pack mì cho 1 phần.' },
-      { ingredientCode: 'MUOI', quantityBase: 1 / 50, note: 'Hao trừ 1/50 bag muối, tương đương 1 muỗng.' },
-      { ingredientCode: 'SOT_MI', quantityBase: 1 / 20, note: 'Hao trừ 1/20 pack sốt mì, tương đương 1 muỗng lớn.' },
+      { ingredientCode: 'MUOI', quantity: 1, unit: 'spoon', quantityBase: 1 / 50, note: 'Hao trừ 1 muỗng, tương đương 1/50 bag muối.' },
+      { ingredientCode: 'SOT_MI', quantity: 1, unit: 'tbsp', quantityBase: 1 / 20, note: 'Hao trừ 1 muỗng lớn, tương đương 1/20 pack sốt mì.' },
       { ingredientCode: 'PHO_MAI_BAO', quantityBase: 75, note: 'Hao trừ 75 gram phô mai bào.' },
-      { ingredientCode: 'GA_MIENG', quantityBase: 1 / 8, note: 'Hao trừ thêm 1/8 pack gà miếng cho phần gà giòn đi kèm.' },
+      { ingredientCode: 'GA_MIENG', quantity: 1, unit: 'pcs', quantityBase: 1 / 8, note: 'Hao trừ thêm 1 miếng gà, tương đương 1/8 pack.' },
       { ingredientCode: 'BOT_CHIEN_GA', quantityBase: 1 / 15, note: 'Hao trừ thêm 1/15 pack bột chiên gà cho phần gà giòn đi kèm.' }
     ],
     note: 'Công thức mỳ Ý Jolly kèm 1 miếng gà giòn.'
@@ -260,8 +266,8 @@ const RECIPE_DEFINITIONS = Object.freeze([
     productCode: 'MON0008',
     name: 'Cơm Gà Giòn Vui Vẻ',
     ingredients: [
-      { ingredientCode: 'GAO', quantityBase: 0.1, note: 'Hao trừ khoảng 100 gram gạo, tương đương 0.1 kg cho 1 suất cơm.' },
-      { ingredientCode: 'GA_MIENG', quantityBase: 1 / 8, note: 'Hao trừ 1/8 pack gà miếng cho phần gà giòn.' },
+      { ingredientCode: 'GAO', quantity: 1, unit: 'serving', quantityBase: 0.1, note: 'Hao trừ 1 suất cơm, tương đương 100 gram hoặc 0.1 kg gạo.' },
+      { ingredientCode: 'GA_MIENG', quantity: 1, unit: 'pcs', quantityBase: 1 / 8, note: 'Hao trừ 1 miếng gà, tương đương 1/8 pack.' },
       { ingredientCode: 'BOT_CHIEN_GA', quantityBase: 1 / 15, note: 'Hao trừ 1/15 pack bột chiên gà cho phần gà giòn.' }
     ],
     note: 'Một suất cơm gà dùng 0.1 kg gạo, 1/8 pack gà miếng và 1/15 pack bột chiên.'
@@ -271,7 +277,7 @@ const RECIPE_DEFINITIONS = Object.freeze([
     productCode: 'MON0009',
     name: 'Burger Tôm',
     ingredients: [
-      { ingredientCode: 'XA_LACH', quantityBase: 50, note: 'Hao trừ 50 gram xà lách, tương đương 1 miếng.' },
+      { ingredientCode: 'XA_LACH', quantity: 1, unit: 'pcs', quantityBase: 50, note: 'Hao trừ 1 miếng xà lách, tương đương 50 gram.' },
       { ingredientCode: 'BANH_NHAN_TOM', quantityBase: 1, note: 'Hao trừ 1 miếng bánh nhân tôm.' }
     ],
     note: 'Burger tôm dùng 50 gram xà lách và 1 miếng bánh nhân tôm.'
@@ -299,7 +305,7 @@ const RECIPE_DEFINITIONS = Object.freeze([
     productCode: 'MON0012',
     name: 'Bánh Xoài Đào',
     ingredients: [
-      { ingredientCode: 'BANH_XOAI_DAO', quantityBase: 1 / 8, note: 'Hao trừ 1/8 pack bánh xoài đào cho 1 cái bánh.' }
+      { ingredientCode: 'BANH_XOAI_DAO', quantity: 1, unit: 'pcs', quantityBase: 1 / 8, note: 'Hao trừ 1 cái bánh, tương đương 1/8 pack.' }
     ],
     note: 'Một cái bánh xoài đào dùng 1/8 pack bánh.'
   },
@@ -317,7 +323,7 @@ const RECIPE_DEFINITIONS = Object.freeze([
     productCode: 'MON0014',
     name: 'Pepsi',
     ingredients: [
-      { ingredientCode: 'PEPSI', quantityBase: 1 / 50, note: 'Hao trừ 1/50 thùng/case nước ngọt cho 1 cốc Pepsi.' }
+      { ingredientCode: 'PEPSI', quantity: 1, unit: 'cup', quantityBase: 1 / 50, note: 'Hao trừ 1 cốc Pepsi, tương đương 1/50 case.' }
     ],
     note: 'Một cốc Pepsi dùng 1/50 thùng/case.'
   }
