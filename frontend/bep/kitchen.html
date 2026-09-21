@@ -228,7 +228,7 @@
           <div class="muted">${escapeHtml(item.supplierName || 'Chưa có nhà cung cấp')}</div>
           <div class="muted">Mua theo: ${escapeHtml(item.orderUnit)} · quy đổi kho: ${escapeHtml(item.stockQuantityPerOrderUnit)} ${escapeHtml(item.stockUnit || 'đơn vị')}</div>
           <div class="inline-actions">
-            <input class="quantity-input" type="number" min="1" value="1" data-material-id="${item._id}" />
+            <input class="quantity-input" type="number" min="1" step="1" inputmode="numeric" value="1" data-material-id="${item._id}" />
             <button class="btn btn-primary" type="button" data-action="add" data-material-id="${item._id}">Thêm vào đơn</button>
           </div>
         </div>
@@ -249,7 +249,7 @@
           </div>
           <div class="muted">Số lượng đặt: ${escapeHtml(item.quantity)}</div>
           <div class="inline-actions">
-            <input class="quantity-input" type="number" min="1" value="${item.quantity}" data-selection-id="${item.id}" />
+            <input class="quantity-input" type="number" min="1" step="1" inputmode="numeric" value="${item.quantity}" data-selection-id="${item.id}" />
             <button class="btn btn-danger" type="button" data-action="remove" data-selection-id="${item.id}">Xóa</button>
           </div>
         </div>
@@ -306,6 +306,16 @@
 
     function getMaterialById(materialId) {
       return state.purchaseMaterials.find((item) => item._id === materialId);
+    }
+
+    function sanitizeQuantityInput(input) {
+      input.value = input.value.replace(/\D/g, '');
+    }
+
+    function blockNonNumericQuantityKey(event) {
+      if (!/[0-9]/.test(event.key) && !['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Home', 'End'].includes(event.key) && !(event.ctrlKey || event.metaKey)) {
+        event.preventDefault();
+      }
     }
 
     function addSelection(materialId, quantity) {
@@ -375,6 +385,14 @@
       showOrderNotice('Đã thêm nguyên liệu vào đơn đặt hàng.', 'success');
     });
 
+    purchaseMaterialsList.addEventListener('keydown', (event) => {
+      if (event.target.matches('.quantity-input')) blockNonNumericQuantityKey(event);
+    });
+
+    purchaseMaterialsList.addEventListener('input', (event) => {
+      if (event.target.matches('.quantity-input')) sanitizeQuantityInput(event.target);
+    });
+
     selectedMaterialsList.addEventListener('click', (event) => {
       const button = event.target.closest('button[data-action]');
       if (!button) return;
@@ -394,6 +412,14 @@
         renderSelectedItems();
         renderStats();
       }
+    });
+
+    selectedMaterialsList.addEventListener('keydown', (event) => {
+      if (event.target.matches('.quantity-input')) blockNonNumericQuantityKey(event);
+    });
+
+    selectedMaterialsList.addEventListener('input', (event) => {
+      if (event.target.matches('.quantity-input')) sanitizeQuantityInput(event.target);
     });
 
     document.getElementById('clearSelectionBtn').addEventListener('click', () => {
