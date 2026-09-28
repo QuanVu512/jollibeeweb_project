@@ -8,7 +8,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const displayName = document.getElementById('display-user-name');
     const btnLogout = document.getElementById('btn-logout');
 
-    
+    // ==================== PHẦN THÔNG BÁO KHÁCH HÀNG ====================
+    // Vùng này dùng cho nút chuông thông báo trên homepage khách hàng.
+    // Nếu cần sửa giao diện/thay đổi cách lấy thông báo, bạn chỉnh trong vùng này.
     const notificationWrapper = document.getElementById('notification-wrapper');
     const notificationButton = document.getElementById('notification-button');
     const notificationPanel = document.getElementById('notification-panel');
@@ -17,6 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const notificationCount = document.getElementById('notification-count');
     let notificationsLoaded = false;
     let notificationsReady = false;
+    // ================== HẾT PHẦN KHAI BÁO THÔNG BÁO ==================
 
     async function checkLoginStatus() {
         try {
