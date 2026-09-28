@@ -57,9 +57,7 @@ async function register(req, res) {
       data: result.data
     });
   } catch (error) {
-    console.log('=== 🚨 LỖI CRASH Ở BACKEND 🚨 ===');
-    console.error(error);
-    return res.status(400).json({ success: false, message: error.message || 'Dữ liệu không hợp lệ' });
+    throw error;
   }
 }
 

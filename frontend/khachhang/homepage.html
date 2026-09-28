@@ -91,8 +91,8 @@
         .customer-info-form input:focus { border-color: #e21b22; }
         .btn-checkout { background-color: #e21b22; color: white; border: none; padding: 15px; width: 100%; font-size: 16px; font-weight: bold; border-radius: 25px; cursor: pointer; text-transform: uppercase; transition: background 0.2s; }
         .btn-checkout:hover { background-color: #b9151c; }
+        .btn-checkout:disabled { opacity: 0.65; cursor: wait; }
     </style>
-    <script src="/assets/js/admin-return.js" defer></script>
 </head>
 
 <body>
@@ -224,13 +224,21 @@
             <h2>Giỏ Hàng Của Bạn</h2>
             <span class="close-btn" onclick="toggleCart(false)">&times;</span>
         </div>
-        
+
+        <div class="cart-tabs" role="tablist">
+            <button type="button" class="cart-tab active" data-cart-tab="draft">Giỏ hàng <span id="draft-tab-count">(0)</span></button>
+            <button type="button" class="cart-tab" data-cart-tab="orders">Đơn hàng của tôi</button>
+        </div>
+
+        <section id="cart-draft-panel" class="cart-panel">
+        <label class="cart-select-all"><input type="checkbox" id="cart-select-all" onchange="toggleSelectAllCartItems(this.checked)" checked> Chọn tất cả sản phẩm</label>
         <div id="cart-items" class="cart-items">
             <p style="text-align: center; color: #666; margin-top: 20px;">Giỏ hàng đang trống</p>
         </div>
 
         <div class="cart-summary">
-            <h3>Tổng tiền: <span id="cart-total-price">0 ₫</span></h3>
+            <h3>Tổng đã chọn: <span id="cart-total-price">0 ₫</span></h3>
+            <small id="cart-selected-summary">Chưa chọn sản phẩm</small>
         </div>
 
         <div class="customer-info-form">
@@ -239,9 +247,59 @@
             <input type="text" id="cust-address" placeholder="Địa chỉ giao hàng (VD: Hạ Long, Quảng Ninh)" required>
             <button class="btn-checkout" onclick="submitOrder()">Tiến Hành Đặt Hàng</button>
         </div>
+        </section>
+
+        <section id="cart-orders-panel" class="cart-panel" hidden>
+            <div id="customer-orders-list" class="orders-list"><p class="orders-loading">Đang tải đơn hàng...</p></div>
+        </section>
     </div>
 </div>
 
+    <div id="toast-container" class="toast-container" aria-live="polite"></div>
+    <dialog id="confirm-dialog" class="site-dialog">
+        <form method="dialog">
+            <h3 id="confirm-title">Xác nhận</h3>
+            <p id="confirm-message"></p>
+            <div class="site-dialog-actions">
+                <button value="cancel" class="site-dialog-secondary">Quay lại</button>
+                <button value="confirm" class="site-dialog-primary">Xác nhận</button>
+            </div>
+        </form>
+    </dialog>
+    <dialog id="address-dialog" class="site-dialog">
+        <form id="address-form">
+            <h3>Thay đổi địa chỉ giao hàng</h3>
+            <p>Chỉ có thể thay đổi khi nhà hàng chưa bắt đầu chế biến.</p>
+            <input id="order-address-input" maxlength="300" required autocomplete="street-address">
+            <input id="order-address-id" type="hidden">
+            <div class="site-dialog-actions">
+                <button type="button" id="address-close" class="site-dialog-secondary">Quay lại</button>
+                <button type="submit" class="site-dialog-primary">Lưu địa chỉ</button>
+            </div>
+        </form>
+    </dialog>
+
+    <link rel="stylesheet" href="cart-orders.css">
+    <link rel="stylesheet" href="profile.css">
+    <dialog id="profile-dialog" aria-labelledby="profile-title">
+        <form id="profile-form">
+            <h2 id="profile-title">Thông tin cá nhân</h2>
+            <p>Xem và cập nhật thông tin, địa chỉ giao hàng của bạn.</p>
+            <p id="profile-status" role="status" aria-live="polite"></p>
+            <fieldset id="profile-fields" disabled>
+                <label>Họ và tên<input name="fullName" autocomplete="name" required maxlength="120"></label>
+                <label>Số điện thoại liên hệ<input name="phone" type="tel" autocomplete="tel" maxlength="20"></label>
+                <label>Email<input name="email" type="email" autocomplete="email" maxlength="160"></label>
+                <label>Ngày sinh<input name="birthDate" type="date" autocomplete="bday"></label>
+                <label>Giới tính<select name="gender"><option value="">Chưa cung cấp</option><option value="male">Nam</option><option value="female">Nữ</option><option value="other">Khác</option></select></label>
+                <label>Địa chỉ giao hàng<textarea name="address" autocomplete="street-address" maxlength="300" rows="3"></textarea></label>
+            </fieldset>
+            <div class="profile-actions"><button type="button" id="profile-close">Đóng</button><button type="submit" id="profile-save" disabled>Lưu thay đổi</button></div>
+        </form>
+    </dialog>
+    <script src="profile.js"></script>
+    <script src="account-validation.js"></script>
+    <script src="customer-orders.js"></script>
     <script src="homepage.js"></script>
 </body>
 </html>

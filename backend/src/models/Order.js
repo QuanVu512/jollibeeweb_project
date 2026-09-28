@@ -61,6 +61,7 @@ const orderSchema = new mongoose.Schema(
     isInvoicePrinted: { type: Boolean, default: false },
     invoicePrintedAt: { type: Date, default: null },
     source: { type: String, enum: ['web', 'pos', 'phone', 'legacy'], default: 'web' },
+    checkoutToken: { type: String, trim: true, maxlength: 100, unique: true, sparse: true },
     branchCode: { type: String, trim: true, uppercase: true, default: 'MAIN' },
     items: { type: [orderItemSchema], default: [] },
     payment: { type: paymentSchema, default: () => ({}) },

@@ -75,7 +75,7 @@ function findForLogout(id) {
 
 function findForAuthentication(id) {
   return User.findById(id)
-    .select('+tokenVersion username role displayName isActive employee revokedAt');
+    .select('+tokenVersion username role displayName isActive employee customer revokedAt');
 }
 
 module.exports = {

@@ -116,6 +116,10 @@ async function deductIngredientsForOrder(order, userId, options = {}) {
   const recipesByProductCode = await loadRecipesForOrder(order, session);
   const plan = calculateRecipeDeductions(order, recipesByProductCode);
   const deducted = [];
+  if (options.requireRecipes && (plan.missingRecipes.length || [...recipesByProductCode.values()].some(recipe =>
+    !recipe.ingredients.length || recipe.ingredients.some(row => !row.ingredient || !row.ingredient.isActive)))) {
+    throw new ApiError(409, 'Món ăn chưa có công thức hợp lệ hoặc nguyên liệu không còn hoạt động.');
+  }
 
   for (const deduction of plan.deductions) {
     const updatedIngredient = await ingredientRepository.deductStock(deduction, session);
@@ -193,13 +197,20 @@ async function restoreIngredientsForOrder(order, userId, options = {}) {
   }
 
   const session = options.session || null;
-  const recipesByProductCode = await loadRecipesForOrder(order, session);
-  const plan = calculateRecipeDeductions(order, recipesByProductCode);
+  const movements = await inventoryTransactionRepository.findOrderMovements(order._id, session);
+  const outstanding = new Map();
+  for (const movement of movements) {
+    const id = String(movement.ingredient);
+    const entry = outstanding.get(id) || { ingredient: movement.ingredient, quantity: 0 };
+    entry.quantity = roundQuantity(entry.quantity - movement.quantityChange);
+    outstanding.set(id, entry);
+  }
+  const plan = { deductions: [...outstanding.values()].filter(item => item.quantity > 0) };
   const restored = [];
 
   for (const item of plan.deductions) {
     const updatedIngredient = await ingredientRepository.restoreStock(item, session);
-    if (!updatedIngredient) continue;
+    if (!updatedIngredient) throw new ApiError(409, 'Không thể hoàn nguyên liệu đã bị xóa.');
 
     const stockBefore = roundQuantity(updatedIngredient.stockQuantity - item.quantity);
     const stockAfter = roundQuantity(updatedIngredient.stockQuantity);
@@ -331,6 +342,7 @@ async function checkOrderStockSufficiency(order, session = null) {
 }
 
 module.exports = {
+  loadRecipesForOrder,
   calculateRecipeDeductions,
   deductIngredientsForOrder,
   restoreIngredientsForOrder,
