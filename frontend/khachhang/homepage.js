@@ -1,6 +1,49 @@
 let allProducts = []; 
 let cart = [];
 let isLoggedIn = false;
+let orderSubmissionInProgress = false;
+const CART_STORAGE_PREFIX = 'jollibee_cart_v1_';
+let cartStorageKey = `${CART_STORAGE_PREFIX}guest`;
+
+function readStoredCart(key) {
+    try {
+        const stored = JSON.parse(localStorage.getItem(key) || '[]');
+        if (!Array.isArray(stored)) return [];
+        return stored.filter(item => item && typeof item._id === 'string' && typeof item.name === 'string')
+            .map(item => ({
+                _id: item._id,
+                name: item.name,
+                image: typeof item.image === 'string' ? item.image : '',
+                quantity: Math.max(0, Number(item.quantity) || 0),
+                unitPrice: Math.max(0, Number(item.unitPrice) || 0),
+                lineTotal: Math.max(0, Number(item.unitPrice) || 0) * Math.max(0, Number(item.quantity) || 0),
+                maxQuantity: Number.isInteger(Number(item.maxQuantity)) ? Math.max(0, Number(item.maxQuantity)) : null,
+                selected: item.selected !== false
+            }));
+    } catch (error) {
+        console.warn('Không thể đọc giỏ hàng đã lưu:', error);
+        return [];
+    }
+}
+
+function saveCart() {
+    try {
+        localStorage.setItem(cartStorageKey, JSON.stringify(cart));
+    } catch (error) {
+        console.warn('Không thể lưu giỏ hàng:', error);
+    }
+}
+
+function useCartForUser(user) {
+    const userKey = `${CART_STORAGE_PREFIX}${user.id}`;
+    const savedUserCart = readStoredCart(userKey);
+    const guestCart = cartStorageKey === `${CART_STORAGE_PREFIX}guest` ? cart : [];
+    cartStorageKey = userKey;
+    cart = savedUserCart.length ? savedUserCart : guestCart;
+    saveCart();
+    if (guestCart.length && !savedUserCart.length) localStorage.removeItem(`${CART_STORAGE_PREFIX}guest`);
+    updateCartUI();
+}
 
 document.addEventListener('DOMContentLoaded', () => {
     const guestMenu = document.getElementById('guest-menu');
@@ -23,11 +66,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function checkLoginStatus() {
         try {
-            const response = await fetch('http://localhost:3000/api/v1/auth/me');
+            const response = await fetch('/api/v1/auth/me');
             const result = await response.json();
 
             if (response.ok && result.success) {
                 isLoggedIn = true;
+                useCartForUser(result.data.user);
 
                 guestMenu.style.display = 'none';
                 userMenu.style.display = 'flex';
@@ -37,6 +81,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     setupNotifications();
                 }
                 displayName.textContent = result.data.user.displayName || result.data.user.fullName || "Khách hàng";
+                if (result.data.user.role === 'customer') {
+                    window.setupCustomerProfile();
+                    window.customerOrders.setup();
+                }
             }
         } catch (error) {
             console.log("Trạng thái: Khách vãng lai");
@@ -116,7 +164,7 @@ document.addEventListener('DOMContentLoaded', () => {
         notificationList.innerHTML = '<p class="notification-empty">Đang tải thông báo...</p>';
 
         try {
-            const response = await fetch('http://localhost:3000/api/v1/customer/notifications?limit=8', {
+            const response = await fetch('/api/v1/customer/notifications?limit=8', {
                 credentials: 'include'
             });
             const result = await response.json();
@@ -166,32 +214,52 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     // ================== HẾT LOGIC THÔNG BÁO KHÁCH HÀNG ==================
 
-    async function fetchProducts() {
+    let productsLoading = false;
+    async function fetchProducts(quiet = false) {
+        if (productsLoading || orderSubmissionInProgress) return;
+        productsLoading = true;
         try {
-            const response = await fetch('http://localhost:3000/api/v1/products');
+            const response = await fetch('/api/v1/products');
             if (!response.ok) {
                 throw new Error("Không thể kết nối đến API");
             }
 
             const jsonResponse = await response.json();
             allProducts = jsonResponse.data.items; 
-            renderProducts(allProducts);
+            cart = cart.map(item => {
+                const product = allProducts.find(candidate => candidate._id === item._id);
+                const maxQuantity = product ? Math.max(0, Number(product.availableQuantity) || 0) : 0;
+                const quantity = Math.min(item.quantity, maxQuantity);
+                return { ...item, maxQuantity, quantity, lineTotal: quantity * item.unitPrice };
+            });
+            if (!document.activeElement?.classList.contains('cart-quantity-input')) updateCartUI();
+            if (!quiet) renderProducts(allProducts);
+            else document.querySelectorAll('[data-product-id]').forEach(button => {
+                const product = allProducts.find(item => item._id === button.dataset.productId);
+                const unavailable = !product || !product.canOrder;
+                button.disabled = unavailable;
+                button.textContent = unavailable ? 'Món ăn hết' : 'Thêm vào giỏ';
+                button.style.backgroundColor = unavailable ? '#aaa' : '#e21b22';
+                button.style.cursor = unavailable ? 'not-allowed' : 'pointer';
+            });
 
         } catch (error) {
-            console.error("Lỗi lấy sản phẩm, đang dùng dữ liệu giả:", error);
-
-            const mockProducts = [
-                { _id: "1", name: "2 Miếng Gà Giòn Vui Vẻ", price: 70000, image: "https://jollibee.com.vn/media/catalog/product/cache/42b2ab66a7ec6a6443cba394ba0d15e2/2/m/2m_g_gi_n.png" },
-                { _id: "2", name: "Mì Ý Sốt Xúc Xích", price: 40000, image: "https://jollibee.com.vn/media/catalog/product/cache/42b2ab66a7ec6a6443cba394ba0d15e2/m/_/m_y.png" },
-                { _id: "3", name: "Combo 1 Người Gà Sốt Cay", price: 85000, image: "https://jollibee.com.vn/media/catalog/product/cache/42b2ab66a7ec6a6443cba394ba0d15e2/1/m/1m_g_cay_1_khoai_v_a_1_pepsi_l_n.png" },
-                { _id: "4", name: "Burger Tôm Gà", price: 35000, image: "https://jollibee.com.vn/media/catalog/product/cache/42b2ab66a7ec6a6443cba394ba0d15e2/b/u/burger_g_.png" }
-            ];
-            allProducts = mockProducts;
-            renderProducts(allProducts);
+            console.error('Không thể tải thực đơn:', error);
+            if (!quiet) {
+                allProducts = [];
+                document.getElementById('product-grid').textContent = 'Không thể tải thực đơn. Vui lòng tải lại trang để thử lại.';
+            }
+        } finally {
+            productsLoading = false;
         }
     }
+    window.refreshProductAvailability = () => fetchProducts(true);
+    setInterval(() => { if (!document.hidden) fetchProducts(true); }, 5000);
+    window.addEventListener('focus', () => fetchProducts(true));
 
     checkLoginStatus();
+    cart = readStoredCart(cartStorageKey);
+    updateCartUI();
     fetchProducts();
 });
 
@@ -226,13 +294,14 @@ function renderProducts(productList) {
             <img src="${imageUrl}" alt="${product.name}" style="width: 100%; height: 200px; object-fit: contain; margin-bottom: 15px;">
             <h3 style="font-size: 16px; font-weight: bold; color: #333; margin-bottom: 10px; height: 40px; overflow: hidden; display: flex; align-items: center; justify-content: center;">${product.name}</h3>
             <p style="color: #e21b22; font-size: 18px; font-weight: bold; margin-bottom: 15px;">${formattedPrice}</p>
-            <button onclick="addToCart('${product._id}')" style="background-color: #e21b22; color: white; border: none; padding: 10px 20px; font-size: 14px; font-weight: bold; border-radius: 20px; cursor: pointer; width: 100%; transition: background 0.2s;">Thêm vào giỏ</button>
+            <button ${product.canOrder === false ? 'disabled' : ''} onclick="addToCart('${product._id}')" style="background-color: ${product.canOrder === false ? '#aaa' : '#e21b22'}; color: white; border: none; padding: 10px 20px; font-size: 14px; font-weight: bold; border-radius: 20px; cursor: ${product.canOrder === false ? 'not-allowed' : 'pointer'}; width: 100%; transition: background 0.2s;">${product.canOrder === false ? 'Món ăn hết' : 'Thêm vào giỏ'}</button>
         `;
 
         productCard.onmouseover = () => productCard.style.transform = 'scale(1.05)';
         productCard.onmouseleave = () => productCard.style.transform = 'scale(1)';
 
         productGrid.appendChild(productCard);
+        productCard.querySelector('button').dataset.productId = product._id;
     });
 }
 
@@ -294,10 +363,14 @@ function filterCategory(categoryKeyword, event) {
 function addToCart(productId) {
     const product = allProducts.find(p => p._id === productId);
     if (!product) return;
+    if (product.canOrder === false) return window.showToast('Món ăn hết. Vui lòng chọn món khác.', 'info');
+    const maxQuantity = Math.max(0, Number(product.availableQuantity) || 0);
 
     const existingItem = cart.find(item => item._id === productId);
     if (existingItem) {
+        if (existingItem.quantity >= maxQuantity) return window.showToast(`Món này chỉ còn tối đa ${maxQuantity} phần.`, 'info');
         existingItem.quantity += 1;
+        existingItem.maxQuantity = maxQuantity;
         existingItem.lineTotal = existingItem.quantity * existingItem.unitPrice;
     } else {
         const imageUrl = (product.image && product.image.length > 0) ? product.image : "https://jollibee.com.vn/media/logo-footer.png";
@@ -308,7 +381,9 @@ function addToCart(productId) {
             image: imageUrl, 
             quantity: 1,
             unitPrice: product.price,
-            lineTotal: product.price
+            lineTotal: product.price,
+            maxQuantity,
+            selected: true
         });
     }
 
@@ -320,13 +395,21 @@ function updateCartUI() {
     const cartItemsContainer = document.getElementById('cart-items');
     const cartTotalElement = document.getElementById('cart-total-price');
     const cartCountElement = document.getElementById('cart-count');
+    const draftTabCount = document.getElementById('draft-tab-count');
+    const selectAll = document.getElementById('cart-select-all');
+    const selectedSummary = document.getElementById('cart-selected-summary');
 
-    if (!cartItemsContainer) return; 
+    if (!cartItemsContainer) return;
+    saveCart();
 
     if (cart.length === 0) {
         cartItemsContainer.innerHTML = '<p style="text-align: center; color: #666; margin-top: 20px;">Giỏ hàng đang trống</p>';
         cartTotalElement.innerText = '0 ₫';
         cartCountElement.innerText = '0';
+        draftTabCount.innerText = '(0)';
+        selectedSummary.innerText = 'Chưa chọn sản phẩm';
+        selectAll.checked = false;
+        selectAll.indeterminate = false;
         return;
     }
 
@@ -335,23 +418,25 @@ function updateCartUI() {
     let totalItems = 0;
 
     cart.forEach((item, index) => {
-        total += item.lineTotal;
+        if (item.selected !== false) total += item.lineTotal;
         totalItems += item.quantity;
 
         const formattedUnitPrice = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item.unitPrice);
         const formattedLineTotal = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item.lineTotal);
 
         cartItemsContainer.innerHTML += `
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding: 15px 0;">
+            <div class="cart-item-row ${item.selected === false ? 'unselected' : ''}">
+                <input class="cart-item-check" type="checkbox" aria-label="Chọn ${item.name}" ${item.selected === false ? '' : 'checked'} onchange="toggleCartItemSelection(${index}, this.checked)">
+                <div class="cart-item-main">
                 <div style="display: flex; align-items: center; gap: 15px;">
                     <img src="${item.image}" alt="${item.name}" style="width: 60px; height: 60px; object-fit: contain; border-radius: 8px; border: 1px solid #eee; padding: 2px;">
                     <div>
                         <strong style="color: #333; font-size: 14px;">${item.name}</strong>
                         <p style="margin: 5px 0; font-size: 13px; color: #666;">Đơn giá: ${formattedUnitPrice}</p>
                         <div style="display: flex; align-items: center; gap: 10px; margin-top: 5px;">
-                            <button onclick="changeQuantity(${index}, -1)" style="width: 25px; height: 25px; border: 1px solid #ccc; background: white; cursor: pointer; border-radius: 4px;">-</button>
-                            <span style="font-weight: bold;">${item.quantity}</span>
-                            <button onclick="changeQuantity(${index}, 1)" style="width: 25px; height: 25px; border: 1px solid #ccc; background: white; cursor: pointer; border-radius: 4px;">+</button>
+                            <button ${item.quantity <= 0 ? 'disabled' : ''} onclick="changeQuantity(${index}, -1)" class="cart-quantity-button">-</button>
+                            <input class="cart-quantity-input" type="number" min="0" max="${item.maxQuantity ?? item.quantity}" value="${item.quantity}" onchange="setCartItemQuantity(${index}, this.value)" aria-label="Số lượng ${item.name}">
+                            <button ${item.maxQuantity !== null && item.quantity >= item.maxQuantity ? 'disabled' : ''} onclick="changeQuantity(${index}, 1)" class="cart-quantity-button">+</button>
                         </div>
                     </div>
                 </div>
@@ -366,26 +451,49 @@ function updateCartUI() {
                         </svg>
                     </button>
                 </div>
+                </div>
             </div>
         `;
     });
 
     cartTotalElement.innerText = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(total);
     cartCountElement.innerText = totalItems;
+    draftTabCount.innerText = `(${totalItems})`;
+    const selectedItems = cart.filter(item => item.selected !== false);
+    const selectedQuantity = selectedItems.reduce((sum, item) => sum + item.quantity, 0);
+    selectedSummary.innerText = selectedQuantity ? `${selectedQuantity} sản phẩm được chọn` : 'Chưa chọn sản phẩm';
+    selectAll.checked = selectedItems.length === cart.length;
+    selectAll.indeterminate = selectedItems.length > 0 && selectedItems.length < cart.length;
 }
 
-function changeQuantity(index, delta) {
-    cart[index].quantity += delta;
-    if (cart[index].quantity <= 0) {
-        cart.splice(index, 1);
-    } else {
-        cart[index].lineTotal = cart[index].quantity * cart[index].unitPrice;
-    }
+function toggleCartItemSelection(index, checked) {
+    if (!cart[index]) return;
+    cart[index].selected = checked;
     updateCartUI();
 }
 
-function removeFromCart(index) {
-    if (confirm("Bạn có chắc muốn xóa món này khỏi giỏ hàng?")) {
+function toggleSelectAllCartItems(checked) {
+    cart.forEach(item => { item.selected = checked; });
+    updateCartUI();
+}
+
+function changeQuantity(index, delta) {
+    if (!cart[index]) return;
+    setCartItemQuantity(index, cart[index].quantity + delta);
+}
+
+function setCartItemQuantity(index, rawValue) {
+    const item = cart[index];
+    if (!item) return;
+    const requested = Number.parseInt(rawValue, 10);
+    const maxQuantity = item.maxQuantity === null ? Math.max(0, requested || 0) : item.maxQuantity;
+    item.quantity = Math.min(maxQuantity, Math.max(0, Number.isFinite(requested) ? requested : 0));
+    item.lineTotal = item.quantity * item.unitPrice;
+    updateCartUI();
+}
+
+async function removeFromCart(index) {
+    if (await window.siteConfirm("Bạn có chắc muốn xóa món này khỏi giỏ hàng?", "Xóa món")) {
         cart.splice(index, 1); 
         updateCartUI(); 
     }
@@ -404,10 +512,13 @@ function toggleCart(forceShow = null) {
 }
 
 async function submitOrder() {
-    if (cart.length === 0) return alert("Giỏ hàng đang trống!");
+    if (orderSubmissionInProgress) return;
+    if (cart.length === 0) return window.showToast("Giỏ hàng đang trống!", 'info');
+    const selectedCartItems = cart.filter(item => item.selected !== false && item.quantity > 0);
+    if (selectedCartItems.length === 0) return window.showToast("Vui lòng tick chọn ít nhất một sản phẩm để thanh toán.", 'info');
 
     if (!isLoggedIn) {
-        const userWantsToLogin = confirm("Bạn cần đăng nhập tài khoản để tiếp tục đặt hàng!\n\nNhấn 'OK' để sang trang Đăng nhập.\nNhấn 'Hủy' (Cancel) để ở lại.");
+        const userWantsToLogin = await window.siteConfirm("Bạn cần đăng nhập tài khoản để tiếp tục đặt hàng.", "Đăng nhập để đặt hàng");
         
         if (userWantsToLogin) {
             window.location.href = "/admin/login.html"; 
@@ -419,7 +530,7 @@ async function submitOrder() {
     const phone = document.getElementById('cust-phone').value;
     const address = document.getElementById('cust-address').value;
 
-    if (!name || !phone || !address) return alert("Vui lòng điền đủ thông tin giao hàng!");
+    if (!name || !phone || !address) return window.showToast("Vui lòng điền đủ thông tin giao hàng!", 'error');
     
     const orderPayload = {
         customerName: name,
@@ -428,7 +539,10 @@ async function submitOrder() {
         orderType: "delivery",
         source: "web",
         branchCode: "MAIN",
-        items: cart.map(item => ({
+        checkoutToken: typeof crypto.randomUUID === 'function'
+            ? crypto.randomUUID()
+            : `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+        items: selectedCartItems.map(item => ({
             productId: item._id, 
             product: item._id,
             name: item.name,
@@ -438,32 +552,24 @@ async function submitOrder() {
         }))
     };
     
+    const checkoutButton = document.querySelector('.btn-checkout');
+    orderSubmissionInProgress = true;
+    checkoutButton.disabled = true;
+    checkoutButton.textContent = 'ĐANG GỬI ĐƠN...';
     try {
-        const response = await fetch('http://localhost:3000/api/v1/orders', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'  
-            },
-            body: JSON.stringify(orderPayload) 
-        });
-        
-        const result = await response.json();
-
-        if (response.ok) {
-            alert("Chúc mừng! Đơn hàng của bạn đã được tạo thành công!");
-            cart = [];
-            updateCartUI();
-            toggleCart(false);
-            
-            document.getElementById('cust-name').value = '';
-            document.getElementById('cust-phone').value = '';
-            document.getElementById('cust-address').value = '';
-        } else {
-            alert("Lỗi từ server: " + (result.message || "Không thể tạo đơn hàng"));
-        }
+        const result = await window.customerOrders.placeOrder(orderPayload);
+        window.showToast(result.message || "Đặt hàng thành công!", 'success');
+        const orderedIds = new Set(selectedCartItems.map(item => item._id));
+        cart = cart.filter(item => !orderedIds.has(item._id));
+        updateCartUI();
 
     } catch (error) {
-        console.error("Lỗi khi bắn API:", error);
-        alert("Không thể kết nối đến Backend. Vui lòng kiểm tra lại Server!");
+        console.error("Lỗi đặt hàng:", error);
+        window.showToast(error.message || "Không thể kết nối đến Backend.", 'error');
+    } finally {
+        orderSubmissionInProgress = false;
+        window.refreshProductAvailability?.();
+        checkoutButton.disabled = false;
+        checkoutButton.textContent = 'TIẾN HÀNH ĐẶT HÀNG';
     }
 }

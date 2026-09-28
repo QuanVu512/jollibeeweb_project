@@ -121,60 +121,32 @@ async function logout(userId, context) {
 }
 
 async function register(body) {
-  console.log('=== 1. DỮ LIỆU FRONTEND GỬI LÊN ===');
-  console.log(body);
-
-  const { displayName, username, password, email, address, gender, birthDate } = body;
-
-  if (!username || !password || !displayName) {
-    console.log('-> Bị chặn vì thiếu họ tên, tài khoản hoặc mật khẩu');
-    return { statusCode: 400, message: 'Vui lòng nhập đủ họ tên, tài khoản và mật khẩu.' };
-  }
-
-  const cleanUsername = username.trim().toLowerCase();
-
-  const existingUser = await userRepository.findByUsername(cleanUsername);
-  if (existingUser) {
-    return { statusCode: 409, message: 'Tên đăng nhập hoặc số điện thoại này đã tồn tại!' };
-  }
-
+  const mongoose = require('mongoose');
+  const { validateRegistration } = require('../validators/registrationValidator');
+  const { username, password, profile } = validateRegistration(body);
+  if (await userRepository.findByUsername(username)) throw new ApiError(409, 'Tên đăng nhập đã tồn tại.');
   const passwordHash = await userRepository.hashPassword(password);
-
-  const customerData = {
-    fullName: displayName,
-    phone: cleanUsername
-  };
-
-  if (email && email.trim() !== '') customerData.email = email.trim();
-  if (address && address.trim() !== '') customerData.address = address.trim();
-  if (gender && gender.trim() !== '') customerData.gender = gender;
-  if (birthDate && birthDate.trim() !== '') customerData.birthDate = birthDate;
-
-  console.log('=== 2. CHUẨN BỊ LƯU VÀO BẢNG CUSTOMER ===');
-  console.log(customerData);
-
-  const newCustomer = customerRepository.createDocument(customerData);
-  await customerRepository.save(newCustomer);
-
-  const newUser = userRepository.createDocument({
-    username: cleanUsername,
-    passwordHash,
-    role: 'customer',
-    displayName,
-    customer: newCustomer._id,
-    isActive: true,
-    tokenVersion: 0
-  });
-  await userRepository.save(newUser);
-
-  newCustomer.account = newUser._id;
-  await customerRepository.save(newCustomer);
-
-  console.log('-> ĐĂNG KÝ THÀNH CÔNG!');
+  try {
+    await mongoose.connection.transaction(async session => {
+      const customerId = new mongoose.Types.ObjectId();
+      const userId = new mongoose.Types.ObjectId();
+      const customer = customerRepository.createDocument({ ...profile, _id: customerId, account: userId });
+      const user = userRepository.createDocument({
+        _id: userId, username, passwordHash, displayName: profile.fullName,
+        customer: customerId, role: 'customer', isActive: true, tokenVersion: 0
+      });
+      await customerRepository.save(customer, { session });
+      await userRepository.save(user, { session });
+    });
+  } catch (error) {
+    if (error.code === 11000 && (error.keyPattern?.username || error.keyValue?.username)) {
+      throw new ApiError(409, 'Tên đăng nhập đã tồn tại.');
+    }
+    throw error;
+  }
   return {
-    statusCode: 201,
-    message: 'Đăng ký tài khoản thành công!',
-    data: { username: newUser.username, displayName: newUser.displayName }
+    statusCode: 201, message: 'Đăng ký tài khoản thành công!',
+    data: { username, displayName: profile.fullName }
   };
 }
 

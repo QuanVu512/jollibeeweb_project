@@ -72,20 +72,25 @@ async function finishPreparingOrder(id, userId, options) {
   };
 }
 
-async function getProducts() {
+async function getProducts(orderType = 'dine_in') {
   const items = await productRepository.findActive();
   const productCodes = items.map(p => p.productCode).filter(Boolean);
-  const portionsMap = await calculateAvailablePortionsForProducts(productCodes, 'dine_in');
+  const portionsMap = await calculateAvailablePortionsForProducts(productCodes, orderType);
+  const { withAvailability } = require('./productAvailability');
+  const customerItems = await withAvailability(items, orderType);
 
   return items.map(item => {
     const obj = item.toObject ? item.toObject() : { ...item };
     const portions = portionsMap[item.productCode];
     obj.availableServings = portions !== undefined ? portions : null;
+    const availability = customerItems.find(product => String(product._id) === String(obj._id));
+    obj.availableQuantity = availability.availableQuantity;
+    obj.canOrder = availability.canOrder;
     return obj;
   });
 }
 
-async function createOrder(body, userId) {
+async function createOrder(body, userId, user) {
   const {
     customerName,
     customerPhone,
@@ -113,6 +118,19 @@ async function createOrder(body, userId) {
   }
 
   const isWeb = source === 'web';
+  let customer = null;
+  const checkoutToken = typeof body.checkoutToken === 'string' ? body.checkoutToken.trim() : '';
+  if (isWeb) {
+    const Customer = require('../models/Customer');
+    const owners = [{ account: userId }];
+    if (user?.customer) owners.push({ _id: user.customer });
+    customer = await Customer.findOne({ $or: owners, isActive: true });
+    if (!customer) throw new ApiError(404, 'Không tìm thấy hồ sơ khách hàng.');
+    if (checkoutToken) {
+      const existing = await orderRepository.findOne({ checkoutToken, createdBy: userId });
+      if (existing) return { order: existing, message: 'Đơn hàng đã được ghi nhận.' };
+    }
+  }
 
   // 2. Bắt buộc chọn bàn và phải là số không âm (cho đơn tạo tại quầy)
   let tableNum = '';
@@ -161,6 +179,11 @@ async function createOrder(body, userId) {
     }
 
     const quantity = Number(item.quantity) || 1;
+    if (isWeb) {
+      const { withAvailability } = require('./productAvailability');
+      const [availability] = await withAvailability([product], orderType || 'delivery');
+      if (quantity > availability.availableQuantity) throw new ApiError(409, `Món ${product.name} chỉ còn tối đa ${availability.availableQuantity} phần.`);
+    }
     const lineTotal = quantity * product.price;
     calculatedTotal += lineTotal;
 
@@ -204,6 +227,8 @@ async function createOrder(body, userId) {
   });
 
   if (isWeb) {
+    order.customer = customer._id;
+    if (checkoutToken) order.checkoutToken = checkoutToken;
     order.payment = {
       method: paymentMethod,
       status: 'unpaid',
@@ -231,6 +256,12 @@ async function createOrder(body, userId) {
     await order.validate();
     // Kiểm tra nguyên liệu trong kho: nếu thiếu thì báo chỉ còn bao nhiêu suất
     await checkOrderStockSufficiency(order, session);
+    if (isWeb) {
+      order.inventoryDeductedAt = null;
+      await deductIngredientsForOrder(order, userId, { session, requireRecipes: true });
+      order.inventoryDeductedAt = new Date();
+      order.inventoryDeductedBy = userId;
+    }
     await orderRepository.save(order, { session });
   });
 

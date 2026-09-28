@@ -19,7 +19,6 @@
         .auth-container::-webkit-scrollbar { width: 6px; }
         .auth-container::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
     </style>
-    <script src="/assets/js/admin-return.js" defer></script>
 </head>
 <body>
     <div class="auth-container">
@@ -34,8 +33,12 @@
                 <input type="text" id="reg-name" placeholder="Ví dụ: Nguyễn Văn A" required>
             </div>
             <div class="form-group">
-                <label>Tên đăng nhập (hoặc Số điện thoại) *</label>
+                <label>Tên đăng nhập *</label>
                 <input type="text" id="reg-username" placeholder="Nhập tài khoản viết liền không dấu" required>
+            </div>
+            <div class="form-group">
+                <label>Số điện thoại</label>
+                <input type="tel" id="reg-phone" placeholder="Ví dụ: 0912345678" maxlength="20" autocomplete="tel">
             </div>
             <div class="form-group">
                 <label>Mật khẩu *</label>
@@ -70,13 +73,23 @@
         <p class="link-text">Đã có tài khoản? <a href="/admin/login.html">Đăng nhập tại đây</a></p>
     </div>
 
+    <script src="account-validation.js"></script>
+    <p id="register-status" role="status" aria-live="polite"></p>
     <script>
+        let registering = false;
         document.getElementById('registerForm').addEventListener('submit', async (e) => {
             e.preventDefault(); 
+            if (registering) return;
+            registering = true;
+            const button = e.target.querySelector('button[type="submit"]');
+            button.disabled = true;
+            const status = document.getElementById('register-status');
+            status.textContent = 'Đang đăng ký...';
 
             const displayName = document.getElementById('reg-name').value;
             const username = document.getElementById('reg-username').value;
             const password = document.getElementById('reg-password').value;
+            const phone = document.getElementById('reg-phone').value;
             const email = document.getElementById('reg-email').value;
             const address = document.getElementById('reg-address').value;
             const gender = document.getElementById('reg-gender').value;
@@ -86,6 +99,7 @@
                 displayName: displayName,
                 username: username,
                 password: password,
+                phone: phone,
                 email: email,
                 address: address,
                 gender: gender,
@@ -93,7 +107,7 @@
             };
 
             try {
-                const response = await fetch('http://localhost:3000/api/v1/auth/register', {
+                const response = await fetch('/api/v1/auth/register', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
@@ -102,14 +116,17 @@
                 const result = await response.json();
 
                 if (response.ok) {
-                    alert("Đăng ký thành công! Hãy đăng nhập để tiếp tục.");
+                    status.textContent = 'Đăng ký thành công! Đang chuyển đến trang đăng nhập...';
                     window.location.href = "/admin/login.html"; 
                 } else {
-                    alert("Lỗi: " + (result.message || "Đăng ký thất bại!"));
+                    status.textContent = result.message || 'Đăng ký thất bại!';
                 }
             } catch (error) {
                 console.error(error);
-                alert("Không thể kết nối tới Server!");
+                status.textContent = 'Không thể kết nối tới server. Vui lòng thử lại.';
+            } finally {
+                registering = false;
+                button.disabled = false;
             }
         });
     </script>

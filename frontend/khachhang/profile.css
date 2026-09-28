@@ -1,0 +1,13 @@
+#profile-dialog { margin: auto; border: 0; border-radius: 16px; padding: 28px; width: min(540px, 94vw); max-height: 90vh; overflow-y: auto; color: #333; }
+#profile-dialog::backdrop { background: #0008; }
+#profile-dialog h2 { color: #e21b22; margin-bottom: 10px; }
+#profile-dialog p { margin-bottom: 16px; line-height: 1.5; }
+#profile-fields { border: 0; display: grid; gap: 14px; }
+#profile-fields label { display: grid; gap: 6px; font-weight: bold; }
+#profile-fields input, #profile-fields textarea, #profile-fields select { width: 100%; border: 1px solid #bbb; border-radius: 7px; padding: 10px; font: inherit; font-weight: normal; }
+.profile-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 22px; }
+.profile-actions button, #profile-open { padding: 10px 14px; border: 0; border-radius: 7px; cursor: pointer; font: inherit; }
+#profile-save { background: #e21b22; color: white; }
+#profile-open { background: white; color: #b9151c; }
+#profile-dialog button:disabled { opacity: .55; cursor: wait; }
+@media (max-width: 650px) { .header-content, .header-right, .auth-menu { flex-wrap: wrap; gap: 12px; } }

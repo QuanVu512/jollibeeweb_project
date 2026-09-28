@@ -1,12 +1,13 @@
 const banhangService = require('../services/banhangService');
 
-async function getProducts(_req, res) {
-  const items = await banhangService.getProducts();
+async function getProducts(req, res) {
+  const items = await banhangService.getProducts(req.user?.role === 'customer' || !req.user ? 'delivery' : 'dine_in');
   res.json({ success: true, data: { items } });
 }
 
 async function createOrder(req, res) {
-  const result = await banhangService.createOrder(req.body, req.user ? req.user._id : null);
+  const body = req.user?.role === 'customer' ? { ...req.body, source: 'web', orderType: 'delivery', tableNumber: '', shippingFee: 0, discount: 0 } : req.body;
+  const result = await banhangService.createOrder(body, req.user ? req.user._id : null, req.user);
   res.status(201).json({
     success: true,
     message: result.message,
