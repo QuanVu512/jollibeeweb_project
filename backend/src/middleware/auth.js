@@ -1,6 +1,5 @@
-const jwt = require('jsonwebtoken');
 const { config } = require('../config/env');
-const User = require('../models/User');
+const authService = require('../services/authService');
 const ApiError = require('../utils/ApiError');
 const asyncHandler = require('../utils/asyncHandler');
 
@@ -14,26 +13,7 @@ const authenticate = asyncHandler(async (req, _res, next) => {
     throw new ApiError(401, 'Bạn cần đăng nhập để tiếp tục.');
   }
 
-  let payload;
-  try {
-    payload = jwt.verify(token, config.jwtSecret, {
-      issuer: 'jollibee-admin-api',
-      audience: 'jollibee-admin'
-    });
-  } catch (_error) {
-    throw new ApiError(401, 'Phiên đăng nhập không hợp lệ hoặc đã hết hạn.');
-  }
-
-  const user = await User.findById(payload.sub)
-    .select('+tokenVersion username role displayName isActive employee revokedAt');
-  if (!user || !user.isActive) {
-    throw new ApiError(401, 'Tài khoản không tồn tại hoặc đã bị khóa.');
-  }
-  if (payload.version !== (user.tokenVersion || 0)) {
-    throw new ApiError(401, 'Phiên đăng nhập đã bị thu hồi. Vui lòng đăng nhập lại.');
-  }
-
-  req.user = user;
+  req.user = await authService.authenticateToken(token);
   next();
 });
 
@@ -46,4 +26,22 @@ function authorize(...roles) {
   };
 }
 
-module.exports = { authenticate, authorize };
+async function resolveUserForLogout(req, _res, next) {
+  const token = req.cookies[config.cookieName]
+    || (req.headers.authorization?.startsWith('Bearer ')
+      ? req.headers.authorization.slice(7)
+      : null);
+
+  if (!token) {
+    return next();
+  }
+
+  const user = await authService.resolveLogoutUser(token);
+  if (user) {
+    req.user = user;
+  }
+
+  return next();
+}
+
+module.exports = { authenticate, authorize, resolveUserForLogout };

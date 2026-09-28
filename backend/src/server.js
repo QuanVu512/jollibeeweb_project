@@ -1,14 +1,16 @@
-const http = require('node:http');
-const app = require('./app');
-const { config, validateEnvironment } = require('./config/env');
-const { connectDatabase, disconnectDatabase } = require('./config/database');
-const { initializeDatabase } = require('./services/databaseBootstrap');
+const http = require("node:http");
+const app = require("./app");
+const { config, validateEnvironment } = require("./config/env");
+const { connectDatabase, disconnectDatabase } = require("./config/database");
+const { initializeDatabase } = require("./services/databaseBootstrap");
 
 async function start() {
   validateEnvironment();
   await connectDatabase();
   const database = await initializeDatabase();
-  console.log(`Đã kiểm tra ${database.collections.length} collection và ${database.roles.length} vai trò hệ thống.`);
+  console.log(
+    `Đã kiểm tra ${database.collections.length} collection và ${database.roles.length} vai trò hệ thống.`,
+  );
 
   const server = http.createServer(app);
   server.listen(config.port, () => {
@@ -23,11 +25,12 @@ async function start() {
     });
   }
 
-  process.on('SIGINT', () => shutdown('SIGINT'));
-  process.on('SIGTERM', () => shutdown('SIGTERM'));
+  process.on("SIGINT", () => shutdown("SIGINT"));
+  process.on("SIGTERM", () => shutdown("SIGTERM"));
 }
 
 start().catch((error) => {
-  console.error('Không thể khởi động máy chủ:', error.message);
-  process.exit(1);
+  console.error("=== BẮT ĐƯỢC LỖI CRASH Ở ĐÂY ===");
+  console.error(error); // In chi tiết lỗi bao gồm cả dòng bị lỗi
+  // process.exit(1); <--- Comment dòng này lại để Render giữ tiến trình, không thoát sớm
 });

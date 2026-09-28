@@ -3,6 +3,9 @@ const { validateEnvironment } = require('../config/env');
 const { ROLES } = require('../constants/roles');
 const User = require('../models/User');
 
+const USERNAME_PATTERN = /^(?=.*[A-Za-z])[A-Za-z0-9]{6,30}$/;
+const PASSWORD_PATTERN = /^[\x21-\x7E]{8,30}$/;
+
 async function seedAdmin() {
   validateEnvironment();
   const username = process.env.ADMIN_USERNAME?.trim().toLowerCase();
@@ -12,8 +15,11 @@ async function seedAdmin() {
   if (!username || !password) {
     throw new Error('Cần khai báo ADMIN_USERNAME và ADMIN_PASSWORD trong file .env.');
   }
-  if (password.length < 8) {
-    throw new Error('ADMIN_PASSWORD phải có ít nhất 8 ký tự.');
+  if (!USERNAME_PATTERN.test(username)) {
+    throw new Error('ADMIN_USERNAME phải dài từ 6 đến 30 ký tự, chỉ gồm chữ không dấu và số, đồng thời phải có ít nhất một chữ cái.');
+  }
+  if (!PASSWORD_PATTERN.test(password)) {
+    throw new Error('ADMIN_PASSWORD phải dài từ 8 đến 30 ký tự, không chứa dấu tiếng Việt hoặc khoảng trắng.');
   }
 
   await connectDatabase();

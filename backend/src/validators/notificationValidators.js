@@ -1,3 +1,4 @@
+// API thông báo được giữ lại cho tương lai nhưng hiện chưa được giao diện quản trị sử dụng.
 const ApiError = require('../utils/ApiError');
 
 const NOTIFICATION_AUDIENCES = Object.freeze(['all_customers', 'active_customers']);

@@ -9,17 +9,20 @@ const router = express.Router();
 const cashierOrAdmin = authorize(ROLES.CASHIER, ROLES.ADMIN);
 const anyStaff = authorize(ROLES.CASHIER, ROLES.KITCHEN, ROLES.ADMIN);
 
-// Thu ngân (Cashier)
+// Thu ngân (Cashier) & Bếp (Kitchen)
 router.get("/products", cashierOrAdmin, asyncHandler(controller.getProducts));
 router.post("/orders", cashierOrAdmin, asyncHandler(controller.createOrder));
+router.get("/orders", cashierOrAdmin, asyncHandler(controller.getOrders));
 router.get("/orders/pending", cashierOrAdmin, asyncHandler(controller.getPendingOrders));
+router.get("/orders/preparing", anyStaff, asyncHandler(controller.getPreparingOrders));
+router.get("/orders/:id", cashierOrAdmin, asyncHandler(controller.getOrderDetails));
+router.put("/orders/:id", cashierOrAdmin, asyncHandler(controller.updateOrder));
 router.patch("/orders/:id/accept", cashierOrAdmin, asyncHandler(controller.acceptOrder));
 router.patch("/orders/:id/cancel", cashierOrAdmin, asyncHandler(controller.cancelOrder));
-
-// Bếp (Kitchen) / Thu ngân cũng có thể xem
-router.get("/orders/preparing", anyStaff, asyncHandler(controller.getPreparingOrders));
-router.patch("/orders/:id/serve", cashierOrAdmin, asyncHandler(controller.serveOrder));
-router.patch("/orders/:id/ready", cashierOrAdmin, asyncHandler(controller.readyOrder));
+router.patch("/orders/:id/serve", anyStaff, asyncHandler(controller.serveOrder));
+router.patch("/orders/:id/ready", anyStaff, asyncHandler(controller.readyOrder));
+router.post("/orders/:id/invoice", cashierOrAdmin, asyncHandler(controller.printInvoice));
+router.post("/verify-admin", cashierOrAdmin, asyncHandler(controller.verifyAdmin));
 
 // Tài khoản chung - Đã gỡ bỏ tính năng sửa hồ sơ/đổi mật khẩu của phân hệ bán hàng
 

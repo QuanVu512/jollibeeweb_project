@@ -14,7 +14,7 @@ MongoDB gọi “bảng” là **collection**. Hệ thống hiện có 18 collec
 | `products` | `productCode`, `name`, `category`, `categoryCode`, `price`, `costPrice`, `stock`, `unit`, `reorderLevel`, `image`, `isActive` | Doanh số món, lợi nhuận, tồn kho thấp và giá trị tồn |
 | `ingredients` | `code`, `name`, `supplierName`, `baseUnit`, `stockQuantity`, `packaging[]`, `isActive` | Tồn nguyên liệu theo đơn vị cơ sở, nhà cung cấp và quy đổi nhập kho/bán lẻ |
 | `purchasematerials` | `code`, `name`, `ingredient`, `ingredientCode`, `orderUnit`, `orderUnitLabel`, `stockUnit`, `stockQuantityPerOrderUnit`, `supplierName`, `isActive` | Danh mục nguyên vật liệu đặt hàng theo đơn vị mua, quy đổi về nguyên liệu kiểm kho |
-| `recipes` | `recipeCode`, `productCode`, `name`, `ingredients[]`, `yieldQuantity`, `orderTypes`, `isActive` | Công thức trừ kho nguyên liệu theo từng món bán |
+| `recipes` | `recipeCode`, `productCode`, `name`, `ingredients[].quantity`, `ingredients[].unit`, `ingredients[].quantityBase`, `yieldQuantity`, `orderTypes`, `isActive` | Công thức trừ kho nguyên liệu theo từng món bán; định lượng nhập được chuẩn hóa về đơn vị tồn kho cơ sở |
 | `kitchensupplyorders` | `items[]`, `status`, `note`, `createdBy`, `confirmedBy`, `cancelledBy`, `createdAt` | Lưu lịch sử đặt hàng nguyên vật liệu của bếp nếu dùng luồng đặt hàng |
 | `carts` | `customer`, `items[]`, `updatedAt` | Giỏ hàng đang lưu và sản phẩm được quan tâm |
 | `orders` | mã đơn, khách hàng, thời gian, loại/nguồn đơn, tổng tiền, thanh toán, nhân viên xử lý, trạng thái và `items[]` | Collection chính cho doanh thu và hiệu suất vận hành |
@@ -27,7 +27,17 @@ MongoDB gọi “bảng” là **collection**. Hệ thống hiện có 18 collec
 
 ## Quy chuẩn đơn vị nguyên liệu
 
-`ingredients.packaging[].unit` dùng thống nhất 4 mã: `case` = thùng, `bag` = túi lớn, `pack` = túi nilon chứa đồ nhỏ, `pcs` = cái. `baseUnit` vẫn có thể là đơn vị kiểm kho như `kg` hoặc `gram` khi nguyên liệu cần cân đo trực tiếp.
+`ingredients.packaging[].unit` lưu cả đơn vị đóng gói và đơn vị nghiệp vụ. Các mã đóng gói gồm `case` = thùng, `bag` = túi lớn, `pack` = túi nilon chứa đồ nhỏ, `pcs` = cái/miếng. Các mã nghiệp vụ bổ sung gồm `spoon` = muỗng, `tbsp` = muỗng lớn, `gram` = gram, `serving` = suất cơm và `cup` = cốc. `baseQuantity` luôn biểu diễn lượng tương ứng theo `baseUnit` của nguyên liệu.
+
+| Nguyên liệu | Đơn vị nghiệp vụ | Quy đổi về đơn vị cơ sở |
+|---|---|---|
+| Gà miếng | `pcs` | `1 pcs = 1/8 pack = 1/80 case` |
+| Muối | `spoon` | `1 spoon = 1/50 bag` |
+| Sốt mì | `tbsp` | `1 tbsp = 1/20 pack` |
+| Gạo | `gram`, `serving` | `1 gram = 0.001 kg`; `1 serving = 0.1 kg` |
+| Xà lách | `pcs` | `1 pcs = 50 gram` |
+| Bánh xoài đào | `pcs` | `1 pcs = 1/8 pack` |
+| Pepsi | `cup` | `1 cup = 1/50 case` |
 
 `purchasematerials` là bảng dùng cho đặt hàng nhà cung cấp. Mỗi dòng trỏ về một `ingredients` tương ứng và lưu `stockQuantityPerOrderUnit` để biết 1 đơn vị đặt hàng nhập vào kho thành bao nhiêu đơn vị kiểm kho. Ví dụ gạo đặt theo `bag` và vào kho thành `20 kg`; cà chua đặt theo `pcs` và vào kho thành `1 pcs`.
 
@@ -74,7 +84,7 @@ Các thuộc tính quan trọng khác của `orders`:
 
 | Vai trò | Key | Phạm vi chính |
 |---|---|---|
-| Quản trị viên | `admin` | Nhân viên, tài khoản, báo cáo |
+| Quản trị viên | `admin` | Nhân viên, tài khoản, sản phẩm, báo cáo |
 | Thu ngân | `cashier` | Nhận/tạo/hủy đơn, khách hàng, thanh toán |
 | Nhân viên bếp | `kitchen` | Chế biến, món ăn, kho |
 | Nhân viên giao hàng | `shipper` | Nhận và giao đơn |

@@ -4,8 +4,8 @@ const Counter = require('./Counter');
 const productSchema = new mongoose.Schema(
   {
     productCode: { type: String, required: true, unique: true, trim: true, uppercase: true },
-    name: { type: String, required: true, trim: true, maxlength: 160 },
-    price: { type: Number, required: true, min: 0 },
+    name: { type: String, required: true, trim: true, maxlength: 70 },
+    price: { type: Number, required: true, min: 1 },
     costPrice: { type: Number, default: 0, min: 0 },
     stock: { type: Number, default: 0, min: 0 },
     unit: { type: String, trim: true, default: 'phần', maxlength: 30 },
