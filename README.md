@@ -11,6 +11,7 @@ Dự án sử dụng frontend HTML/CSS/JavaScript thuần và REST API xây dự
 | Phân hệ | Chức năng |
 |---|---|
 | Quản trị viên | Quản lý nhân viên, tài khoản, sản phẩm và báo cáo doanh thu |
+| Chấm công | Phân ca theo ngày, Kiosk IN/OUT, duyệt OT, điều chỉnh công và lịch sử người ghi nhận |
 | Thu ngân | Tạo đơn tại quầy, tiếp nhận và xử lý đơn hàng |
 | Bếp | Theo dõi món cần chế biến, quản lý nguyên liệu và yêu cầu nhập hàng |
 | Giao hàng | Nhận đơn, cập nhật tiến trình và kết quả giao hàng |
@@ -26,6 +27,7 @@ Dự án sử dụng frontend HTML/CSS/JavaScript thuần và REST API xây dự
 | Xác thực | JWT trong cookie `HttpOnly`, bcrypt |
 | Bảo mật và logging | Helmet, CORS, express-rate-limit, Morgan |
 | Xuất báo cáo | ExcelJS |
+| Xuất hóa đơn chấm công | docx |
 | Hỗ trợ chuyển đổi dữ liệu cũ | MySQL2 |
 
 ## Kiến trúc hệ thống
@@ -57,7 +59,7 @@ Chi tiết nguyên tắc phân lớp được trình bày tại [docs/ARCHITECTU
 ```text
 jollibee_project/
 ├── frontend/
-│   ├── admin/                     # Giao diện quản trị
+│   ├── admin/                     # Giao diện quản trị, phân ca, chấm công & Kiosk
 │   ├── banhang/                   # Giao diện thu ngân
 │   ├── bep/                       # Giao diện bếp
 │   ├── khachhang/                 # Giao diện khách hàng
@@ -66,22 +68,23 @@ jollibee_project/
 ├── backend/
 │   ├── src/
 │   │   ├── config/                # Môi trường và kết nối database
-│   │   ├── constants/             # Hằng số nghiệp vụ
+│   │   ├── constants/             # Hằng số nghiệp vụ (vai trò, trạng thái, chấm công)
 │   │   ├── controllers/           # Điều phối request/response
 │   │   ├── middleware/            # Xác thực, phân quyền và xử lý lỗi
 │   │   ├── models/                # Mongoose schema
 │   │   ├── repositories/          # Truy cập dữ liệu
 │   │   ├── routes/                # Khai báo REST API
-│   │   ├── services/              # Xử lý nghiệp vụ
+│   │   ├── services/              # Xử lý nghiệp vụ (sản phẩm, ca làm, chấm công, bill Word...)
 │   │   ├── validators/            # Kiểm tra dữ liệu đầu vào
 │   │   ├── scripts/               # Seed và chuyển đổi dữ liệu
-│   │   ├── utils/                 # Tiện ích dùng chung
+│   │   ├── utils/                 # Tiện ích dùng chung (thời gian ca, sinh bill Word...)
 │   │   ├── app.js                 # Cấu hình Express
 │   │   └── server.js              # Kết nối database và khởi động server
-│   ├── test/                       # Kiểm thử backend
+│   ├── test/                      # Kiểm thử backend (quản trị, chấm công, bill Word)
+│   ├── tools/                     # Công cụ phát triển & demo chấm công độc lập
 │   └── package.json
-├── docs/                           # Tài liệu kỹ thuật
-└── legacy/php-app/                 # Bản PHP/MySQL cũ dùng để đối chiếu
+├── docs/                          # Tài liệu kỹ thuật
+└── legacy/php-app/                # Bản PHP/MySQL cũ dùng để đối chiếu
 ```
 
 ## Yêu cầu hệ thống
@@ -157,7 +160,11 @@ Server mặc định chạy tại `http://localhost:3000`.
 | Khu vực | URL |
 |---|---|
 | Khách hàng | `http://localhost:3000/` |
-| Quản trị viên | `http://localhost:3000/admin/login.html` |
+| Quản trị viên (Đăng nhập) | `http://localhost:3000/admin/login.html` |
+| Quản trị viên (Tổng quan) | `http://localhost:3000/admin/` |
+| Phân ca làm việc | `http://localhost:3000/admin/shifts.html` |
+| Bảng chấm công & lịch sử | `http://localhost:3000/admin/attendance.html` |
+| Kiosk chấm công | `http://localhost:3000/admin/kiosk.html` |
 | Thu ngân | `http://localhost:3000/banhang/` |
 | Bếp | `http://localhost:3000/bep/kitchen-login.html` |
 | Giao hàng | `http://localhost:3000/shipper/` |
@@ -171,8 +178,12 @@ Tất cả API sử dụng tiền tố `/api/v1`.
 |---|---|
 | `/auth` | Đăng ký, đăng nhập, đăng xuất và phiên người dùng |
 | `/admin` | Nghiệp vụ tổng hợp dành cho quản trị viên |
+| `/admin/shift-templates` | Quản lý ca làm việc mẫu |
+| `/admin/employee-shifts` | Phân ca làm việc theo ngày cho nhân viên |
+| `/admin/attendance` | Chấm công Kiosk (`/scan`), duyệt ngoại lệ (`/exceptions`), xuất bill Word (`/receipts/:requestId`), điều chỉnh và lịch sử |
 | `/employees`, `/accounts` | Nhân viên và tài khoản |
-| `/reports`, `/notifications` | Báo cáo và API thông báo dự phòng (chưa có giao diện admin) |
+| `/reports` | Báo cáo Doanh thu / Giao dịch / Khách hàng, popup chi tiết và xuất Excel; xem [hướng dẫn](docs/REPORTS.md) |
+| `/notifications` | API thông báo dự phòng (chưa có giao diện admin) |
 | `/banhang` | Nghiệp vụ thu ngân |
 | `/kitchen` | Chế biến, kho và yêu cầu nguyên liệu |
 | `/shipper` | Nghiệp vụ giao hàng |
@@ -191,6 +202,11 @@ Chạy các lệnh sau trong thư mục `backend/`:
 | `npm run dev` | Chạy server với chế độ theo dõi thay đổi |
 | `npm start` | Chạy server thông thường |
 | `npm test` | Chạy bộ kiểm thử Node.js |
+| `npm run test:attendance` | Chạy bộ kiểm thử phân ca, chấm công Kiosk và bill Word |
+| `npm run demo:attendance` | Chạy demo Kiosk chấm công độc lập với replica set tạm thời |
+| `npm run test:reports` | Chạy bộ kiểm thử quy tắc và tích hợp báo cáo doanh thu, giao dịch, khách hàng |
+| `npm run test:reports:ui` | Kiểm tra giao diện và chụp ảnh xác minh báo cáo qua Chrome/Playwright |
+| `npm run demo:reports` | Chạy demo báo cáo độc lập với dữ liệu mẫu và replica set tạm thời |
 | `npm run init:database` | Khởi tạo collection, index, vai trò và dữ liệu nền |
 | `npm run seed:admin` | Tạo hoặc đặt lại tài khoản quản trị |
 | `npm run seed:recipes` | Khởi tạo công thức và dữ liệu kho |
@@ -206,6 +222,9 @@ Chạy các lệnh sau trong thư mục `backend/`:
 | [Vai trò và database](docs/ROLES_AND_DATABASE.md) | Ma trận vai trò, collection và trạng thái đơn hàng |
 | [Database schema](docs/DATABASE_SCHEMA.md) | Cấu trúc dữ liệu MongoDB |
 | [Backend quản trị](docs/ADMIN_BACKEND.md) | Endpoint và nghiệp vụ quản trị |
+| [Báo cáo Doanh thu, Giao dịch & Khách hàng](docs/REPORTS.md) | Thống kê doanh thu, chuỗi thời gian, phân tích khách hàng và xuất Excel |
+| [Phân ca và chấm công Kiosk](docs/ATTENDANCE.md) | Quy tắc, bill Word IN/OUT, API, transaction, kiểm thử và demo riêng |
+| [Biên bản kiểm chứng chấm công](docs/ATTENDANCE_VERIFICATION.md) | Kết quả kiểm chứng tự động, kiểm thử Kiosk, âm báo và bill Word |
 
 ## Quy ước phát triển
 

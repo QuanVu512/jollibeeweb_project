@@ -37,11 +37,14 @@ npm install
 
 Mỗi thành viên mở `.env` và điền `MONGODB_URI`, `JWT_SECRET`. File `.env` đã được bỏ qua bởi Git và không được gửi lên kho mã nguồn.
 
-Người phụ trách admin chạy một lần:
+Người phụ trách admin chạy một lần để khởi tạo 21 collection, index (gồm các index phục vụ báo cáo và partial index độc nhất cho chấm công) và tài khoản quản trị:
 
 ```powershell
+npm run init:database
 npm run seed:admin
 ```
+
+> **Lưu ý về Transaction:** Phân hệ chấm công và phân ca sử dụng MongoDB multi-document transactions để đảm bảo an toàn dữ liệu và chống xung đột quét mã. MongoDB Atlas (kể cả Free cluster) mặc định là replica set nên hỗ trợ đầy đủ transactions mà không cần cấu hình thêm.
 
 Các thành viên chạy ứng dụng:
 

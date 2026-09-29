@@ -37,7 +37,7 @@ Route -> Middleware -> Controller -> Service -> Repository -> Model -> MongoDB
 5. Chỉ đặt schema và hành vi của entity trong `models/`.
 6. Đặt mọi file giao diện và tài nguyên trình duyệt trong `frontend/`.
 
-Các script seed/migrate trong `backend/src/scripts/` là tác vụ hạ tầng chạy độc lập, không thuộc request flow HTTP nên có thể gọi model trực tiếp.
+Các script seed/migrate trong `backend/src/scripts/` và các công cụ hỗ trợ/demo trong `backend/tools/` là tác vụ hạ tầng chạy độc lập, không thuộc request flow HTTP nên có thể gọi model trực tiếp. Hệ thống hỗ trợ MongoDB multi-document transactions ở tầng Service để đảm bảo tính nguyên tử giữa các repository.
 
 ## Tài liệu tham chiếu
 

@@ -1,6 +1,6 @@
 # Thiết kế dữ liệu MongoDB Atlas
 
-MongoDB gọi “bảng” là **collection**. Hệ thống hiện có 18 collection; khi backend khởi động, các collection và index cần thiết sẽ được tự tạo trên database `jollibee`.
+MongoDB gọi “bảng” là **collection**. Các collection và index cần thiết được khởi tạo bằng `npm run init:database`; toàn hệ thống có **21 collection** sau khi bổ sung ba collection ca mẫu, lịch ca và phiên công.
 
 ## Danh sách collection và thuộc tính quan trọng
 
@@ -22,8 +22,15 @@ MongoDB gọi “bảng” là **collection**. Hệ thống hiện có 18 collec
 | `inventorytransactions` | `product`, `type`, `quantityChange`, `stockBefore`, `stockAfter`, `unitCost`, `totalCost`, `supplier`, `supplierName`, `referenceCode`, `order`, `createdBy`, `createdAt` | Nhập/xuất/điều chỉnh kho, chi phí nhập và đối chiếu tồn |
 | `paymenttransactions` | `order`, `type`, `method`, `amount`, `status`, `transactionReference`, `processedBy`, `processedAt` | Tiền thu/hoàn, tỷ lệ giao dịch thành công và phương thức thanh toán |
 | `notifications` | `title`, `message`, `audience`, `priority`, `status`, `recipientCount`, `createdBy`, `sentAt` | Lưu thông báo admin gửi cho khách hàng để giao diện khách hàng hiển thị sau này |
-| `auditlogs` | `actor`, `action`, `entityType`, `entityId`, `before`, `after`, `ipAddress`, `createdAt` | Truy vết ai thay đổi dữ liệu và thời điểm thay đổi |
+| `auditlogs` | `actor`, `action`, `entityType`, `entityId`, `before`, `after`, `reason`, `requestId`, `fingerprint`, `response`, `ipAddress`, `createdAt` | Truy vết ai thay đổi dữ liệu, thời điểm, lý do, fingerprint và kết quả idempotent retry |
 | `counters` | `_id`, `sequence` | Sinh mã liên tục `NV`, `KH`, `MON`, `NCC`, `DH` |
+| `shifttemplates` | `name`, `startTime`, `endTime`, `isActive` | Ca mẫu trong cùng ngày |
+| `employeeshifts` | `employee`, `template`, `workDate`, `name`, `startAt`, `endAt`, `graceMinutes`, `isActive`, `assignedBy` | Lịch phân theo ngày, giữ bản sao giờ ca |
+| `attendancesessions` | `employee`, `employeeCode`, `employeeName`, `employeeShift`, `workDate`, `kind`, `state`, `schedule`, `checkInAt`, `checkOutAt`, `checkInRecordedBy`, `checkOutRecordedBy`, đánh giá vào/ra, `approval`, `revision`, thông tin hủy | Công thực tế và người ghi nhận từng đầu giờ |
+
+Chấm công thêm `employees.attendanceRevision` (khóa cập nhật) và `lastAttendanceAt` (cooldown), ẩn khỏi JSON hồ sơ. `auditlogs` thêm lý do, `requestId`, fingerprint và response để truy vết, retry an toàn. Index bảo đảm một phiên OPEN/nhân viên, một phiên sống/lịch ca và UUID duy nhất theo actor. Chi tiết tại [Phân ca và chấm công](ATTENDANCE.md).
+
+`users.role` cho phép `null` và mặc định là `null` với tài khoản mới chưa cấp quyền. Tài khoản này vẫn liên kết `employee` để chấm công, nhưng không được đăng nhập hoặc dùng phiên đã cấp trước đó. Thay đổi vai trò tăng `users.tokenVersion` để thu hồi phiên cũ; đặt role về null không xóa hồ sơ, mã nhân viên hoặc liên kết tài khoản.
 
 ## Quy chuẩn đơn vị nguyên liệu
 
@@ -68,17 +75,32 @@ Các thuộc tính quan trọng khác của `orders`:
 - `statusHistory[]`: lịch sử chuyển trạng thái, người chuyển và thời điểm.
 - `cancellationReason`, `failureReason`: thống kê nguyên nhân hủy/giao thất bại.
 
+Index phục vụ báo cáo: `orders` thiết lập chỉ mục kép `{ status: 1, 'payment.status': 1, completedAt: -1 }` kết hợp với `{ status: 1, orderedAt: -1 }` để tối ưu hóa truy vấn chuỗi thời gian hoàn thành theo múi giờ Việt Nam.
+
 ## Những báo cáo có thể thực hiện
 
-- Doanh thu, số đơn, giá trị đơn trung bình theo ngày/tháng.
-- Giá vốn và lợi nhuận gộp toàn cửa hàng hoặc theo từng món/danh mục.
-- Món bán chạy/chậm; doanh thu và số lượng bán của từng món.
-- Doanh thu theo ăn tại chỗ, mang đi, giao hàng; theo web/quầy/điện thoại.
-- Tỷ lệ hoàn thành, hủy, giao thất bại và nguyên nhân.
-- Thời gian từ đặt đến hoàn thành; hiệu suất thu ngân, bếp và shipper.
-- Tồn hiện tại, món dưới ngưỡng nhập lại, lịch sử nhập/xuất và giá trị nhập kho.
-- Phương thức thanh toán, số giao dịch thành công/thất bại, số tiền hoàn.
-- Khách mới, khách quay lại, giá trị mua của khách và điểm tích lũy.
+Hệ thống cung cấp ba phân hệ báo cáo quản trị chuyên sâu tại `/admin/report.html`:
+
+1. **Báo cáo Doanh thu**:
+   - Thống kê doanh thu thực tế, số đơn hoàn thành và giá trị đơn trung bình (AOV = doanh thu / số đơn).
+   - Chuỗi thời gian theo ngày, tuần (bắt đầu thứ Hai) hoặc tháng, tự động bù kỳ không có doanh thu bằng 0.
+   - So sánh tăng/giảm phần trăm với kỳ liền trước có cùng độ dài ngày.
+   - Biểu đồ và bảng xếp hạng Top 5 món ăn bán chạy nhất theo số lượng.
+   - Nhấp vào kỳ trên biểu đồ/bảng để mở popup danh sách đơn đóng góp doanh thu.
+
+2. **Báo cáo Giao dịch**:
+   - Đối soát toàn bộ đơn hoàn thành trong kỳ theo phương thức và trạng thái thanh toán (`paid`, `unpaid`, `refunded`).
+   - Phân trang, tìm kiếm theo mã đơn, tên hoặc số điện thoại khách hàng.
+   - Nhấp mã đơn mở popup chi tiết đơn hàng (chỉ đọc) với thông tin khách, chi tiết món, giảm giá và phí giao hàng.
+
+3. **Báo cáo Khách hàng**:
+   - Thống kê số lượng khách hàng định danh có phát sinh đơn và tổng chi tiêu của nhóm này.
+   - Tách riêng nhóm **Khách lẻ** (đơn không liên kết hồ sơ) để đối chiếu chính xác, không tính vào số khách định danh.
+   - Biểu đồ và bảng xếp hạng Top 5 khách hàng chi tiêu nhiều nhất.
+   - Nhấp vào khách hàng để mở popup danh sách các đơn hàng của khách trong kỳ.
+
+4. **Xuất báo cáo Excel đa dạng**:
+   - Hỗ trợ xuất các loại file `.xlsx`: `revenue` (tổng hợp kỳ), `orders` (chi tiết giao dịch), `customers` (danh sách khách hàng & khách lẻ) và `items` (chi tiết tiêu thụ món ăn). Chi tiết xem tại [Tài liệu báo cáo](REPORTS.md).
 
 ## Vai trò hiện có
 
