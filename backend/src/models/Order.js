@@ -80,6 +80,7 @@ const orderSchema = new mongoose.Schema(
 );
 
 orderSchema.index({ status: 1, orderedAt: -1 });
+orderSchema.index({ status: 1, 'payment.status': 1, completedAt: -1 });
 orderSchema.index({ assignedShipper: 1, status: 1 });
 orderSchema.index({ orderType: 1, orderedAt: -1 });
 orderSchema.index({ source: 1, orderedAt: -1 });

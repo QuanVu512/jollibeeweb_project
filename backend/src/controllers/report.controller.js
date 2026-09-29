@@ -12,4 +12,12 @@ async function exportReport(req, res) {
   res.send(Buffer.from(buffer));
 }
 
-module.exports = { summary, exportReport };
+async function transactions(req, res) {
+  res.json({ success: true, data: await reportService.transactions(req.query) });
+}
+
+async function customers(req, res) {
+  res.json({ success: true, data: await reportService.customers(req.query) });
+}
+
+module.exports = { summary, transactions, customers, exportReport };

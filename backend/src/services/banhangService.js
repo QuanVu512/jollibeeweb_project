@@ -358,7 +358,7 @@ async function getPosOrders(query = {}) {
 }
 
 async function getOrderDetails(id) {
-  const order = await orderRepository.findById(id);
+  const order = await orderRepository.findByIdWithDetails(id);
   if (!order) {
     throw new ApiError(404, 'Không tìm thấy đơn hàng.');
   }

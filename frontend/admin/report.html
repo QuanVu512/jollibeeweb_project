@@ -6,9 +6,11 @@
   <title>Báo cáo thống kê</title>
   <link rel="icon" href="/assets/logo.png">
   <link rel="stylesheet" href="/admin/assets/css/admin.css">
+  <link rel="stylesheet" href="/admin/assets/css/report.css">
   <script src="/assets/js/role-guard.js" defer></script>
   <script src="/admin/assets/js/api.js" defer></script>
   <script src="/admin/assets/js/common.js" defer></script>
+  <script src="/admin/assets/js/report-charts.js" defer></script>
   <script src="/admin/assets/js/report.js" defer></script>
 </head>
 <body data-required-role="admin">
@@ -34,61 +36,79 @@
     <main class="content">
       <div class="page-heading">
         <h1>Báo cáo thống kê</h1>
-        <p>Tổng hợp các đơn đã hoàn thành và xuất dữ liệu Excel.</p>
+        <p>Theo dõi doanh thu, đối soát giao dịch và hành vi mua hàng.</p>
       </div>
 
       <section class="card">
+        <div class="report-tabs" role="tablist" aria-label="Loại thống kê">
+          <button id="tab-revenue" class="report-tab" type="button" role="tab" aria-selected="true" aria-controls="report-results" data-tab="revenue">Doanh thu</button>
+          <button id="tab-orders" class="report-tab" type="button" role="tab" aria-selected="false" aria-controls="report-results" tabindex="-1" data-tab="orders">Giao dịch</button>
+          <button id="tab-customers" class="report-tab" type="button" role="tab" aria-selected="false" aria-controls="report-results" tabindex="-1" data-tab="customers">Khách hàng</button>
+        </div>
+        <div class="report-shortcuts" aria-label="Khoảng ngày nhanh">
+          <button class="btn btn-secondary" type="button" data-range="today">Hôm nay</button>
+          <button class="btn btn-secondary" type="button" data-range="week">7 ngày gần nhất</button>
+          <button class="btn btn-secondary" type="button" data-range="month">Tháng này</button>
+        </div>
         <form id="report-form" class="report-controls">
           <div class="form-group">
             <label for="from-date">Từ ngày</label>
-            <input id="from-date" name="from" type="date">
+            <input id="from-date" name="from" type="date" required>
           </div>
           <div class="form-group">
             <label for="to-date">Đến ngày</label>
-            <input id="to-date" name="to" type="date">
+            <input id="to-date" name="to" type="date" required>
           </div>
-          <div class="form-group">
-            <label for="report-type">Loại báo cáo Excel</label>
-            <select id="report-type" name="type">
-              <option value="orders">Danh sách đơn hàng</option>
-              <option value="revenue">Doanh thu</option>
-              <option value="items">Số lượng món tiêu thụ</option>
+          <div class="form-group" id="group-filter">
+            <label for="report-group">Nhóm theo</label>
+            <select id="report-group" name="groupBy">
+              <option value="day">Ngày</option>
+              <option value="week">Tuần</option>
+              <option value="month">Tháng</option>
             </select>
           </div>
+          <div class="form-group" id="search-filter" hidden>
+            <label for="report-search">Tìm kiếm</label>
+            <input id="report-search" name="search" type="search" maxlength="100" placeholder="Mã, tên hoặc số điện thoại">
+          </div>
           <div class="actions">
-            <button class="btn btn-secondary" type="submit">Xem thống kê</button>
+            <button id="report-submit" class="btn btn-secondary" type="submit">Xem thống kê</button>
             <button id="export-button" class="btn btn-primary" type="button">Xuất Excel</button>
           </div>
         </form>
       </section>
 
-      <section class="dashboard-cards" aria-live="polite">
-        <article class="metric-card green">
-          <div>
-            <h2>Tổng doanh thu</h2>
-            <div id="total-revenue" class="metric-value">0 ₫</div>
-            <div class="metric-note">Đơn giao thành công</div>
-          </div>
-          <div class="metric-icon" aria-hidden="true">💰</div>
-        </article>
-        <article class="metric-card blue">
-          <div>
-            <h2>Số đơn hoàn thành</h2>
-            <div id="completed-orders" class="metric-value">0</div>
-            <div class="metric-note">Đơn hàng</div>
-          </div>
-          <div class="metric-icon" aria-hidden="true">📦</div>
-        </article>
-        <article class="metric-card orange">
-          <div>
-            <h2>Món bán chạy nhất</h2>
-            <div id="top-item" class="metric-value">Chưa có dữ liệu</div>
-            <div id="top-item-note" class="metric-note">Đã bán: 0 phần</div>
-          </div>
-          <div class="metric-icon" aria-hidden="true">🍗</div>
-        </article>
+      <p id="report-status" role="status" aria-live="polite"></p>
+      <button id="report-retry" class="btn btn-secondary" type="button" hidden>Thử lại</button>
+      <section id="report-results" role="tabpanel" aria-labelledby="tab-revenue" hidden>
+        <p id="report-caption" class="report-caption"></p>
+        <div id="report-metrics" class="dashboard-cards report-metrics"></div>
+        <p id="report-comparison" class="report-comparison" hidden></p>
+        <div id="report-charts" class="report-chart-grid"></div>
+        <section class="card report-table-card">
+          <h2 id="report-table-title" class="card-title">Chi tiết thống kê</h2>
+          <p id="report-empty" hidden>Không có dữ liệu phù hợp. Hãy chọn lại bộ lọc.</p>
+          <div id="report-table" class="table-wrap"></div>
+          <p id="report-total" class="report-total"></p>
+          <div id="report-pagination" class="report-pagination"></div>
+        </section>
+        <section id="report-guest" class="card" hidden></section>
       </section>
     </main>
   </div>
+  <dialog id="report-list-dialog" class="report-dialog" aria-labelledby="report-list-title">
+    <header class="report-dialog-header"><h2 id="report-list-title">Danh sách đơn</h2><button class="btn btn-secondary" type="button" data-close="report-list-dialog">Đóng</button></header>
+    <p id="report-list-status" role="status"></p>
+    <button id="report-list-retry" class="btn btn-secondary" type="button" hidden>Thử lại</button>
+    <div id="report-list-table" class="table-wrap"></div>
+    <p id="report-list-total" class="report-total"></p>
+    <div id="report-list-pagination" class="report-pagination"></div>
+  </dialog>
+  <dialog id="report-order-dialog" class="report-dialog" aria-labelledby="report-order-title">
+    <header class="report-dialog-header"><h2 id="report-order-title">Chi tiết đơn hàng</h2><button class="btn btn-secondary" type="button" data-close="report-order-dialog">Đóng</button></header>
+    <p id="report-order-status" role="status"></p>
+    <button id="report-order-retry" class="btn btn-secondary" type="button" hidden>Thử lại</button>
+    <div id="report-order-content"></div>
+  </dialog>
 </body>
 </html>
