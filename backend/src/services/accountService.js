@@ -92,7 +92,8 @@ async function createAccount(body, context) {
 async function updateAccount(id, currentUserId, body, context) {
   if (!databaseRepository.isValidObjectId(id)) throw new ApiError(400, 'Mã tài khoản không hợp lệ.');
   const payload = validateAccountUpdate(body);
-  if (id === currentUserId.toString() && payload.role && payload.role !== ROLES.ADMIN) {
+  if (String(id).toLowerCase() === String(currentUserId).toLowerCase()
+    && payload.role !== undefined && payload.role !== ROLES.ADMIN) {
     throw new ApiError(400, 'Bạn không thể tự bỏ quyền quản trị của chính mình.');
   }
 
@@ -102,6 +103,9 @@ async function updateAccount(id, currentUserId, body, context) {
     if (!account || account.role === ROLES.CUSTOMER) throw new ApiError(404, 'Không tìm thấy tài khoản nhân viên.');
     if (account.revokedAt) throw new ApiError(409, 'Tài khoản này đã bị thu hồi.');
     const before = account.toObject();
+    if (payload.role !== undefined && payload.role !== account.role) {
+      account.tokenVersion = (account.tokenVersion || 0) + 1;
+    }
     account.set(payload);
     await userRepository.save(account, { session });
     await recordAudit(context, {

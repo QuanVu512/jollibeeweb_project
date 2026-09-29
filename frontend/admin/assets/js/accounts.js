@@ -6,6 +6,17 @@ document.addEventListener('DOMContentLoaded', async () => {
   const roleFilter = document.querySelector('#account-role-filter');
   const countLabel = document.querySelector('#account-count');
   const tableBody = document.querySelector('#account-table-body');
+  const roleDialog = document.querySelector('#account-role-dialog');
+  const roleForm = document.querySelector('#account-role-form');
+  const newRole = document.querySelector('#account-new-role');
+  const roleError = document.querySelector('#account-role-error');
+  const roleSubmit = document.querySelector('#account-role-submit');
+  const roleClose = document.querySelector('#account-role-close');
+  const confirmDialog = document.querySelector('#account-confirm-dialog');
+  const confirmTitle = document.querySelector('#account-confirm-title');
+  const confirmDescription = document.querySelector('#account-confirm-description');
+  const confirmSubmit = document.querySelector('#account-confirm-submit');
+  const confirmCancel = document.querySelector('#account-confirm-cancel');
   const {
     roleLabels,
     showToast,
@@ -18,6 +29,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   const usernamePattern = /^(?=.*[A-Za-z])[A-Za-z0-9]{6,30}$/;
   const passwordPattern = /^[\x21-\x7E]{8,30}$/;
   let searchTimer;
+  let currentUser;
+  let roleAccount;
+  let rolePending = false;
 
   function cell(text) {
     const element = document.createElement('td');
@@ -60,8 +74,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       const roleCell = document.createElement('td');
       const roleBadge = document.createElement('span');
-      roleBadge.className = `badge badge-${account.role}`;
-      roleBadge.textContent = roleLabels[account.role] || account.role;
+      roleBadge.className = `badge badge-${account.role || 'no-role'}`;
+      roleBadge.textContent = account.role ? roleLabels[account.role] || account.role : 'Chưa cấp quyền';
       roleCell.append(roleBadge);
       row.append(roleCell);
 
@@ -73,23 +87,51 @@ document.addEventListener('DOMContentLoaded', async () => {
       row.append(statusCell);
 
       const actionCell = document.createElement('td');
+      const menu = document.createElement('details');
+      menu.className = 'account-actions';
+      const toggle = document.createElement('summary');
+      toggle.textContent = '+';
+      toggle.setAttribute('aria-label', `Thao tác cho tài khoản ${account.username}`);
       const actions = document.createElement('div');
       actions.className = 'row-actions';
+
+      const roleButton = document.createElement('button');
+      roleButton.type = 'button';
+      roleButton.className = 'btn btn-secondary';
+      roleButton.textContent = account.role ? 'Sửa quyền' : 'Cấp quyền';
+      roleButton.addEventListener('click', () => { menu.open = false; openRoleDialog(account); });
+      actions.append(roleButton);
+      if (account.role) {
+        const removeRoleButton = document.createElement('button');
+        removeRoleButton.type = 'button';
+        removeRoleButton.className = 'btn btn-danger';
+        removeRoleButton.textContent = 'Xóa quyền';
+        removeRoleButton.addEventListener('click', () => {
+          menu.open = false; removeRole(account, removeRoleButton);
+        });
+        actions.append(removeRoleButton);
+      }
 
       const statusButton = document.createElement('button');
       statusButton.type = 'button';
       statusButton.className = `btn ${account.isActive ? 'btn-warning' : 'btn-secondary'}`;
       statusButton.textContent = account.isActive ? 'Khóa' : 'Mở khóa';
-      statusButton.addEventListener('click', () => updateStatus(account));
+      statusButton.addEventListener('click', () => { menu.open = false; updateStatus(account); });
 
       const revokeButton = document.createElement('button');
       revokeButton.type = 'button';
       revokeButton.className = 'btn btn-danger';
       revokeButton.textContent = 'Thu hồi';
-      revokeButton.addEventListener('click', () => revokeAccount(account));
+      revokeButton.addEventListener('click', () => { menu.open = false; revokeAccount(account); });
 
       actions.append(statusButton, revokeButton);
-      actionCell.append(actions);
+      menu.append(toggle, actions);
+      menu.addEventListener('toggle', () => {
+        if (menu.open) tableBody.querySelectorAll('.account-actions[open]').forEach(other => {
+          if (other !== menu) other.open = false;
+        });
+      });
+      actionCell.append(menu);
       row.append(actionCell);
       tableBody.append(row);
     });
@@ -151,17 +193,98 @@ document.addEventListener('DOMContentLoaded', async () => {
       showFieldError(form.elements.password, 'Mật khẩu không được chứa dấu tiếng Việt hoặc khoảng trắng.');
       valid = false;
     }
-    if (!form.elements.role.value) {
-      showFieldError(form.elements.role, 'Chọn vai trò cho tài khoản.');
-      valid = false;
-    }
     form.querySelector('.is-invalid')?.focus();
     return valid;
   }
 
+  function openRoleDialog(account) {
+    roleAccount = account;
+    roleForm.reset();
+    clearFieldErrors(roleForm);
+    roleError.hidden = true;
+    newRole.value = account.role || '';
+    document.querySelector('#account-role-title').textContent = account.role ? 'Sửa quyền' : 'Cấp quyền';
+    document.querySelector('#account-role-description').textContent = `${account.username} — ${account.employee?.fullName || account.displayName || 'Nhân viên'}`;
+    roleDialog.showModal();
+    newRole.focus();
+  }
+
+  function canChangeOwnRole(account, role) {
+    if (String(account._id) === String(currentUser?.id) && role !== 'admin') {
+      return 'Bạn không thể tự bỏ quyền quản trị của chính mình.';
+    }
+    return null;
+  }
+
+  function confirmAction(title, description, actionLabel) {
+    if (confirmDialog.open) return Promise.resolve(false);
+    confirmTitle.textContent = title;
+    confirmDescription.textContent = description;
+    confirmSubmit.textContent = actionLabel;
+    confirmDialog.returnValue = 'cancel';
+    return new Promise(resolve => {
+      confirmDialog.addEventListener('close', () => {
+        resolve(confirmDialog.returnValue === 'confirm');
+      }, { once: true });
+      confirmDialog.showModal();
+      confirmCancel.focus();
+    });
+  }
+
+  function confirmRemoveRole(account) {
+    return confirmAction('Xóa quyền đăng nhập',
+      `Xóa quyền của ${account.username}? Nhân viên vẫn có hồ sơ và mã chấm công, nhưng không thể đăng nhập cho đến khi được cấp quyền lại.`,
+      'Xóa quyền');
+  }
+
+  async function removeRole(account, button) {
+    const error = canChangeOwnRole(account, null);
+    if (error) { showToast(error, 'error'); return; }
+    button.disabled = true;
+    try {
+      if (!await confirmRemoveRole(account)) return;
+      await window.AdminApi.request(`/accounts/${account._id}`, { method: 'PATCH', body: JSON.stringify({ role: null }) });
+      showToast('Đã xóa quyền đăng nhập.');
+      await loadAccounts();
+    } catch (error) { showToast(error.message, 'error'); }
+    finally { button.disabled = false; }
+  }
+
+  roleForm.addEventListener('submit', async event => {
+    event.preventDefault();
+    if (rolePending || !roleAccount) return;
+    clearFieldErrors(roleForm);
+    roleError.hidden = true;
+    const role = newRole.value || null;
+    if (!role && !roleAccount.role) { showFieldError(newRole, 'Chọn vai trò cần cấp cho tài khoản.'); newRole.focus(); return; }
+    const ownRoleError = canChangeOwnRole(roleAccount, role);
+    if (ownRoleError) { showFieldError(newRole, ownRoleError); newRole.focus(); return; }
+    rolePending = true;
+    roleSubmit.disabled = true; roleClose.disabled = true; newRole.disabled = true;
+    try {
+      if (!role && !await confirmRemoveRole(roleAccount)) return;
+      await window.AdminApi.request(`/accounts/${roleAccount._id}`, { method: 'PATCH', body: JSON.stringify({ role }) });
+      roleDialog.close();
+      showToast(role ? 'Đã lưu quyền của tài khoản.' : 'Đã xóa quyền đăng nhập.');
+      await loadAccounts();
+    } catch (error) {
+      if (!applyFieldErrors(roleForm, error.details)) { roleError.textContent = error.message; roleError.hidden = false; }
+    } finally {
+      rolePending = false;
+      roleSubmit.disabled = false; roleClose.disabled = false; newRole.disabled = false;
+    }
+  });
+  roleClose.addEventListener('click', () => { if (!rolePending) roleDialog.close(); });
+  roleDialog.addEventListener('cancel', event => { if (rolePending) event.preventDefault(); });
+  document.addEventListener('click', event => {
+    tableBody.querySelectorAll('.account-actions[open]').forEach(menu => { if (!menu.contains(event.target)) menu.open = false; });
+  });
+
   async function updateStatus(account) {
     const action = account.isActive ? 'khóa' : 'mở khóa';
-    if (!confirm(`Bạn có chắc muốn ${action} tài khoản ${account.username}?`)) return;
+    if (!await confirmAction(account.isActive ? 'Khóa tài khoản' : 'Mở khóa tài khoản',
+      `Bạn có chắc muốn ${action} tài khoản ${account.username}?`,
+      account.isActive ? 'Khóa' : 'Mở khóa')) return;
     try {
       await window.AdminApi.request(`/accounts/${account._id}/status`, {
         method: 'PATCH',
@@ -175,7 +298,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   async function revokeAccount(account) {
-    if (!confirm(`Thu hồi tài khoản ${account.username}? Hồ sơ nhân viên vẫn được giữ lại.`)) return;
+    if (!await confirmAction('Thu hồi tài khoản',
+      `Thu hồi tài khoản ${account.username}? Hồ sơ nhân viên vẫn được giữ lại.`,
+      'Thu hồi')) return;
     try {
       await window.AdminApi.request(`/accounts/${account._id}`, { method: 'DELETE' });
       showToast('Đã thu hồi tài khoản.');
@@ -191,10 +316,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     submitButton.disabled = true;
     submitButton.textContent = 'Đang lưu...';
     const data = new FormData(form);
+    const payload = Object.fromEntries(data.entries());
+    payload.role = payload.role || null;
     try {
       await window.AdminApi.request('/accounts', {
         method: 'POST',
-        body: JSON.stringify(Object.fromEntries(data.entries()))
+        body: JSON.stringify(payload)
       });
       form.reset();
       showToast('Đã cấp tài khoản cho nhân viên.');
@@ -210,6 +337,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   bindFieldErrorClearing(form);
+  bindFieldErrorClearing(roleForm);
   searchInput.addEventListener('input', () => {
     clearTimeout(searchTimer);
     searchTimer = setTimeout(() => loadAccounts().catch((error) => showToast(error.message, 'error')), 300);
@@ -219,7 +347,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   try {
-    await initAdminPage();
+    currentUser = await initAdminPage();
     await refresh();
   } catch (error) {
     showToast(error.message, 'error');

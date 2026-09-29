@@ -138,21 +138,23 @@ function validateAccountPayload(body) {
   if (!/^[A-Za-z0-9]+$/.test(username)) fieldError('username', 'Tên đăng nhập chỉ được gồm chữ không dấu và số.');
   if (!USERNAME_PATTERN.test(username)) fieldError('username', 'Tên đăng nhập phải có ít nhất một chữ cái.');
   const password = validatePassword(body.password);
-  if (!STAFF_ROLES.includes(body.role)) {
+  const role = body.role === undefined || body.role === '' ? null : body.role;
+  if (role !== null && !STAFF_ROLES.includes(role)) {
     fieldError('role', 'Chọn vai trò cho tài khoản.');
   }
   if (!mongoose.isValidObjectId(body.employeeId)) {
     fieldError('employeeId', 'Chọn nhân viên cần cấp tài khoản.');
   }
 
-  return { username, password, role: body.role, employeeId: body.employeeId };
+  return { username, password, role, employeeId: body.employeeId };
 }
 
 function validateAccountUpdate(body) {
   const data = {};
   if (body.role !== undefined) {
-    if (!STAFF_ROLES.includes(body.role)) throw new ApiError(400, 'Vai trò không hợp lệ.');
-    data.role = body.role;
+    const role = body.role === '' ? null : body.role;
+    if (role !== null && !STAFF_ROLES.includes(role)) throw new ApiError(400, 'Vai trò không hợp lệ.');
+    data.role = role;
   }
   if (body.displayName !== undefined) {
     data.displayName = requireText(body.displayName, 'Tên hiển thị', 70, 'displayName');

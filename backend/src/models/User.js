@@ -17,9 +17,8 @@ const userSchema = new mongoose.Schema(
     passwordHash: { type: String, required: true, select: false },
     role: {
       type: String,
-      required: true,
-      enum: Object.values(ROLES),
-      default: ROLES.CASHIER
+      enum: [...Object.values(ROLES), null],
+      default: null
     },
     displayName: { type: String, trim: true, maxlength: 120 },
     employee: {

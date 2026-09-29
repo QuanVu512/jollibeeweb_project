@@ -38,6 +38,9 @@ async function authenticateToken(token) {
   if (!user || !user.isActive) {
     throw new ApiError(401, 'Tài khoản không tồn tại hoặc đã bị khóa.');
   }
+  if (!user.role) {
+    throw new ApiError(401, 'Tài khoản chưa được cấp quyền đăng nhập.');
+  }
   if (payload.version !== (user.tokenVersion || 0)) {
     throw new ApiError(401, 'Phiên đăng nhập đã bị thu hồi. Vui lòng đăng nhập lại.');
   }
@@ -77,6 +80,9 @@ async function login(body, context) {
   if (!user.isActive) {
     throw new ApiError(403, 'Tài khoản đã bị khóa.');
   }
+  if (!user.role) {
+    throw new ApiError(403, 'Tài khoản chưa được cấp quyền đăng nhập. Vui lòng liên hệ quản trị viên.');
+  }
 
   const token = jwt.sign({
     sub: user._id.toString(),
@@ -104,6 +110,9 @@ async function login(body, context) {
 
 async function me(userId) {
   const user = await userRepository.findCurrentUser(userId);
+  if (!user || !user.role) {
+    throw new ApiError(401, 'Tài khoản không tồn tại hoặc chưa được cấp quyền đăng nhập.');
+  }
   return authenticationResponse(user);
 }
 

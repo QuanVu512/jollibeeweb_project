@@ -6,6 +6,7 @@
   <title>Quản lý tài khoản</title>
   <link rel="icon" href="/assets/logo.png">
   <link rel="stylesheet" href="/admin/assets/css/admin.css">
+  <link rel="stylesheet" href="/admin/assets/css/accounts.css">
   <script src="/assets/js/role-guard.js" defer></script>
   <script src="/admin/assets/js/api.js" defer></script>
   <script src="/admin/assets/js/common.js" defer></script>
@@ -34,7 +35,7 @@
     <main class="content">
       <div class="page-heading">
         <h1>Quản lý tài khoản</h1>
-        <p>Cấp quyền đăng nhập cho nhân viên đã có hồ sơ</p>
+        <p>Tạo tài khoản chấm công và quản lý quyền đăng nhập cho nhân viên</p>
       </div>
 
       <section class="card work-entry-card" aria-label="Chuyển nhanh khu vực làm việc">
@@ -91,12 +92,14 @@
             </div>
             <div class="form-group">
               <label for="role">Vai trò</label>
-              <select id="role" name="role" required>
+              <select id="role" name="role" aria-describedby="role-note">
+                <option value="">-- Chưa cấp quyền --</option>
                 <option value="cashier">Thu ngân</option>
                 <option value="kitchen">Nhân viên bếp</option>
                 <option value="shipper">Nhân viên giao hàng</option>
                 <option value="admin">Quản trị viên</option>
               </select>
+              <small id="role-note" class="field-note">Để trống để chỉ chấm công. Nhân viên chưa được cấp quyền sẽ không thể đăng nhập.</small>
             </div>
             <button id="account-submit" class="btn btn-primary btn-block" type="submit">Cấp tài khoản</button>
           </form>
@@ -137,5 +140,37 @@
       </div>
     </main>
   </div>
+  <dialog id="account-role-dialog" class="account-role-dialog" aria-labelledby="account-role-title">
+    <h2 id="account-role-title">Cấp quyền</h2>
+    <p id="account-role-description"></p>
+    <form id="account-role-form" novalidate>
+      <div class="form-group">
+        <label for="account-new-role">Vai trò</label>
+        <select id="account-new-role" name="role" aria-describedby="account-new-role-note">
+          <option value="">-- Chưa cấp quyền --</option>
+          <option value="cashier">Thu ngân</option>
+          <option value="kitchen">Nhân viên bếp</option>
+          <option value="shipper">Nhân viên giao hàng</option>
+          <option value="admin">Quản trị viên</option>
+        </select>
+        <small id="account-new-role-note" class="field-note">Để trống để bỏ quyền đăng nhập, giữ hồ sơ và mã chấm công.</small>
+      </div>
+      <p id="account-role-error" class="account-role-error" role="alert" hidden></p>
+      <div class="actions">
+        <button id="account-role-submit" class="btn btn-primary" type="submit">Xác nhận</button>
+        <button id="account-role-close" class="btn btn-secondary" type="button">Đóng</button>
+      </div>
+    </form>
+  </dialog>
+  <dialog id="account-confirm-dialog" class="account-role-dialog account-confirm-dialog" aria-labelledby="account-confirm-title" aria-describedby="account-confirm-description">
+    <h2 id="account-confirm-title">Xác nhận thao tác</h2>
+    <p id="account-confirm-description"></p>
+    <form method="dialog">
+      <div class="actions">
+        <button id="account-confirm-cancel" class="btn btn-secondary" type="submit" value="cancel" autofocus>Hủy</button>
+        <button id="account-confirm-submit" class="btn btn-danger" type="submit" value="confirm">Xác nhận</button>
+      </div>
+    </form>
+  </dialog>
 </body>
 </html>
