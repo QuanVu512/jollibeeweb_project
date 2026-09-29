@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kiosk chấm công</title>
+  <link rel="stylesheet" href="/admin/assets/css/admin.css"><link rel="stylesheet" href="/admin/assets/css/attendance.css">
+  <script src="/assets/js/role-guard.js" defer></script><script src="/admin/assets/js/api.js" defer></script>
+  <script src="/admin/assets/js/common.js" defer></script><script src="/admin/assets/js/attendance-common.js" defer></script>
+  <script src="/admin/assets/js/scan-queue.js" defer></script><script src="/admin/assets/js/attendance-bills.js" defer></script><script src="/admin/assets/js/kiosk.js" defer></script>
+</head>
+<body class="kiosk-page" data-required-role="admin">
+  <header class="kiosk-topbar"><strong>JOLLIBEE · CHẤM CÔNG</strong><div class="kiosk-links">
+    <span data-user-name>Đang xác thực…</span><a href="/admin/attendance.html">Bảng công</a><a href="/admin/shifts.html">Phân ca</a>
+    <button id="fullscreen" class="btn btn-secondary" type="button">Toàn màn hình</button><button class="btn btn-danger" data-logout type="button">Đăng xuất</button>
+  </div></header>
+  <main class="kiosk-main">
+    <div id="clock" class="kiosk-clock"></div><h1>Sẵn sàng nhận mã nhân viên</h1>
+    <p class="kiosk-description">Gõ mã hoặc quét thẻ rồi nhấn Enter. Mỗi lượt thành công tự tải bill Word.<br>Cho phép tải nhiều tệp cho trang này. Giờ công theo máy chủ, múi giờ Việt Nam.</p>
+    <form id="scan-form"><label class="visually-hidden" for="employee-code">Mã nhân viên</label>
+      <input id="employee-code" class="kiosk-input" name="employeeCode" placeholder="NV0001" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="30" autofocus disabled>
+    </form>
+    <p id="queue-status" class="kiosk-queue" aria-live="polite">Đang xác thực tài khoản…</p>
+    <section id="result" class="kiosk-result" role="status" aria-live="polite" aria-atomic="true"><h2>Chờ mã nhân viên</h2><p>Không cần chọn Check-in hay Check-out.</p></section>
+    <ul id="recent" class="kiosk-recent" aria-label="Các lượt ghi nhận gần đây"></ul>
+  </main>
+  <dialog id="exception-dialog" class="attendance-dialog" aria-labelledby="exception-title">
+    <h2 id="exception-title">Duyệt ghi nhận ngoài lịch</h2><p id="exception-employee"></p><p id="exception-message" class="attendance-note"></p>
+    <form id="exception-form">
+      <div class="form-group"><label for="exception-mode">Ghi nhận theo</label><select id="exception-mode"><option value="SHIFT">Ca được phân</option><option value="OT">Làm thêm giờ (OT)</option></select></div>
+      <div id="exception-shift-group" class="form-group"><label for="exception-shift">Ca làm việc</label><select id="exception-shift"></select></div>
+      <div id="exception-end-group" class="form-group" hidden><label for="exception-end">Giờ kết thúc OT dự kiến (hôm nay)</label><input id="exception-end" type="time"></div>
+      <div class="form-group"><label for="exception-reason">Lý do duyệt</label><textarea id="exception-reason" maxlength="500" required></textarea></div>
+      <p id="exception-error" class="attendance-error" role="alert" hidden></p>
+      <div class="actions"><button id="exception-submit" class="btn btn-primary" type="submit">Duyệt · Enter</button><button id="exception-cancel" class="btn btn-secondary" type="button">Hủy · Esc</button></div>
+    </form>
+  </dialog>
+  <dialog id="recovery-dialog" class="attendance-dialog" aria-labelledby="recovery-title">
+    <h2 id="recovery-title">Chưa xác định kết quả ghi nhận</h2><p id="recovery-message" class="attendance-note"></p>
+    <p>Hàng đợi đang tạm dừng. Gửi lại yêu cầu này để xác nhận kết quả an toàn.</p>
+    <div class="actions"><button id="recovery-retry" class="btn btn-primary" type="button">Gửi lại an toàn · Enter</button><a class="btn btn-secondary" href="/admin/attendance.html" target="_blank" rel="noopener">Mở bảng công</a></div>
+  </dialog>
+</body>
+</html>

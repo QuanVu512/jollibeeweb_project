@@ -1,0 +1,61 @@
+.attendance-content { width: min(1600px, 100%); }
+.attendance-stack { display: grid; gap: 24px; }
+.attendance-grid { display: grid; grid-template-columns: minmax(280px, .65fr) minmax(450px, 1.35fr); gap: 24px; align-items: start; }
+.attendance-filters { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; margin-bottom: 18px; }
+.attendance-filters .form-group { margin: 0; min-width: 150px; }
+.attendance-filters select { max-width: 310px; }
+.attendance-dialog { width: min(650px, calc(100% - 32px)); max-height: 85vh; overflow: auto; border: 0; border-top: 5px solid var(--brand); border-radius: 14px; padding: 28px; box-shadow: var(--shadow); }
+.attendance-dialog::backdrop { background: rgba(17, 30, 42, .65); }
+.attendance-dialog h2 { margin: 0 0 16px; }
+.attendance-dialog .form-group textarea { min-height: 90px; }
+.attendance-error { background: #fff4e1; color: #7d4900; padding: 12px; border-radius: 8px; margin: 12px 0; }
+.attendance-note { color: var(--muted); line-height: 1.5; }
+.attendance-history { display: grid; gap: 14px; padding: 0; list-style: none; }
+.attendance-history li { border: 1px solid var(--border); border-radius: 8px; padding: 16px; }
+.attendance-history p { margin: 6px 0; }
+.attendance-history pre { font-size: 12px; overflow-x: auto; white-space: pre-wrap; overflow-wrap: anywhere; }
+.attendance-history summary { cursor: pointer; font-weight: 650; }
+.kiosk-page { min-height: 100vh; background: #101f2d; color: #f4f7fa; }
+.kiosk-topbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; padding: 20px 32px; border-bottom: 1px solid #314352; }
+.kiosk-topbar strong { letter-spacing: 1px; }
+.kiosk-topbar a { color: #c4d3df; text-decoration: none; }
+.kiosk-links { display: flex; flex-wrap: wrap; gap: 18px; align-items: center; }
+.kiosk-main { width: min(860px, 100%); margin: 0 auto; padding: 48px 28px; }
+.kiosk-clock { color: #aabbca; font-variant-numeric: tabular-nums; }
+.kiosk-main h1 { margin: 10px 0; font-size: clamp(30px, 5vw, 48px); }
+.kiosk-description { color: #aabbca; line-height: 1.6; margin-bottom: 32px; }
+.kiosk-input { width: 100%; border: 2px solid #496170; border-radius: 14px; background: #1b3041; color: #fff; font-size: clamp(30px, 6vw, 54px); letter-spacing: 3px; padding: 24px; text-transform: uppercase; }
+.kiosk-input:focus { outline: 3px solid #ef9b35; outline-offset: 4px; }
+.kiosk-input::placeholder { color: #8096a6; }
+.kiosk-queue { min-height: 24px; color: #aabbca; margin: 16px 0 24px; }
+.kiosk-result { min-height: 175px; padding: 26px; border-radius: 14px; border-left: 7px solid #547283; background: #1b3041; }
+.kiosk-result.success { border-color: #62d49b; background: #173c32; }
+.kiosk-result.warning { border-color: #ffc26b; background: #423720; }
+.kiosk-result.error { border-color: #fb8d8d; background: #462c32; }
+.kiosk-result h2 { font-size: 27px; margin: 0 0 10px; overflow-wrap: anywhere; }
+.kiosk-result p { font-size: 20px; line-height: 1.5; margin: 0; }
+.kiosk-result a { color: #ffe0a9; }
+.kiosk-recent { margin-top: 30px; padding: 0; list-style: none; }
+.kiosk-recent li { padding: 12px 0; border-bottom: 1px solid #314352; color: #b7c9d7; }
+.kiosk-bill-link { display: inline-block; margin: 6px 0 0 12px; color: #c4efd8; font-size: 14px; }
+.kiosk-result .kiosk-bill-link { margin-left: 0; }
+.kiosk-bill-link[aria-disabled="true"] { opacity: .65; }
+.kiosk-bill-link.download-failed { color: #ffe0a9; }
+.kiosk-bill-status { display: block; margin-top: 6px; color: #c4d3df; font-size: 13px; }
+.kiosk-page .attendance-dialog { color: var(--text); }
+[hidden] { display: none !important; }
+@media (max-width: 1000px) { .attendance-grid { grid-template-columns: 1fr; } }
+@media (max-height: 800px) {
+  .kiosk-topbar { padding: 14px 24px; }
+  .kiosk-main { padding-top: 18px; }
+  .kiosk-main h1 { font-size: clamp(26px, 4vw, 36px); margin: 6px 0; }
+  .kiosk-description { font-size: 14px; line-height: 1.4; margin: 8px 0 18px; }
+  .kiosk-input { padding: 16px 22px; font-size: 40px; }
+  .kiosk-queue { min-height: 18px; margin: 12px 0 18px; }
+  .kiosk-result { min-height: 120px; padding: 20px; }
+  .kiosk-result h2 { font-size: 24px; }
+  .kiosk-result p { font-size: 18px; }
+  .kiosk-recent { margin-top: 16px; }
+  .kiosk-recent li { padding: 8px 0; }
+}
+@media (max-width: 600px) { .kiosk-topbar { padding: 16px; } .kiosk-main { padding: 32px 18px; } .attendance-filters .form-group { width: 100%; } .attendance-filters select { max-width: none; } }

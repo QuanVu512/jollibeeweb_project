@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Phân ca làm việc</title>
+  <link rel="stylesheet" href="/admin/assets/css/admin.css"><link rel="stylesheet" href="/admin/assets/css/attendance.css">
+  <script src="/assets/js/role-guard.js" defer></script><script src="/admin/assets/js/api.js" defer></script><script src="/admin/assets/js/common.js" defer></script>
+  <script src="/admin/assets/js/attendance-common.js" defer></script><script src="/admin/assets/js/shifts.js" defer></script>
+</head>
+<body data-required-role="admin">
+  <aside class="sidebar"><div class="sidebar-brand">JOLLIBEE ADMIN</div><nav class="sidebar-nav" aria-label="Điều hướng quản trị">
+    <a href="/admin/">Quản lý tài khoản</a><a href="/admin/staff.html">Hồ sơ nhân viên</a><a href="/admin/products.html">Quản lý sản phẩm</a><a href="/admin/report.html">Báo cáo thống kê</a>
+  </nav></aside>
+  <div class="page-shell"><header class="topbar"><strong>QUẢN LÝ CA LÀM</strong><div class="topbar-user"><span data-user-name></span><button class="btn btn-danger" data-logout type="button">Đăng xuất</button></div></header>
+    <main class="content attendance-content attendance-stack">
+      <div class="page-heading"><h1>Phân ca làm việc</h1><p>Ca mẫu và lịch theo ngày · giờ Việt Nam · hỗ trợ nhiều ca trong ngày.</p></div>
+      <div class="attendance-grid">
+        <section class="card"><h2 id="template-title" class="card-title">Tạo ca mẫu</h2>
+          <form id="template-form"><input id="template-id" type="hidden">
+            <div class="form-group"><label for="template-name">Tên ca</label><input id="template-name" maxlength="80" required placeholder="Ca sáng"></div>
+            <div class="form-row"><div class="form-group"><label for="template-start">Bắt đầu</label><input id="template-start" type="time" required></div><div class="form-group"><label for="template-end">Kết thúc</label><input id="template-end" type="time" required></div></div>
+            <label><input id="template-active" type="checkbox" checked> Đang sử dụng</label>
+            <p class="attendance-note">Chỉ hỗ trợ ca trong ngày. Chỉnh ca mẫu không đổi các lịch đã phân. Ân hạn 15 phút.</p>
+            <p id="template-error" class="attendance-error" role="alert" hidden></p>
+            <div class="actions"><button class="btn btn-primary" type="submit">Lưu ca mẫu</button><button id="template-reset" class="btn btn-secondary" type="button">Tạo mới</button></div>
+          </form>
+        </section>
+        <section class="card"><h2 class="card-title">Danh sách ca mẫu</h2><div class="table-wrap"><table><thead><tr><th>Tên ca</th><th>Giờ làm</th><th>Trạng thái</th><th>Thao tác</th></tr></thead><tbody id="templates-body"></tbody></table></div></section>
+      </div>
+      <section class="card"><h2 id="assignment-title" class="card-title">Phân ca theo ngày</h2>
+        <form id="assignment-form"><input id="assignment-id" type="hidden"><div class="attendance-filters">
+          <div class="form-group"><label for="assignment-employee">Nhân viên</label><select id="assignment-employee" required></select></div>
+          <div class="form-group"><label for="assignment-template">Ca mẫu</label><select id="assignment-template" required></select></div>
+          <div class="form-group"><label for="assignment-date">Ngày làm việc</label><input id="assignment-date" type="date" required></div>
+          <button class="btn btn-primary" type="submit">Lưu lịch ca</button><button id="assignment-reset" class="btn btn-secondary" type="button">Tạo mới</button>
+        </div><p id="assignment-error" class="attendance-error" role="alert" hidden></p></form>
+        <p class="attendance-note">Không phân ca chồng giờ. Lịch đã có chấm công không được sửa hoặc hủy.</p>
+      </section>
+      <section class="card"><h2 class="card-title">Lịch làm việc</h2>
+        <form id="filter-form" class="attendance-filters"><div class="form-group"><label for="filter-date">Ngày</label><input id="filter-date" type="date" required></div><div class="form-group"><label for="filter-employee">Nhân viên</label><select id="filter-employee"></select></div><label><input id="filter-inactive" type="checkbox"> Hiện lịch đã hủy</label><button class="btn btn-secondary" type="submit">Xem lịch</button></form>
+        <p id="list-error" class="attendance-error" role="alert" hidden></p>
+        <div class="table-wrap"><table><thead><tr><th>Nhân viên</th><th>Ngày</th><th>Ca / Giờ làm</th><th>Người phân</th><th>Trạng thái</th><th>Thao tác</th></tr></thead><tbody id="assignments-body"></tbody></table></div>
+        <div class="pagination"><button id="previous" class="btn btn-secondary" type="button">Trước</button><span id="page-label"></span><button id="next" class="btn btn-secondary" type="button">Sau</button></div>
+      </section>
+    </main>
+  </div>
+  <dialog id="cancel-dialog" class="attendance-dialog" aria-labelledby="cancel-title"><h2 id="cancel-title">Hủy lịch ca</h2><p id="cancel-description"></p>
+    <form id="cancel-form"><div class="form-group"><label for="cancel-reason">Lý do hủy</label><textarea id="cancel-reason" maxlength="500" required></textarea></div><p id="cancel-error" class="attendance-error" role="alert" hidden></p><div class="actions"><button class="btn btn-danger" type="submit">Hủy lịch ca</button><button id="cancel-close" class="btn btn-secondary" type="button">Đóng</button></div></form>
+  </dialog>
+</body>
+</html>

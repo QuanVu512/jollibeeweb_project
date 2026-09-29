@@ -4,8 +4,10 @@ const accountRoutes = require('./account.routes');
 const reportRoutes = require('./report.routes');
 const notificationRoutes = require('./notification.routes');
 const adminProductRoutes = require('./adminProduct.routes');
+const attendanceRoutes = require('./attendance.routes');
 
 const router = express.Router();
+router.use(attendanceRoutes);
 
 router.use('/employees', employeeRoutes);
 router.use('/accounts', accountRoutes);

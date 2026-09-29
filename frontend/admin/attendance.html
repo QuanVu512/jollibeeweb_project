@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Chấm công và lịch sử</title>
+  <link rel="stylesheet" href="/admin/assets/css/admin.css"><link rel="stylesheet" href="/admin/assets/css/attendance.css">
+  <script src="/assets/js/role-guard.js" defer></script><script src="/admin/assets/js/api.js" defer></script><script src="/admin/assets/js/common.js" defer></script>
+  <script src="/admin/assets/js/attendance-common.js" defer></script><script src="/admin/assets/js/attendance.js" defer></script>
+</head>
+<body data-required-role="admin">
+  <aside class="sidebar"><div class="sidebar-brand">JOLLIBEE ADMIN</div><nav class="sidebar-nav" aria-label="Điều hướng quản trị">
+    <a href="/admin/">Quản lý tài khoản</a><a href="/admin/staff.html">Hồ sơ nhân viên</a><a href="/admin/products.html">Quản lý sản phẩm</a><a href="/admin/report.html">Báo cáo thống kê</a>
+  </nav></aside>
+  <div class="page-shell"><header class="topbar"><strong>CHẤM CÔNG & LỊCH SỬ</strong><div class="topbar-user"><span data-user-name></span><button class="btn btn-danger" data-logout type="button">Đăng xuất</button></div></header>
+    <main class="content attendance-content">
+      <div class="page-heading"><h1>Bảng chấm công</h1><p>Đối chiếu giờ vào / ra và người ghi nhận · giờ Việt Nam.</p></div>
+      <section class="card">
+        <form id="filter-form" class="attendance-filters">
+          <div class="form-group"><label for="filter-from">Từ ngày</label><input id="filter-from" type="date" required></div><div class="form-group"><label for="filter-to">Đến ngày</label><input id="filter-to" type="date" required></div>
+          <div class="form-group"><label for="filter-employee">Nhân viên</label><select id="filter-employee"></select></div>
+          <div class="form-group"><label for="filter-state">Phiên công</label><select id="filter-state"><option value="">Tất cả</option><option value="OPEN">Đang mở / Thiếu giờ ra</option><option value="CLOSED">Hoàn tất</option><option value="CANCELLED">Đã hủy</option></select></div>
+          <div class="form-group"><label for="filter-status">Đánh giá</label><select id="filter-status"><option value="">Tất cả</option><option value="ON_TIME">Đúng giờ</option><option value="LATE">Muộn</option><option value="EARLY_LEAVE">Về sớm</option></select></div>
+          <button class="btn btn-secondary" type="submit">Xem công</button><a class="btn btn-primary" href="/admin/kiosk.html">Mở Kiosk</a>
+        </form>
+        <p id="list-error" class="attendance-error" role="alert" hidden></p>
+        <div class="table-wrap"><table><thead><tr><th>Nhân viên</th><th>Ngày / Ca</th><th>Giờ vào</th><th>Giờ ra</th><th>Đánh giá</th><th>Ghi giờ vào bởi</th><th>Ghi giờ ra bởi</th><th>Thao tác</th></tr></thead><tbody id="attendance-body"></tbody></table></div>
+        <div class="pagination"><button id="previous" class="btn btn-secondary" type="button">Trước</button><span id="page-label"></span><button id="next" class="btn btn-secondary" type="button">Sau</button></div>
+      </section>
+    </main>
+  </div>
+  <dialog id="edit-dialog" class="attendance-dialog" aria-labelledby="edit-title">
+    <h2 id="edit-title">Điều chỉnh công</h2><p id="edit-description"></p><p class="attendance-note">Giờ thuộc ngày công, theo múi giờ Việt Nam. Người ghi nhận ban đầu được giữ lại; mọi điều chỉnh đều có lịch sử.</p>
+    <form id="edit-form"><div class="form-group"><label for="edit-in">Giờ vào</label><input id="edit-in" type="datetime-local" step="1" required></div><div class="form-group"><label for="edit-out">Giờ ra (để trống nếu phiên đang mở)</label><input id="edit-out" type="datetime-local" step="1"></div><div class="form-group"><label for="edit-reason">Lý do điều chỉnh</label><textarea id="edit-reason" maxlength="500" required></textarea></div><p id="edit-error" class="attendance-error" role="alert" hidden></p><div class="actions"><button class="btn btn-primary" type="submit">Lưu điều chỉnh</button><button id="edit-close" class="btn btn-secondary" type="button">Đóng</button></div></form>
+  </dialog>
+  <dialog id="cancel-dialog" class="attendance-dialog" aria-labelledby="cancel-title">
+    <h2 id="cancel-title">Hủy bản ghi công</h2><p id="cancel-description"></p><p class="attendance-note">Bản ghi vẫn được giữ để đối chiếu lịch sử.</p>
+    <form id="cancel-form"><div class="form-group"><label for="cancel-reason">Lý do hủy</label><textarea id="cancel-reason" maxlength="500" required></textarea></div><p id="cancel-error" class="attendance-error" role="alert" hidden></p><div class="actions"><button class="btn btn-danger" type="submit">Xác nhận hủy</button><button id="cancel-close" class="btn btn-secondary" type="button">Đóng</button></div></form>
+  </dialog>
+  <dialog id="history-dialog" class="attendance-dialog" aria-labelledby="history-title"><h2 id="history-title">Lịch sử chấm công</h2><p id="history-description"></p><p id="history-error" class="attendance-error" role="alert" hidden></p><ul id="history-list" class="attendance-history"></ul><button id="history-more" class="btn btn-secondary" type="button" hidden>Xem thêm</button><div class="actions"><button id="history-close" class="btn btn-secondary" type="button">Đóng</button></div></dialog>
+</body>
+</html>

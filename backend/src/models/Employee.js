@@ -17,6 +17,8 @@ const employeeSchema = new mongoose.Schema(
     hireDate: { type: Date, default: Date.now },
     terminationDate: { type: Date, default: null },
     isActive: { type: Boolean, default: true },
+    attendanceRevision: { type: Number, default: 0, select: false },
+    lastAttendanceAt: { type: Date, default: null, select: false },
     account: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
@@ -52,6 +54,8 @@ employeeSchema.pre('validate', async function assignEmployeeCode() {
 employeeSchema.set('toJSON', {
   transform: (_document, result) => {
     delete result.__v;
+    delete result.attendanceRevision;
+    delete result.lastAttendanceAt;
     return result;
   }
 });

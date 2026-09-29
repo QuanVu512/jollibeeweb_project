@@ -2,6 +2,7 @@
   const API_BASE = '/api/v1';
 
   async function apiFetch(path, options = {}) {
+    const { redirectOnUnauthorized = true, ...fetchOptions } = options;
     const headers = { ...(options.headers || {}) };
     if (options.body && !(options.body instanceof FormData)) {
       headers['Content-Type'] = 'application/json';
@@ -9,7 +10,7 @@
 
     const response = await fetch(`${API_BASE}${path}`, {
       credentials: 'include',
-      ...options,
+      ...fetchOptions,
       headers
     });
 
@@ -19,7 +20,7 @@
     const payload = contentType.includes('application/json') ? await response.json() : null;
 
     if (!response.ok) {
-      if (response.status === 401 && !location.pathname.endsWith('/login.html')) {
+      if (response.status === 401 && redirectOnUnauthorized && !location.pathname.endsWith('/login.html')) {
         location.replace('/admin/login.html');
       }
       const error = new Error(payload?.message || 'Không thể kết nối với máy chủ.');

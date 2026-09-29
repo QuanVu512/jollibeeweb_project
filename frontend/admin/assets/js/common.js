@@ -97,6 +97,17 @@
   }
 
   async function initAdminPage() {
+    const nav = document.querySelector('.sidebar-nav');
+    if (nav && !nav.querySelector('[data-attendance-nav]')) {
+      [['/admin/shifts.html', 'Phân ca làm việc'], ['/admin/attendance.html', 'Chấm công & lịch sử'], ['/admin/kiosk.html', 'Mở Kiosk']].forEach(([href, label]) => {
+        const link = document.createElement('a');
+        link.href = href;
+        link.textContent = label;
+        link.dataset.attendanceNav = 'true';
+        link.classList.toggle('active', location.pathname === href);
+        nav.append(link);
+      });
+    }
     const payload = await global.AdminApi.request('/auth/me');
     document.querySelectorAll('[data-user-name]').forEach((element) => {
       element.textContent = payload.data.user.displayName;

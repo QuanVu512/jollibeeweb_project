@@ -15,6 +15,9 @@ const Ingredient = require('../models/Ingredient');
 const PurchaseMaterial = require('../models/PurchaseMaterial');
 const Recipe = require('../models/Recipe');
 const Notification = require('../models/Notification');
+const ShiftTemplate = require('../models/ShiftTemplate');
+const EmployeeShift = require('../models/EmployeeShift');
+const AttendanceSession = require('../models/AttendanceSession');
 
 const MODELS = [
   Role,
@@ -33,7 +36,10 @@ const MODELS = [
   Ingredient,
   PurchaseMaterial,
   Recipe,
-  Notification
+  Notification,
+  ShiftTemplate,
+  EmployeeShift,
+  AttendanceSession
 ];
 
 async function ensureCollection(Model) {

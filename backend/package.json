@@ -6,6 +6,8 @@
   "main": "src/server.js",
   "scripts": {
     "test": "node --test",
+    "test:attendance": "node --test test/attendanceRules.test.js test/attendanceIntegration.test.js test/attendanceBill.test.js",
+    "demo:attendance": "node tools/attendanceDemo.cjs",
     "test:reports": "node --test test/reportRules.test.js test/reportIntegration.test.js",
     "test:reports:ui": "node tools/reportUiCheck.cjs",
     "demo:reports": "node tools/reportDemo.cjs",
@@ -24,6 +26,7 @@
     "bcryptjs": "^3.0.3",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
+    "docx": "9.6.1",
     "dotenv": "^17.4.2",
     "exceljs": "^4.4.0",
     "express": "^5.2.1",

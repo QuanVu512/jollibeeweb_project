@@ -17,6 +17,10 @@ async function recordAudit(context, event, session = null) {
     entityId: event.entityId || null,
     before: snapshot(event.before),
     after: snapshot(event.after),
+    reason: event.reason,
+    requestId: event.requestId,
+    fingerprint: event.fingerprint,
+    response: snapshot(event.response),
     ipAddress: context.ipAddress,
     userAgent: context.userAgent
   };
