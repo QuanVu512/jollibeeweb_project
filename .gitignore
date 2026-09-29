@@ -21,3 +21,18 @@ yarn-error.log*
 # OS files
 .DS_Store
 Thumbs.db
+
+# AI agent configuration and local planning artifacts
+.codex/
+.agents/
+.cursor/
+AGENTS.md
+CLAUDE.md
+GEMINI.md
+.github/copilot-instructions.md
+/KIOSK_ATTENDANCE_PLAN.md
+/REVENUE_STATISTICS_PLAN.md
+
+# Local agent verification output and managed-runtime QA tooling
+/docs/report-verification/
+/backend/tools/receiptSamples.cjs
