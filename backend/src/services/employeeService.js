@@ -47,10 +47,13 @@ async function listEmployees(query) {
 }
 
 async function ensureUniqueContact(payload, excludeId, session) {
-  const [phoneExists, emailExists] = await Promise.all([
-    payload.phone ? employeeRepository.existsByPhone(payload.phone, excludeId, session) : false,
-    payload.email ? employeeRepository.existsByEmail(payload.email, excludeId, session) : false
-  ]);
+  // MongoDB does not support parallel operations within a transaction session.
+  const phoneExists = payload.phone
+    ? await employeeRepository.existsByPhone(payload.phone, excludeId, session)
+    : false;
+  const emailExists = payload.email
+    ? await employeeRepository.existsByEmail(payload.email, excludeId, session)
+    : false;
   if (phoneExists) {
     const message = 'Số điện thoại này đã được sử dụng.';
     throw new ApiError(409, message, { phone: message });
