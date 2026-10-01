@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: jollibee-web-app
+    runtime: node
+    plan: free
+    region: singapore
+    buildCommand: npm run build
+    startCommand: npm start
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 8h
+      - key: COOKIE_NAME
+        value: jollibee_admin_token
+      - key: COOKIE_MAX_AGE_MS
+        value: 28800000

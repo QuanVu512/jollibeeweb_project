@@ -1,0 +1,15 @@
+{
+  "name": "jollibee-web-project",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Hệ thống Web Quản lý & Đặt hàng Jollibee",
+  "scripts": {
+    "build": "npm --prefix backend install --omit=dev",
+    "install:all": "npm --prefix backend install",
+    "start": "node backend/src/server.js",
+    "test": "npm --prefix backend test"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
