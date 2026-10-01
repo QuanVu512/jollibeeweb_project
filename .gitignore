@@ -32,6 +32,8 @@ GEMINI.md
 .github/copilot-instructions.md
 /KIOSK_ATTENDANCE_PLAN.md
 /REVENUE_STATISTICS_PLAN.md
+/TODO.md
+/test/*.md
 
 # Local agent verification output and managed-runtime QA tooling
 /docs/report-verification/
