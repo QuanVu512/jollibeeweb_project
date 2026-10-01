@@ -4,8 +4,8 @@ const path = require('node:path');
 
 // Resolve path to backend modules flexibly (whether running from root/test or backend/test)
 const fs = require('node:fs');
-const candidate1 = path.resolve(__dirname, '../../backend');
-const candidate2 = path.resolve(__dirname, '../..');
+const candidate1 = path.resolve(__dirname, '../../../backend');
+const candidate2 = path.resolve(__dirname, '../../..');
 const backendRoot = fs.existsSync(path.join(candidate1, 'src')) ? candidate1 : candidate2;
 const auditService = require(path.join(backendRoot, 'src/services/auditService'));
 const auditLogRepository = require(path.join(backendRoot, 'src/repositories/auditLog.repository'));
@@ -181,35 +181,35 @@ test('UT_ACC_07: getAccount(id) - Lấy chi tiết thất bại khi tài khoản
 // -------------------------------------------------------------
 
 test('UT_ACC_08: createAccount(body, context) - Tạo tài khoản nhân viên mới thành công', async () => {
-  const employeeId = '507f1f77bcf86cd799439022';
+  const employeeId = '507f1f77bcf86cd799439022'; //id fake nvien
   const body = {
     username: 'newstaff01',
     password: 'Password@123',
     role: ROLES.CASHIER,
     employeeId
-  };
+  }; //taikhoan fake 
   const context = { actor: { id: '507f1f77bcf86cd799439000' } };
   const mockEmp = createMockEmployee({ _id: employeeId });
   const mockCreatedUser = createMockUser({
     _id: '507f1f77bcf86cd799439033',
     username: 'newstaff01',
     role: ROLES.CASHIER
-  });
+  }); //nhân viên fake
 
-  employeeRepository.findById = async (id) => mockEmp;
-  employeeRepository.save = async (emp) => emp;
-  userRepository.existsByUsername = async () => false;
-  userRepository.hashPassword = async (p) => `hashed_${p}`;
+  employeeRepository.findById = async (id) => mockEmp; ///test hàm tìm id
+  employeeRepository.save = async (emp) => emp;  //lưu nhân viên fake
+  userRepository.existsByUsername = async () => false; //test hàm kiểm tra tồn tại của nvien
+  userRepository.hashPassword = async (p) => `hashed_${p}`;//tạo hash password
   userRepository.create = async (payload) => {
     assert.equal(payload.username, 'newstaff01');
     assert.equal(payload.role, ROLES.CASHIER);
     return mockCreatedUser;
-  };
-  userRepository.populateEmployee = async (user) => user;
+  }; //tạo tài khoản fake
+  userRepository.populateEmployee = async (user) => user; //đổ dữ liệu từ user vào employee
 
-  const result = await accountService.createAccount(body, context);
-  assert.equal(result.username, 'newstaff01');
-  assert.equal(mockEmp.account, mockCreatedUser._id);
+  const result = await accountService.createAccount(body, context); //gán kết quả vào result
+  assert.equal(result.username, 'newstaff01'); //so sánh username có đúng với input fake không
+  assert.equal(mockEmp.account, mockCreatedUser._id); //so sánh xem id tài khoản có bằng id nvien fake không
 });
 
 test('UT_ACC_09: createAccount(body, context) - Tạo tài khoản thất bại khi không tìm thấy nhân viên', async () => {

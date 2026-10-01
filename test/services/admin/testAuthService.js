@@ -3,8 +3,8 @@ const assert = require('node:assert/strict');
 const path = require('node:path');
 const fs = require('node:fs');
 // Resolve path to backend modules
-const candidate1 = path.resolve(__dirname, '../../backend');
-const candidate2 = path.resolve(__dirname, '../..');
+const candidate1 = path.resolve(__dirname, '../../../backend');
+const candidate2 = path.resolve(__dirname, '../../..');
 const backendRoot = fs.existsSync(path.join(candidate1, 'src')) ? candidate1 : candidate2;
 
 // Add backend node_modules to paths so modules like jsonwebtoken and mongoose can be required
