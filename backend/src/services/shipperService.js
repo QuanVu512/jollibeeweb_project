@@ -20,7 +20,8 @@ function addStatusHistory(order, status, userId, note) {
 function getNewOrders() {
   return orderRepository.findMany({
     status: ORDER_STATUS.READY_FOR_DELIVERY,
-    orderType: 'delivery'
+    orderType: 'delivery',
+    assignedShipper: null
   }, { sort: { orderedAt: -1 } });
 }
 
@@ -64,6 +65,9 @@ async function acceptOrder(id, userId) {
   if (order.status !== ORDER_STATUS.READY_FOR_DELIVERY) {
     throw new ApiError(400, 'Chỉ có thể nhận đơn đã sẵn sàng giao.');
   }
+  if (order.assignedShipper && order.assignedShipper.toString() !== userId.toString()) {
+    throw new ApiError(409, 'Đơn hàng đã được shipper khác nhận.');
+  }
 
   order.status = ORDER_STATUS.DELIVERING;
   order.assignedShipper = userId;
@@ -95,7 +99,7 @@ async function completeOrder(id, userId) {
   return order;
 }
 
-async function failOrder(id, userId, body) {
+async function failOrder(id, userId, body = {}) {
   validateOrderId(id);
 
   const order = await orderRepository.findById(id);
@@ -109,7 +113,13 @@ async function failOrder(id, userId, body) {
     throw new ApiError(403, 'Bạn không được cập nhật đơn không thuộc về mình.');
   }
 
-  const reason = body.reason || 'Giao hàng thất bại';
+  const rawReason = typeof body === 'string' ? body : body?.reason;
+  const reason = rawReason ? String(rawReason).trim() : '';
+
+  if (!reason) {
+    throw new ApiError(400, 'Lý do giao hàng thất bại không được để trống.');
+  }
+
   order.status = ORDER_STATUS.FAILED;
   order.failureReason = reason;
   addStatusHistory(order, ORDER_STATUS.FAILED, userId, reason);
@@ -140,13 +150,27 @@ async function cancelOrder(id, userId) {
   return order;
 }
 
+function getNeedCollectAmount(order) {
+  if (!order) return 0;
+  const method = order.payment?.method;
+  const status = order.payment?.status;
+  if ((method === 'cod' || method === 'cash') && status !== 'paid') {
+    return order.total || order.totalPrice || 0;
+  }
+  return 0;
+}
+
 module.exports = {
+  listAvailableOrders: getNewOrders,
   getNewOrders,
+  listDeliveringOrders: getShippingOrders,
   getShippingOrders,
+  listHistory: getHistoryOrders,
   getHistoryOrders,
   getOrderDetail,
   acceptOrder,
   completeOrder,
   failOrder,
-  cancelOrder
+  cancelOrder,
+  getNeedCollectAmount
 };
