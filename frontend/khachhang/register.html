@@ -70,7 +70,7 @@
             <button type="submit" class="btn-submit">ĐĂNG KÝ NGAY</button>
         </form>
         
-        <p class="link-text">Đã có tài khoản? <a href="/admin/login.html">Đăng nhập tại đây</a></p>
+        <p class="link-text">Đã có tài khoản? <a href="/login.html">Đăng nhập tại đây</a></p>
     </div>
 
     <script src="account-validation.js"></script>
@@ -117,7 +117,7 @@
 
                 if (response.ok) {
                     status.textContent = 'Đăng ký thành công! Đang chuyển đến trang đăng nhập...';
-                    window.location.href = "/admin/login.html"; 
+                    window.location.href = "/login.html"; 
                 } else {
                     status.textContent = result.message || 'Đăng ký thất bại!';
                 }

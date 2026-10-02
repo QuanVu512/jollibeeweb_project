@@ -35,7 +35,7 @@ async function logout(req, res) {
 
   const redirectTo = typeof req.query.redirect === 'string' && req.query.redirect.startsWith('/')
     ? req.query.redirect
-    : '/admin/login.html';
+    : '/login.html';
 
   if (req.method === 'GET') {
     return res.redirect(redirectTo);

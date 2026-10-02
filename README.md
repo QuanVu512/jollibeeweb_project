@@ -160,7 +160,7 @@ Server mặc định chạy tại `http://localhost:3000`.
 | Khu vực | URL |
 |---|---|
 | Khách hàng | `http://localhost:3000/` |
-| Quản trị viên (Đăng nhập) | `http://localhost:3000/admin/login.html` |
+| Quản trị viên (Đăng nhập) | `http://localhost:3000/login.html` |
 | Quản trị viên (Tổng quan) | `http://localhost:3000/admin/` |
 | Phân ca làm việc | `http://localhost:3000/admin/shifts.html` |
 | Bảng chấm công & lịch sử | `http://localhost:3000/admin/attendance.html` |

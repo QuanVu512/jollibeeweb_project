@@ -52,7 +52,7 @@ Các thành viên chạy ứng dụng:
 npm run dev
 ```
 
-Truy cập `http://localhost:3000/admin/login.html`.
+Truy cập `http://localhost:3000/login.html`.
 
 ## 5. Đặt lại mật khẩu admin
 

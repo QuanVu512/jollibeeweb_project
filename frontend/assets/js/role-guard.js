@@ -11,7 +11,7 @@
     });
 
     if (!response.ok) {
-      location.replace('/admin/login.html');
+      location.replace('/login.html');
       return;
     }
 
@@ -21,13 +21,13 @@
 
     const allowedRoles = requiredRole.split(',').map(r => r.trim());
     if (!user || !allowedRoles.includes(user.role)) {
-      location.replace(redirectTo || '/admin/login.html');
+      location.replace(redirectTo || '/login.html');
       return;
     }
 
     global.RoleGuard = { user, redirectTo };
     document.documentElement.style.visibility = '';
   } catch (_error) {
-    location.replace('/admin/login.html');
+    location.replace('/login.html');
   }
 })(window);

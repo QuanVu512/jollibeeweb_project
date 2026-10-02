@@ -21,7 +21,7 @@
 
     if (!response.ok) {
       if (response.status === 401 && redirectOnUnauthorized && !location.pathname.endsWith('/login.html')) {
-        location.replace('/admin/login.html');
+        location.replace('/login.html');
       }
       const error = new Error(payload?.message || 'Không thể kết nối với máy chủ.');
       error.status = response.status;
@@ -35,7 +35,7 @@
   async function downloadReport(query) {
     const response = await fetch(`${API_BASE}/reports/export?${query}`, { credentials: 'include' });
     if (response.status === 401) {
-      location.replace('/admin/login.html');
+      location.replace('/login.html');
       return;
     }
     if (!response.ok) {

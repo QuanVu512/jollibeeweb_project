@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
   function expired(error) {
     sessionExpired = true; queue.stop(); input.disabled = true;
-    show('Phiên đăng nhập đã hết hạn', error.message, 'error', '/admin/login.html');
+    show('Phiên đăng nhập đã hết hạn', error.message, 'error', '/login.html');
     document.getElementById('queue-status').textContent = 'Đăng nhập lại để tiếp tục.';
   }
   async function send(path, payload) {

@@ -118,7 +118,7 @@
         try {
           await global.AdminApi.request('/auth/logout', { method: 'POST' });
         } finally {
-          location.replace('/admin/login.html');
+          location.replace('/login.html');
         }
       });
     });

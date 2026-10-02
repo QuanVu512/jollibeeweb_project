@@ -326,12 +326,12 @@
       e.preventDefault();
       try {
         await fetch("/api/v1/auth/logout", { method: "POST" });
-        location.replace("/admin/login.html");
+        location.replace("/login.html");
       } catch (err) {
         if (window.BanhangUi?.toast) {
           window.BanhangUi.toast("Đăng xuất thất bại.", "error");
         } else {
-          location.replace("/admin/login.html");
+          location.replace("/login.html");
         }
       }
     });

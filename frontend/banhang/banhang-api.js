@@ -167,7 +167,7 @@
 
     if (!response.ok) {
       if (response.status === 401 && !path.includes("/verify-admin")) {
-        location.replace("/admin/login.html");
+        location.replace("/login.html");
       }
       const error = new Error(payload?.message || "Không thể kết nối với máy chủ.");
       error.status = response.status;

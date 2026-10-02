@@ -28,7 +28,7 @@ document.addEventListener("DOMContentLoaded", () => {
         e.preventDefault();
         try {
           await fetch("/api/v1/auth/logout", { method: "POST" });
-          location.replace("/admin/login.html");
+          location.replace("/login.html");
         } catch (err) {
           alert("Đăng xuất thất bại!");
         }

@@ -521,7 +521,7 @@ async function submitOrder() {
         const userWantsToLogin = await window.siteConfirm("Bạn cần đăng nhập tài khoản để tiếp tục đặt hàng.", "Đăng nhập để đặt hàng");
         
         if (userWantsToLogin) {
-            window.location.href = "/admin/login.html"; 
+            window.location.href = "/login.html"; 
         }
         return; 
     }

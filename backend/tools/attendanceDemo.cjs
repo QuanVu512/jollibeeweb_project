@@ -67,7 +67,7 @@ async function main() {
     server = app.listen(port, '127.0.0.1');
     await new Promise((resolve, reject) => { server.once('listening', resolve); server.once('error', reject); });
     const url = `http://127.0.0.1:${server.address().port}`;
-    console.log(`Demo riêng sẵn sàng: ${url}/admin/login.html`);
+    console.log(`Demo riêng sẵn sàng: ${url}/login.html`);
     console.log('Tài khoản: demoadmina / demoadminb. Mật khẩu demo: DemoKiosk123');
     console.log('NV0001, NV0002: ca hôm nay. NV0003: cần duyệt OT. NV0004: thiếu checkout hôm trước.');
     console.log('Cooldown giữ nguyên 60 giây; thời gian máy chủ không đổi. Ctrl+C để dừng và xóa database tạm.');

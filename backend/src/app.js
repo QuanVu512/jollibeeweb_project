@@ -98,6 +98,10 @@ app.use(
 );
 
 app.get("/", (_req, res) => res.redirect("/khachhang/homepage.html"));
+app.get("/login.html", (_req, res) =>
+  res.sendFile(path.join(frontendDirectory, "login.html")),
+);
+app.get("/login", (_req, res) => res.redirect("/login.html"));
 app.get("/kitchen-login.html", (_req, res) =>
   res.redirect("/bep/kitchen-login.html"),
 );

@@ -136,7 +136,7 @@ function setupLogoutButton() {
     } catch (error) {
       console.error("Lỗi đăng xuất:", error);
     } finally {
-      location.replace("/admin/login.html");
+      location.replace("/login.html");
     }
   });
 }
